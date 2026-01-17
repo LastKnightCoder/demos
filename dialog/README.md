@@ -379,32 +379,78 @@ form.addEventListener('submit', (e) => {
 });
 ```
 
+### 完整示例：根据按钮值处理不同操作
+
+```html
+<dialog id="saveDialog">
+  <form method="dialog">
+    <h2>保存更改</h2>
+    <input type="text" name="title" required>
+    <button type="submit" value="cancel">取消</button>
+    <button type="submit" value="save">保存</button>
+    <button type="submit" value="saveAndClose">保存并关闭</button>
+  </form>
+</dialog>
+```
+
+```javascript
+const dialog = document.querySelector('#saveDialog');
+const form = dialog.querySelector('form');
+
+dialog.addEventListener('close', () => {
+  const action = dialog.returnValue;
+
+  if (action === 'cancel') {
+    console.log('用户取消了操作');
+    return;
+  }
+
+  // 获取表单数据
+  const formData = new FormData(form);
+  const data = Object.fromEntries(formData);
+
+  if (action === 'save') {
+    console.log('保存数据:', data);
+    // 保存但不关闭编辑器
+  } else if (action === 'saveAndClose') {
+    console.log('保存并关闭:', data);
+    // 保存并关闭编辑器
+  }
+});
+```
+
+**关键点：**
+- 每个提交按钮的 `value` 属性会成为 `dialog.returnValue`
+- 在 `close` 事件中根据 `returnValue` 判断用户点击了哪个按钮
+- 可以同时获取表单数据和按钮值
+
 ## 演示文件
 
 本项目包含以下演示文件：
 
-1. ​**01-basic-dialog.html** - 基础对话框演示
+1. **01-basic-dialog.html** - 基础对话框演示
+   - 模态和非模态对话框
+   - 基本的打开/关闭操作
 
-- 模态和非模态对话框
-- 基本的打开/关闭操作
+2. **02-modal-dialog.html** - 模态对话框演示
+   - 背景遮罩自定义
+   - ESC 键关闭
+   - 点击背景关闭
 
-1. ​**02-modal-dialog.html** - 模态对话框演示
+3. **03-form-dialog.html** - 表单对话框演示
+   - 表单提交处理
+   - 返回值获取
+   - 表单验证
 
-- 背景遮罩自定义
-- ESC 键关闭
-- 点击背景关闭
+4. **04-animated-dialog.html** - 动画对话框演示
+   - 打开/关闭动画
+   - 过渡效果
+   - 自定义动画
 
-1. ​**03-form-dialog.html** - 表单对话框演示
-
-- 表单提交处理
-- 返回值获取
-- 表单验证
-
-1. ​**04-animated-dialog.html** - 动画对话框演示
-
-- 打开/关闭动画
-- 过渡效果
-- 自定义动画
+5. **05-method-dialog.html** - method="dialog" 演示
+   - 按钮 value 与 returnValue 的关系
+   - 根据不同按钮执行不同操作
+   - 结合表单数据和按钮值
 
 ## 常见问题与注意事项
 
