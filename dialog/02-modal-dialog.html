@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>模态对话框演示</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class'
+    }
+  </script>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useRef, useEffect } = React;
+
+    function App() {
+      const confirmDialogRef = useRef(null);
+      const alertDialogRef = useRef(null);
+      const backdropDialogRef = useRef(null);
+      const [isDark, setIsDark] = useState(false);
+      const [message, setMessage] = useState('');
+
+      useEffect(() => {
+        if (isDark) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      }, [isDark]);
+
+      const openConfirm = () => {
+        confirmDialogRef.current?.showModal();
+      };
+
+      const openAlert = () => {
+        alertDialogRef.current?.showModal();
+      };
+
+      const openBackdrop = () => {
+        backdropDialogRef.current?.showModal();
+      };
+
+      const handleConfirm = (action) => {
+        setMessage(`你选择了: ${action}`);
+        confirmDialogRef.current?.close();
+      };
+
+      const handleBackdropClick = (e) => {
+        const dialog = backdropDialogRef.current;
+        const rect = dialog.getBoundingClientRect();
+        if (
+          e.clientX < rect.left ||
+          e.clientX > rect.right ||
+          e.clientY < rect.top ||
+          e.clientY > rect.bottom
+        ) {
+          dialog.close();
+        }
+      };
+
+      return (
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex justify-between items-center mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">模态对话框演示</h1>
+            <button
+              onClick={() => setIsDark(!isDark)}
+              className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white"
+            >
+              {isDark ? '🌞 浅色' : '🌙 深色'}
+            </button>
+          </div>
+
+          {message && (
+            <div className="mb-6 p-4 bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100 rounded-lg">
+              {message}
+            </div>
+          )}
+
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+              <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">确认对话框</h2>
+              <p className="text-gray-600 dark:text-gray-300 mb-4">
+                用于需要用户确认的操作，提供"确定"和"取消"选项。
+              </p>
+              <button
+                onClick={openConfirm}
+                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition w-full"
+              >
+                打开确认对话框
+              </button>
+            </div>
+
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+              <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">警告对话框</h2>
+              <p className="text-gray-600 dark:text-gray-300 mb-4">
+                用于显示重要信息或警告，只需用户确认。
+              </p>
+              <button
+                onClick={openAlert}
+                className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition w-full"
+              >
+                打开警告对话框
+              </button>
+            </div>
+
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+              <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">点击背景关闭</h2>
+              <p className="text-gray-600 dark:text-gray-300 mb-4">
+                点击对话框外的背景区域可以关闭对话框。
+              </p>
+              <button
+                onClick={openBackdrop}
+                className="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition w-full"
+              >
+                打开对话框
+              </button>
+            </div>
+          </div>
+
+          <dialog
+            ref={confirmDialogRef}
+            className="backdrop:bg-black/50 bg-white dark:bg-gray-800 rounded-lg shadow-xl p-0 border-0"
+          >
+            <div className="p-6 min-w-[400px]">
+              <h3 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">确认操作</h3>
+              <p className="text-gray-600 dark:text-gray-300 mb-6">
+                你确定要执行此操作吗？此操作无法撤销。
+              </p>
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => handleConfirm('取消')}
+                  className="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg transition"
+                >
+                  取消
+                </button>
+                <button
+                  onClick={() => handleConfirm('确定')}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+                >
+                  确定
+                </button>
+              </div>
+            </div>
+          </dialog>
+
+          <dialog
+            ref={alertDialogRef}
+            className="backdrop:bg-black/70 bg-white dark:bg-gray-800 rounded-lg shadow-xl p-0 border-0"
+          >
+            <div className="p-6 min-w-[400px]">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center">
+                  <span className="text-2xl">⚠️</span>
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">警告</h3>
+              </div>
+              <p className="text-gray-600 dark:text-gray-300 mb-6">
+                这是一个重要的警告信息。请仔细阅读并确认你已了解相关风险。
+              </p>
+              <button
+                onClick={() => alertDialogRef.current?.close()}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition w-full"
+              >
+                我已了解
+              </button>
+            </div>
+          </dialog>
+
+          <dialog
+            ref={backdropDialogRef}
+            onClick={handleBackdropClick}
+            className="backdrop:bg-black/60 backdrop:backdrop-blur-sm bg-white dark:bg-gray-800 rounded-lg shadow-xl p-0 border-0"
+          >
+            <div className="p-6 min-w-[400px]">
+              <h3 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">点击外部关闭</h3>
+              <p className="text-gray-600 dark:text-gray-300 mb-6">
+                点击对话框外的背景区域可以关闭此对话框。这是一个常见的用户体验模式。
+              </p>
+              <button
+                onClick={() => backdropDialogRef.current?.close()}
+                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition w-full"
+              >
+                关闭
+              </button>
+            </div>
+          </dialog>
+        </div>
+      );
+    }
+
+    ReactDOM.render(<App />, document.getElementById('root'));
+  </script>
+</body>
+</html>

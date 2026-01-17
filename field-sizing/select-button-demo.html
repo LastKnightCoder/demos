@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select & Button field-sizing 演示</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- React CDN -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+    <!-- Babel Standalone -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <script>
+        // Tailwind 配置，启用深色模式
+        tailwind.config = {
+            darkMode: 'class'
+        }
+    </script>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // 主题切换组件
+        function ThemeToggle() {
+            const [isDark, setIsDark] = useState(false);
+
+            useEffect(() => {
+                const savedTheme = localStorage.getItem('theme');
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+                if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+                    setIsDark(true);
+                    document.documentElement.classList.add('dark');
+                }
+            }, []);
+
+            const toggleTheme = () => {
+                const newIsDark = !isDark;
+                setIsDark(newIsDark);
+
+                if (newIsDark) {
+                    document.documentElement.classList.add('dark');
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                    localStorage.setItem('theme', 'light');
+                }
+            };
+
+            return (
+                <button
+                    onClick={toggleTheme}
+                    className="fixed top-6 right-6 p-3 rounded-full bg-white dark:bg-gray-800 shadow-lg hover:shadow-xl border-2 border-gray-200 dark:border-gray-700 transition-all z-50"
+                    aria-label="切换主题"
+                >
+                    {isDark ? (
+                        <svg className="w-6 h-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                    ) : (
+                        <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                        </svg>
+                    )}
+                </button>
+            );
+        }
+
+        // 对比卡片组件
+        function ComparisonCard({ title, type, badge, children, description }) {
+            const badgeColors = {
+                fixed: 'bg-orange-400 dark:bg-orange-500 text-white',
+                content: 'bg-green-500 dark:bg-green-600 text-white'
+            };
+
+            return (
+                <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-xl border border-gray-200 dark:border-gray-700">
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">
+                            {title}
+                        </h3>
+                        <span className={`${badgeColors[badge]} px-3 py-1 rounded-full text-xs font-semibold uppercase`}>
+                            {badge}
+                        </span>
+                    </div>
+
+                    <div className="mb-4">
+                        {children}
+                    </div>
+
+                    <div className="p-3 bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-400 dark:border-blue-500 rounded text-sm text-gray-600 dark:text-gray-300">
+                        {description}
+                    </div>
+                </div>
+            );
+        }
+
+        // 代码块组件
+        function CodeBlock({ children }) {
+            return (
+                <pre className="bg-gray-900 dark:bg-black text-gray-100 p-4 rounded-xl overflow-x-auto text-sm font-mono mt-4">
+                    <code>{children}</code>
+                </pre>
+            );
+        }
+
+        // 主应用
+        function App() {
+            const [selectedCountry, setSelectedCountry] = useState('');
+            const [selectedCity, setSelectedCity] = useState('');
+            const [buttonText, setButtonText] = useState('Click Me');
+
+            const countries = [
+                { value: '', label: '选择国家...' },
+                { value: 'china', label: '中国' },
+                { value: 'usa', label: '美国' },
+                { value: 'uk', label: '英国' },
+                { value: 'japan', label: '日本' },
+                { value: 'australia', label: '澳大利亚' },
+                { value: 'canada', label: '加拿大' },
+            ];
+
+            const cities = [
+                { value: '', label: '选择城市...' },
+                { value: 'beijing', label: '北京市' },
+                { value: 'shanghai', label: '上海市' },
+                { value: 'guangzhou', label: '广州市' },
+                { value: 'shenzhen', label: '深圳市' },
+                { value: 'hangzhou', label: '杭州市' },
+            ];
+
+            return (
+                <div className="min-h-screen bg-gradient-to-br from-purple-100 to-blue-100 dark:from-gray-900 dark:to-gray-800 py-10 px-5 transition-colors duration-300">
+                    <ThemeToggle />
+
+                    <div className="max-w-6xl mx-auto">
+                        {/* Header */}
+                        <header className="text-center mb-12">
+                            <h1 className="text-5xl font-bold text-gray-800 dark:text-gray-100 mb-4">
+                                🎛️ Select & Button 演示
+                            </h1>
+                            <p className="text-xl text-gray-600 dark:text-gray-300">
+                                探索 field-sizing 在 select 和 button 元素上的效果
+                            </p>
+                        </header>
+
+                        {/* Select 演示 */}
+                        <section className="mb-12">
+                            <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-6 flex items-center gap-3">
+                                <span className="text-4xl">📋</span>
+                                Select 下拉框对比
+                            </h2>
+
+                            <div className="grid md:grid-cols-2 gap-6 mb-8">
+                                <ComparisonCard
+                                    title="固定宽度 Select"
+                                    badge="fixed"
+                                    description="使用 field-sizing: fixed，select 元素保持浏览器默认宽度"
+                                >
+                                    <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        选择国家：
+                                    </label>
+                                    <select
+                                        value={selectedCountry}
+                                        onChange={(e) => setSelectedCountry(e.target.value)}
+                                        className="p-3 border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-lg focus:outline-none focus:border-purple-500 dark:focus:border-purple-400 transition-colors cursor-pointer"
+                                        style={{ fieldSizing: 'fixed' }}
+                                    >
+                                        {countries.map(country => (
+                                            <option key={country.value} value={country.value}>
+                                                {country.label}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    {selectedCountry && (
+                                        <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                                            已选择: {countries.find(c => c.value === selectedCountry)?.label}
+                                        </p>
+                                    )}
+                                </ComparisonCard>
+
+                                <ComparisonCard
+                                    title="内容自适应 Select"
+                                    badge="content"
+                                    description="使用 field-sizing: content，select 宽度根据选项内容自动调整"
+                                >
+                                    <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        选择城市：
+                                    </label>
+                                    <select
+                                        value={selectedCity}
+                                        onChange={(e) => setSelectedCity(e.target.value)}
+                                        className="p-3 border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-lg focus:outline-none focus:border-purple-500 dark:focus:border-purple-400 transition-colors cursor-pointer"
+                                        style={{ fieldSizing: 'content', minWidth: '150px' }}
+                                    >
+                                        {cities.map(city => (
+                                            <option key={city.value} value={city.value}>
+                                                {city.label}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    {selectedCity && (
+                                        <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                                            已选择: {cities.find(c => c.value === selectedCity)?.label}
+                                        </p>
+                                    )}
+                                </ComparisonCard>
+                            </div>
+
+                            <CodeBlock>
+{`/* 固定宽度 */
+<select style={{ fieldSizing: 'fixed' }}>
+  <option>选项内容</option>
+</select>
+
+/* 内容自适应 */
+<select style={{ fieldSizing: 'content', minWidth: '150px' }}>
+  <option>选项内容</option>
+</select>`}
+                            </CodeBlock>
+                        </section>
+
+                        {/* Button 演示 */}
+                        <section className="mb-12">
+                            <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-6 flex items-center gap-3">
+                                <span className="text-4xl">🔘</span>
+                                Button 按钮对比
+                            </h2>
+
+                            <div className="grid md:grid-cols-2 gap-6 mb-8">
+                                <ComparisonCard
+                                    title="固定宽度 Button"
+                                    badge="fixed"
+                                    description="使用 field-sizing: fixed，所有按钮保持相同的固定宽度（不会根据文本调整）"
+                                >
+                                    <div className="space-y-3 flex flex-col items-start">
+                                        <button
+                                            className="px-6 py-3 bg-purple-500 hover:bg-purple-600 dark:bg-purple-600 dark:hover:bg-purple-700 text-white rounded-lg font-medium transition-colors border-2 border-purple-300 dark:border-purple-400"
+                                            style={{ fieldSizing: 'fixed' }}
+                                        >
+                                            OK
+                                        </button>
+                                        <button
+                                            className="px-6 py-3 bg-purple-500 hover:bg-purple-600 dark:bg-purple-600 dark:hover:bg-purple-700 text-white rounded-lg font-medium transition-colors border-2 border-purple-300 dark:border-purple-400"
+                                            style={{ fieldSizing: 'fixed' }}
+                                        >
+                                            这是一个非常非常非常长的按钮文本内容
+                                        </button>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                                            ⚠️ 注意：两个按钮宽度相同
+                                        </p>
+                                    </div>
+                                </ComparisonCard>
+
+                                <ComparisonCard
+                                    title="内容自适应 Button"
+                                    badge="content"
+                                    description="使用 field-sizing: content，按钮宽度根据文本内容自动调整（更紧凑或更宽）"
+                                >
+                                    <div className="space-y-3 flex flex-col items-start">
+                                        <button
+                                            className="px-6 py-3 bg-green-500 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700 text-white rounded-lg font-medium transition-colors border-2 border-green-300 dark:border-green-400"
+                                            style={{ fieldSizing: 'content' }}
+                                        >
+                                            OK
+                                        </button>
+                                        <button
+                                            className="px-6 py-3 bg-green-500 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700 text-white rounded-lg font-medium transition-colors border-2 border-green-300 dark:border-green-400"
+                                            style={{ fieldSizing: 'content' }}
+                                        >
+                                            这是一个非常非常非常长的按钮文本内容
+                                        </button>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                                            ✓ 注意：两个按钮宽度不同！
+                                        </p>
+                                    </div>
+                                </ComparisonCard>
+                            </div>
+
+                            <CodeBlock>
+{`/* 固定宽度 */
+<button style={{ fieldSizing: 'fixed' }}>
+  按钮文本
+</button>
+
+/* 内容自适应 */
+<button style={{ fieldSizing: 'content' }}>
+  按钮文本
+</button>`}
+                            </CodeBlock>
+                        </section>
+
+                        {/* 动态按钮演示 */}
+                        <section className="mb-12">
+                            <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-xl border border-gray-200 dark:border-gray-700">
+                                <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6 flex items-center gap-3">
+                                    <span className="text-3xl">⚡</span>
+                                    动态按钮文本演示
+                                </h2>
+
+                                <div className="mb-6">
+                                    <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        修改按钮文本：
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={buttonText}
+                                        onChange={(e) => setButtonText(e.target.value)}
+                                        className="w-full p-3 border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-lg focus:outline-none focus:border-purple-500 dark:focus:border-purple-400 transition-colors"
+                                        placeholder="输入按钮文本..."
+                                    />
+                                </div>
+
+                                <div className="grid md:grid-cols-2 gap-6">
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                                            Fixed (固定宽度)
+                                        </p>
+                                        <button
+                                            className="px-8 py-4 bg-orange-500 hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-700 text-white rounded-lg font-medium transition-all"
+                                            style={{ fieldSizing: 'fixed' }}
+                                        >
+                                            {buttonText || '按钮'}
+                                        </button>
+                                    </div>
+
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                                            Content (内容自适应)
+                                        </p>
+                                        <button
+                                            className="px-8 py-4 bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white rounded-lg font-medium transition-all"
+                                            style={{ fieldSizing: 'content' }}
+                                        >
+                                            {buttonText || '按钮'}
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="mt-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-400 dark:border-yellow-500 rounded text-sm text-gray-700 dark:text-gray-300">
+                                    💡 <strong>观察：</strong>输入不同长度的文本，观察两个按钮的宽度变化。fixed 按钮保持默认宽度，content 按钮会根据文本内容自动调整宽度。
+                                </div>
+                            </div>
+                        </section>
+
+                        {/* 实际应用场景 */}
+                        <section className="mb-12">
+                            <div className="bg-gradient-to-r from-indigo-500 to-purple-500 dark:from-indigo-700 dark:to-purple-700 rounded-2xl p-8 text-white shadow-2xl">
+                                <h2 className="text-3xl font-bold mb-6">📌 实际应用场景</h2>
+
+                                <div className="grid md:grid-cols-2 gap-6">
+                                    <div className="bg-white/10 backdrop-blur-sm rounded-xl p-5">
+                                        <h3 className="text-xl font-bold mb-3">Select 元素</h3>
+                                        <ul className="space-y-2 text-sm">
+                                            <li>✓ 动态表单（选项长度不一）</li>
+                                            <li>✓ 国家/地区选择器</li>
+                                            <li>✓ 分类/标签选择</li>
+                                            <li>✓ 响应式下拉菜单</li>
+                                        </ul>
+                                    </div>
+
+                                    <div className="bg-white/10 backdrop-blur-sm rounded-xl p-5">
+                                        <h3 className="text-xl font-bold mb-3">Button 元素</h3>
+                                        <ul className="space-y-2 text-sm">
+                                            <li>✓ 动作按钮组（宽度一致）</li>
+                                            <li>✓ 标签/徽章按钮</li>
+                                            <li>✓ 多语言界面按钮</li>
+                                            <li>✓ 内联操作按钮</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        {/* 浏览器支持 */}
+                        <section>
+                            <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-xl border border-gray-200 dark:border-gray-700">
+                                <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6">
+                                    🌐 浏览器兼容性
+                                </h2>
+
+                                <div className="grid md:grid-cols-4 gap-4">
+                                    <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-xl border-2 border-green-500">
+                                        <div className="text-3xl mb-2">✅</div>
+                                        <div className="font-semibold text-gray-800 dark:text-gray-200">Chrome</div>
+                                        <div className="text-sm text-gray-600 dark:text-gray-400">123+</div>
+                                    </div>
+
+                                    <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-xl border-2 border-green-500">
+                                        <div className="text-3xl mb-2">✅</div>
+                                        <div className="font-semibold text-gray-800 dark:text-gray-200">Edge</div>
+                                        <div className="text-sm text-gray-600 dark:text-gray-400">123+</div>
+                                    </div>
+
+                                    <div className="text-center p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl border-2 border-yellow-500">
+                                        <div className="text-3xl mb-2">⏳</div>
+                                        <div className="font-semibold text-gray-800 dark:text-gray-200">Safari</div>
+                                        <div className="text-sm text-gray-600 dark:text-gray-400">开发中</div>
+                                    </div>
+
+                                    <div className="text-center p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl border-2 border-yellow-500">
+                                        <div className="text-3xl mb-2">⏳</div>
+                                        <div className="font-semibold text-gray-800 dark:text-gray-200">Firefox</div>
+                                        <div className="text-sm text-gray-600 dark:text-gray-400">开发中</div>
+                                    </div>
+                                </div>
+
+                                <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-400 dark:border-blue-500 rounded text-sm text-gray-700 dark:text-gray-300">
+                                    💡 <strong>建议：</strong>在生产环境中使用时，建议提供降级方案或使用 @supports 进行特性检测。
+                                </div>
+                            </div>
+                        </section>
+
+                        {/* Back to Home */}
+                        <div className="text-center mt-12">
+                            <a
+                                href="index.html"
+                                className="inline-block bg-white dark:bg-gray-800 text-purple-600 dark:text-purple-400 px-10 py-4 rounded-full font-semibold shadow-xl hover:-translate-y-1 transition-transform border-2 border-purple-200 dark:border-purple-700"
+                            >
+                                ← 返回首页
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Render
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

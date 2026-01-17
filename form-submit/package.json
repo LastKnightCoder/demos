@@ -1,0 +1,24 @@
+{
+  "name": "form-submit-demo",
+  "version": "1.0.0",
+  "description": "演示 HTML Form 的 submit() 和 requestSubmit() 方法的区别",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "form",
+    "submit",
+    "requestSubmit",
+    "html",
+    "react",
+    "tailwindcss"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
+  }
+}

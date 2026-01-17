@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>表单应用示例 - field-sizing</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.95;
+        }
+
+        .form-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            margin-bottom: 30px;
+        }
+
+        .form-card h2 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.8rem;
+        }
+
+        .form-description {
+            color: #6c757d;
+            margin-bottom: 30px;
+            font-size: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #495057;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .required {
+            color: #dc3545;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: all 0.3s;
+            background: white;
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #4facfe;
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+        }
+
+        /* field-sizing 应用 */
+        .auto-width {
+            field-sizing: content;
+            min-width: 15ch;
+            max-width: 100%;
+        }
+
+        .auto-height {
+            field-sizing: content;
+            min-height: 3lh;
+            max-height: 15lh;
+            resize: none;
+        }
+
+        /* 内联输入框 */
+        .inline-form {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .inline-form input {
+            width: auto;
+            field-sizing: content;
+            min-width: 8ch;
+            max-width: 30ch;
+        }
+
+        .inline-form span {
+            color: #495057;
+        }
+
+        /* 标签输入 */
+        .tag-input-container {
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            min-height: 50px;
+        }
+
+        .tag-input-container:focus-within {
+            border-color: #4facfe;
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+        }
+
+        .tag {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tag-remove {
+            background: rgba(255, 255, 255, 0.3);
+            border: none;
+            color: white;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s;
+        }
+
+        .tag-remove:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .tag-input {
+            border: none;
+            outline: none;
+            field-sizing: content;
+            min-width: 8ch;
+            max-width: 100%;
+            font-size: 1rem;
+            padding: 6px;
+        }
+
+        /* 提交按钮 */
+        .submit-btn {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            padding: 14px 32px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(79, 172, 254, 0.4);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        /* 响应式网格 */
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .form-card {
+                padding: 25px;
+            }
+        }
+
+        /* 帮助文本 */
+        .help-text {
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+
+        /* 成功提示 */
+        .success-message {
+            display: none;
+            background: #d4edda;
+            border: 2px solid #28a745;
+            color: #155724;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .success-message.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📋 智能表单应用</h1>
+            <p class="subtitle">展示 field-sizing 在实际表单中的应用</p>
+        </header>
+
+        <!-- 用户反馈表单 -->
+        <div class="form-card">
+            <h2>💭 用户反馈表单</h2>
+            <p class="form-description">所有输入框都使用了 field-sizing，观察它们如何自适应内容</p>
+
+            <form id="feedbackForm" onsubmit="handleSubmit(event)">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="name">姓名 <span class="required">*</span></label>
+                        <input
+                            type="text"
+                            id="name"
+                            class="auto-width"
+                            placeholder="请输入姓名"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">邮箱 <span class="required">*</span></label>
+                        <input
+                            type="email"
+                            id="email"
+                            class="auto-width"
+                            placeholder="example@email.com"
+                            required
+                        >
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="subject">反馈主题 <span class="required">*</span></label>
+                    <input
+                        type="text"
+                        id="subject"
+                        class="auto-width"
+                        placeholder="简短描述你的反馈主题"
+                        required
+                    >
+                    <div class="help-text">输入框会随着内容长度自动调整宽度</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="feedback">详细反馈 <span class="required">*</span></label>
+                    <textarea
+                        id="feedback"
+                        class="auto-height"
+                        placeholder="请详细描述你的反馈...&#10;&#10;文本框会自动增长，无需滚动条！"
+                        required
+                    ></textarea>
+                    <div class="help-text">文本域高度自动适应内容（3-15行）</div>
+                </div>
+
+                <div class="form-group">
+                    <label>相关标签</label>
+                    <div class="tag-input-container" id="tagContainer">
+                        <input
+                            type="text"
+                            class="tag-input"
+                            id="tagInput"
+                            placeholder="输入标签后按 Enter"
+                            onkeydown="handleTagInput(event)"
+                        >
+                    </div>
+                    <div class="help-text">按 Enter 添加标签，标签输入框宽度自适应</div>
+                </div>
+
+                <button type="submit" class="submit-btn">提交反馈</button>
+
+                <div class="success-message" id="successMessage">
+                    ✅ 表单提交成功！感谢您的反馈。
+                </div>
+            </form>
+        </div>
+
+        <!-- 内联编辑表单 -->
+        <div class="form-card">
+            <h2>✏️ 内联编辑示例</h2>
+            <p class="form-description">输入框无缝融入文本流，宽度随内容调整</p>
+
+            <div style="background: #f8f9fa; padding: 25px; border-radius: 12px; font-size: 1.1rem; line-height: 2;">
+                <div class="inline-form">
+                    <span>我叫</span>
+                    <input type="text" class="auto-width" value="张三" style="text-align: center;">
+                    <span>，今年</span>
+                    <input type="text" class="auto-width" value="25" style="width: 4ch; text-align: center;">
+                    <span>岁，</span>
+                </div>
+                <div class="inline-form" style="margin-top: 15px;">
+                    <span>来自</span>
+                    <input type="text" class="auto-width" value="北京" style="text-align: center;">
+                    <span>，职业是</span>
+                    <input type="text" class="auto-width" value="软件工程师" style="text-align: center;">
+                    <span>。</span>
+                </div>
+            </div>
+
+            <div class="help-text" style="margin-top: 15px;">
+                💡 尝试编辑上面的输入框，观察它们如何自动调整宽度以适应内容
+            </div>
+        </div>
+
+        <!-- 动态问卷表单 -->
+        <div class="form-card">
+            <h2>📊 动态问卷</h2>
+            <p class="form-description">根据回答长度自适应的问卷表单</p>
+
+            <div class="form-group">
+                <label>1. 您对我们的产品有什么建议？</label>
+                <textarea
+                    class="auto-height"
+                    placeholder="请分享您的想法..."
+                ></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>2. 您最喜欢的功能是什么？</label>
+                <textarea
+                    class="auto-height"
+                    placeholder="简短描述即可..."
+                ></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>3. 您希望增加哪些新功能？</label>
+                <textarea
+                    class="auto-height"
+                    placeholder="列举您期待的功能..."
+                ></textarea>
+            </div>
+        </div>
+
+        <!-- 代码示例 -->
+        <div class="form-card">
+            <h2>💻 核心 CSS 代码</h2>
+            <div style="background: #2d2d2d; color: #f8f8f2; padding: 20px; border-radius: 12px; overflow-x: auto; font-family: 'Courier New', monospace; font-size: 0.95rem;">
+<code>/* 自适应宽度的输入框 */
+.auto-width {
+  field-sizing: content;
+  min-width: 15ch;
+  max-width: 100%;
+}
+
+/* 自适应高度的文本域 */
+.auto-height {
+  field-sizing: content;
+  min-height: 3lh;
+  max-height: 15lh;
+  resize: none;
+}
+
+/* 内联输入框 */
+.inline-form input {
+  field-sizing: content;
+  min-width: 8ch;
+  max-width: 30ch;
+  width: auto;
+}
+
+/* 标签输入 */
+.tag-input {
+  field-sizing: content;
+  min-width: 8ch;
+  max-width: 100%;
+}</code>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 处理表单提交
+        function handleSubmit(event) {
+            event.preventDefault();
+            const successMessage = document.getElementById('successMessage');
+            successMessage.classList.add('show');
+
+            setTimeout(() => {
+                successMessage.classList.remove('show');
+                document.getElementById('feedbackForm').reset();
+                // 清空标签
+                const tagContainer = document.getElementById('tagContainer');
+                const tags = tagContainer.querySelectorAll('.tag');
+                tags.forEach(tag => tag.remove());
+            }, 3000);
+        }
+
+        // 标签输入处理
+        let tags = [];
+
+        function handleTagInput(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                const input = event.target;
+                const value = input.value.trim();
+
+                if (value && !tags.includes(value)) {
+                    addTag(value);
+                    tags.push(value);
+                    input.value = '';
+                }
+            }
+        }
+
+        function addTag(text) {
+            const tagContainer = document.getElementById('tagContainer');
+            const tagInput = document.getElementById('tagInput');
+
+            const tag = document.createElement('span');
+            tag.className = 'tag';
+            tag.innerHTML = `
+                ${text}
+                <button type="button" class="tag-remove" onclick="removeTag(this, '${text}')">&times;</button>
+            `;
+
+            tagContainer.insertBefore(tag, tagInput);
+        }
+
+        function removeTag(button, text) {
+            const tag = button.parentElement;
+            tag.remove();
+            tags = tags.filter(t => t !== text);
+        }
+
+        // 预填充一些标签作为示例
+        const defaultTags = ['功能建议', '界面优化'];
+        defaultTags.forEach(tag => {
+            addTag(tag);
+            tags.push(tag);
+        });
+    </script>
+</body>
+</html>

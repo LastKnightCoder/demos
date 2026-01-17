@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>field-sizing 完整教程与演示</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- React CDN -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+    <!-- Babel Standalone for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .animate-fadeInDown { animation: fadeInDown 0.8s ease; }
+        .animate-fadeInUp { animation: fadeInUp 0.8s ease; }
+        .animate-fadeIn { animation: fadeIn 1s ease; }
+
+        .delay-100 { animation-delay: 0.1s; animation-fill-mode: both; }
+        .delay-200 { animation-delay: 0.2s; animation-fill-mode: both; }
+        .delay-300 { animation-delay: 0.3s; animation-fill-mode: both; }
+        .delay-400 { animation-delay: 0.4s; animation-fill-mode: both; }
+        .delay-500 { animation-delay: 0.5s; animation-fill-mode: both; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+
+        function DemoCard({ title, fileName, icon, features, gradient, delay, onClick }) {
+            return (
+                <div
+                    onClick={() => window.location.href = fileName}
+                    className={`bg-white rounded-3xl overflow-hidden shadow-2xl transition-all duration-300 hover:-translate-y-2 hover:shadow-3xl cursor-pointer animate-fadeInUp ${delay}`}
+                >
+                    <div className={`p-8 bg-gradient-to-br ${gradient} text-white text-center`}>
+                        <div className="text-5xl mb-3">{icon}</div>
+                        <h3 className="text-2xl font-bold mb-2">{title}</h3>
+                        <p className="text-sm opacity-90">{fileName}</p>
+                    </div>
+                    <div className="p-6">
+                        <ul className="space-y-2 mb-5">
+                            {features.map((feature, index) => (
+                                <li key={index} className="text-gray-600 pl-6 relative">
+                                    <span className="absolute left-0 text-green-500 font-bold">✓</span>
+                                    {feature}
+                                </li>
+                            ))}
+                        </ul>
+                        <a
+                            href={fileName}
+                            className={`block bg-gradient-to-r ${gradient} text-white text-center py-3 rounded-xl font-semibold transition-opacity hover:opacity-90`}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            查看演示 →
+                        </a>
+                    </div>
+                </div>
+            );
+        }
+
+        function BrowserItem({ icon, name, version, supported }) {
+            const bgColor = supported ? 'bg-green-100' : 'bg-yellow-100';
+            const borderColor = supported ? 'border-green-500' : 'border-yellow-500';
+
+            return (
+                <div className={`${bgColor} border-2 ${borderColor} rounded-xl p-5 text-center min-w-[120px]`}>
+                    <div className="text-4xl mb-2">{icon}</div>
+                    <div className="font-semibold text-gray-800 mb-1">{name}</div>
+                    <div className="text-sm text-gray-600">{version}</div>
+                </div>
+            );
+        }
+
+        function FeatureItem({ icon, title, description }) {
+            return (
+                <div className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white p-6 rounded-2xl text-center animate-fadeIn">
+                    <h3 className="text-xl font-bold mb-2">{icon} {title}</h3>
+                    <p className="text-sm opacity-90">{description}</p>
+                </div>
+            );
+        }
+
+        function App() {
+            const demos = [
+                {
+                    title: "基础用法",
+                    fileName: "01-basic-usage.html",
+                    icon: "✨",
+                    features: ["输入框尺寸对比", "文本域尺寸对比", "固定 vs 自适应", "实时交互演示"],
+                    gradient: "from-indigo-500 to-purple-600",
+                    delay: "delay-100"
+                },
+                {
+                    title: "自动增长文本域",
+                    fileName: "02-auto-grow-textarea.html",
+                    icon: "📝",
+                    features: ["评论输入框", "CSS vs JavaScript", "多种应用场景", "完整代码示例"],
+                    gradient: "from-pink-400 to-red-400",
+                    delay: "delay-200"
+                },
+                {
+                    title: "表单应用",
+                    fileName: "03-form-application.html",
+                    icon: "📋",
+                    features: ["用户反馈表单", "内联编辑示例", "标签输入功能", "动态问卷表单"],
+                    gradient: "from-cyan-400 to-blue-500",
+                    delay: "delay-300"
+                },
+                {
+                    title: "高级场景",
+                    fileName: "04-advanced-scenarios.html",
+                    icon: "🚀",
+                    features: ["智能搜索框", "聊天消息输入", "可编辑表格", "代码编辑器"],
+                    gradient: "from-pink-400 to-yellow-300",
+                    delay: "delay-400"
+                },
+                {
+                    title: "句子填空",
+                    fileName: "05-sentence-fill-in-fallback.html",
+                    icon: "📝",
+                    features: ["填空输入框", "自适应宽度下划线", "多种样式变体", "教育场景应用"],
+                    gradient: "from-cyan-300 to-blue-400",
+                    delay: "delay-500"
+                }
+            ];
+
+            const browsers = [
+                { icon: "🟢", name: "Chrome", version: "123+", supported: true },
+                { icon: "🟢", name: "Edge", version: "123+", supported: true },
+                { icon: "🟡", name: "Safari", version: "检查中", supported: false },
+                { icon: "🟡", name: "Firefox", version: "检查中", supported: false }
+            ];
+
+            return (
+                <div className="min-h-screen bg-gradient-to-br from-indigo-500 to-purple-600 py-10 px-5">
+                    <div className="max-w-6xl mx-auto">
+                        {/* Header */}
+                        <header className="text-center text-white mb-12">
+                            <h1 className="text-6xl font-bold mb-4 drop-shadow-lg animate-fadeInDown">
+                                field-sizing
+                            </h1>
+                            <p className="text-xl mb-3 opacity-95 animate-fadeInUp">
+                                CSS 表单元素自适应尺寸完整教程
+                            </p>
+                            <div className="inline-block bg-white/20 backdrop-blur-md px-5 py-2 rounded-full text-sm animate-fadeIn">
+                                CSS UI Level 4 新特性
+                            </div>
+                        </header>
+
+                        {/* Intro Card */}
+                        <div className="bg-white rounded-3xl p-10 mb-10 shadow-2xl animate-fadeInUp">
+                            <h2 className="text-3xl font-bold text-gray-800 mb-5 border-l-4 border-indigo-500 pl-5">
+                                📖 什么是 field-sizing？
+                            </h2>
+                            <p className="text-gray-700 text-lg mb-4 leading-relaxed">
+                                <code className="bg-gray-100 px-2 py-1 rounded">field-sizing</code> 是一个强大的 CSS 属性，用于控制表单控件（如 input、textarea、select）如何根据内容自动调整大小。它解决了长期以来表单元素尺寸管理的痛点，让开发者无需编写 JavaScript 就能实现自适应的表单元素。
+                            </p>
+                            <p className="text-gray-700 text-lg mb-4">
+                                使用 <code className="bg-gray-100 px-2 py-1 rounded">field-sizing: content</code> 可以让：
+                            </p>
+                            <ul className="space-y-3 ml-8 text-gray-700">
+                                <li className="flex items-start">
+                                    <span className="mr-2">✨</span>
+                                    <span>输入框根据输入内容自动调整宽度</span>
+                                </li>
+                                <li className="flex items-start">
+                                    <span className="mr-2">✨</span>
+                                    <span>文本域根据文本内容自动调整高度</span>
+                                </li>
+                                <li className="flex items-start">
+                                    <span className="mr-2">✨</span>
+                                    <span>表单布局更加灵活和响应式</span>
+                                </li>
+                                <li className="flex items-start">
+                                    <span className="mr-2">✨</span>
+                                    <span>减少 JavaScript 代码，提升性能</span>
+                                </li>
+                            </ul>
+
+                            {/* Features */}
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mt-8">
+                                <FeatureItem icon="🚀" title="纯 CSS 实现" description="无需 JavaScript 干预" />
+                                <FeatureItem icon="⚡" title="高性能" description="浏览器原生支持" />
+                                <FeatureItem icon="🎨" title="灵活易用" description="简单的语法，强大的功能" />
+                            </div>
+                        </div>
+
+                        {/* Demos Title */}
+                        <h2 className="text-4xl font-bold text-white text-center mb-8 drop-shadow-lg">
+                            🎯 演示示例
+                        </h2>
+
+                        {/* Demo Grid */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-10">
+                            {demos.map((demo, index) => (
+                                <DemoCard key={index} {...demo} />
+                            ))}
+                        </div>
+
+                        {/* Browser Support */}
+                        <div className="bg-white rounded-3xl p-9 mb-10 shadow-2xl animate-fadeInUp">
+                            <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">
+                                🌐 浏览器兼容性
+                            </h2>
+                            <div className="flex flex-wrap justify-center gap-5">
+                                {browsers.map((browser, index) => (
+                                    <BrowserItem key={index} {...browser} />
+                                ))}
+                            </div>
+                            <p className="text-center text-gray-600 mt-5 text-sm">
+                                💡 建议在生产环境中使用 <code className="bg-gray-100 px-2 py-1 rounded">@supports</code> 进行特性检测，并提供降级方案
+                            </p>
+                        </div>
+
+                        {/* Footer */}
+                        <footer className="text-center text-white py-8">
+                            <p className="opacity-90 mb-2">
+                                📚 查看 <a href="README.md" className="underline hover:text-blue-200">完整文档</a> 了解更多详细信息
+                            </p>
+                            <p className="text-sm opacity-80">
+                                2025 · field-sizing CSS 属性完整教程
+                            </p>
+                        </footer>
+                    </div>
+                </div>
+            );
+        }
+
+        // Render App
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

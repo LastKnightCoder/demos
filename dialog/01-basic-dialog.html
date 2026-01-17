@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>基础对话框演示</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class'
+    }
+  </script>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useRef, useEffect } = React;
+
+    function App() {
+      const modalDialogRef = useRef(null);
+      const nonModalDialogRef = useRef(null);
+      const [isDark, setIsDark] = useState(false);
+
+      useEffect(() => {
+        if (isDark) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      }, [isDark]);
+
+      const openModal = () => {
+        modalDialogRef.current?.showModal();
+      };
+
+      const openNonModal = () => {
+        nonModalDialogRef.current?.show();
+      };
+
+      const closeModal = () => {
+        modalDialogRef.current?.close();
+      };
+
+      const closeNonModal = () => {
+        nonModalDialogRef.current?.close();
+      };
+
+      return (
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex justify-between items-center mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">基础对话框演示</h1>
+            <button
+              onClick={() => setIsDark(!isDark)}
+              className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white"
+            >
+              {isDark ? '🌞 浅色' : '🌙 深色'}
+            </button>
+          </div>
+
+          <div className="space-y-6">
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+              <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">模态对话框 (Modal)</h2>
+              <p className="text-gray-600 dark:text-gray-300 mb-4">
+                模态对话框会显示背景遮罩，阻止与页面其他内容的交互。按 ESC 键可关闭。
+              </p>
+              <button
+                onClick={openModal}
+                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+              >
+                打开模态对话框
+              </button>
+            </div>
+
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+              <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">非模态对话框 (Non-modal)</h2>
+              <p className="text-gray-600 dark:text-gray-300 mb-4">
+                非模态对话框不会阻止与页面其他内容的交互，也没有背景遮罩。
+              </p>
+              <button
+                onClick={openNonModal}
+                className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition"
+              >
+                打开非模态对话框
+              </button>
+            </div>
+          </div>
+
+          <dialog
+            ref={modalDialogRef}
+            className="backdrop:bg-black/50 bg-white dark:bg-gray-800 rounded-lg shadow-xl p-0 border-0"
+          >
+            <div className="p-6 min-w-[400px]">
+              <h3 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">模态对话框</h3>
+              <p className="text-gray-600 dark:text-gray-300 mb-6">
+                这是一个模态对话框。你无法与页面其他内容交互，直到关闭此对话框。
+              </p>
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={closeModal}
+                  className="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg transition"
+                >
+                  关闭
+                </button>
+                <button
+                  onClick={closeModal}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+                >
+                  确定
+                </button>
+              </div>
+            </div>
+          </dialog>
+
+          <dialog
+            ref={nonModalDialogRef}
+            className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-0 border-0"
+          >
+            <div className="p-6 min-w-[400px]">
+              <h3 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">非模态对话框</h3>
+              <p className="text-gray-600 dark:text-gray-300 mb-6">
+                这是一个非模态对话框。你仍然可以与页面其他内容交互。
+              </p>
+              <button
+                onClick={closeNonModal}
+                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition w-full"
+              >
+                关闭
+              </button>
+            </div>
+          </dialog>
+        </div>
+      );
+    }
+
+    ReactDOM.render(<App />, document.getElementById('root'));
+  </script>
+</body>
+</html>

@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>01 - submit() vs requestSubmit() 基础对比</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      color: white;
+      text-align: center;
+      margin-bottom: 10px;
+      font-size: 2.5em;
+    }
+
+    .subtitle {
+      color: rgba(255, 255, 255, 0.9);
+      text-align: center;
+      margin-bottom: 40px;
+      font-size: 1.1em;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+      gap: 30px;
+      margin-bottom: 30px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .card h2 {
+      color: #333;
+      margin-bottom: 15px;
+      font-size: 1.5em;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.7em;
+      font-weight: normal;
+    }
+
+    .badge-old {
+      background: #ffeaa7;
+      color: #d63031;
+    }
+
+    .badge-new {
+      background: #55efc4;
+      color: #00b894;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #555;
+      font-weight: 500;
+    }
+
+    input[type="text"],
+    input[type="email"] {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 6px;
+      font-size: 16px;
+      transition: border-color 0.3s;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    input:required:invalid {
+      border-color: #ff6b6b;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    button {
+      flex: 1;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-submit {
+      background: #667eea;
+      color: white;
+    }
+
+    .btn-submit:hover {
+      background: #5568d3;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn-request {
+      background: #00b894;
+      color: white;
+    }
+
+    .btn-request:hover {
+      background: #00a383;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 184, 148, 0.3);
+    }
+
+    .log-container {
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .log-container h2 {
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    #log {
+      background: #1e1e1e;
+      color: #d4d4d4;
+      padding: 20px;
+      border-radius: 8px;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      line-height: 1.6;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .log-entry {
+      margin-bottom: 8px;
+      padding: 8px;
+      border-radius: 4px;
+    }
+
+    .log-submit {
+      background: rgba(255, 107, 107, 0.1);
+      border-left: 3px solid #ff6b6b;
+    }
+
+    .log-request {
+      background: rgba(0, 184, 148, 0.1);
+      border-left: 3px solid #00b894;
+    }
+
+    .log-event {
+      background: rgba(102, 126, 234, 0.1);
+      border-left: 3px solid #667eea;
+    }
+
+    .log-info {
+      background: rgba(255, 255, 255, 0.05);
+      border-left: 3px solid #636e72;
+    }
+
+    .timestamp {
+      color: #888;
+      font-size: 0.9em;
+    }
+
+    .clear-btn {
+      margin-top: 15px;
+      padding: 10px 20px;
+      background: #636e72;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .clear-btn:hover {
+      background: #57606f;
+    }
+
+    .info-box {
+      background: #e3f2fd;
+      border-left: 4px solid #2196F3;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 4px;
+    }
+
+    .info-box p {
+      margin: 5px 0;
+      color: #1565c0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>submit() vs requestSubmit() 基础对比</h1>
+    <p class="subtitle">观察两种方法在事件触发和表单验证上的不同行为</p>
+
+    <div class="grid">
+      <!-- submit() 表单 -->
+      <div class="card">
+        <h2>
+          方法 1: submit()
+          <span class="badge badge-old">传统方法</span>
+        </h2>
+        <div class="info-box">
+          <p><strong>特点：</strong></p>
+          <p>❌ 不触发 submit 事件</p>
+          <p>❌ 不执行表单验证</p>
+        </div>
+        <form id="form1" action="/submit-form" method="POST">
+          <div class="form-group">
+            <label for="name1">姓名 (必填):</label>
+            <input type="text" id="name1" name="name" required>
+          </div>
+          <div class="form-group">
+            <label for="email1">邮箱 (必填):</label>
+            <input type="email" id="email1" name="email" required>
+          </div>
+          <div class="button-group">
+            <button type="button" class="btn-submit" onclick="useSubmit()">
+              使用 submit()
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- requestSubmit() 表单 -->
+      <div class="card">
+        <h2>
+          方法 2: requestSubmit()
+          <span class="badge badge-new">现代方法</span>
+        </h2>
+        <div class="info-box">
+          <p><strong>特点：</strong></p>
+          <p>✅ 触发 submit 事件</p>
+          <p>✅ 执行表单验证</p>
+        </div>
+        <form id="form2" action="/submit-form" method="POST">
+          <div class="form-group">
+            <label for="name2">姓名 (必填):</label>
+            <input type="text" id="name2" name="name" required>
+          </div>
+          <div class="form-group">
+            <label for="email2">邮箱 (必填):</label>
+            <input type="email" id="email2" name="email" required>
+          </div>
+          <div class="button-group">
+            <button type="button" class="btn-request" onclick="useRequestSubmit()">
+              使用 requestSubmit()
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- 日志显示区域 -->
+    <div class="log-container">
+      <h2>事件日志</h2>
+      <div id="log"></div>
+      <button class="clear-btn" onclick="clearLog()">清空日志</button>
+    </div>
+  </div>
+
+  <script>
+    const form1 = document.getElementById('form1');
+    const form2 = document.getElementById('form2');
+    const logDiv = document.getElementById('log');
+
+    // 添加日志
+    function addLog(message, type = 'info') {
+      const timestamp = new Date().toLocaleTimeString('zh-CN');
+      const logEntry = document.createElement('div');
+      logEntry.className = `log-entry log-${type}`;
+      logEntry.innerHTML = `<span class="timestamp">[${timestamp}]</span> ${message}`;
+      logDiv.appendChild(logEntry);
+      logDiv.scrollTop = logDiv.scrollHeight;
+    }
+
+    // 清空日志
+    function clearLog() {
+      logDiv.innerHTML = '';
+    }
+
+    // 监听 form1 的 submit 事件
+    form1.addEventListener('submit', (e) => {
+      e.preventDefault();
+      addLog('🎯 <strong>[form1]</strong> submit 事件被触发！', 'event');
+      addLog('ℹ️  表单验证通过，准备提交...', 'info');
+    });
+
+    // 监听 form2 的 submit 事件
+    form2.addEventListener('submit', (e) => {
+      e.preventDefault();
+      addLog('🎯 <strong>[form2]</strong> submit 事件被触发！', 'event');
+      addLog('ℹ️  表单验证通过，准备提交...', 'info');
+    });
+
+    // 使用 submit() 方法
+    function useSubmit() {
+      addLog('🔴 调用 form1.submit() - 直接提交，绕过事件和验证', 'submit');
+
+      try {
+        // 注意：由于我们添加了 submit 事件监听器并使用了 preventDefault()
+        // submit() 方法会直接提交表单，不会触发我们的监听器
+        // 为了演示目的，我们在这里阻止实际提交
+        addLog('⚠️  注意：submit() 不会触发上面的 submit 事件监听器', 'submit');
+        addLog('⚠️  即使字段为空，也会尝试提交（无验证）', 'submit');
+
+        // 检查字段是否为空（手动检查）
+        const name = document.getElementById('name1').value;
+        const email = document.getElementById('email1').value;
+
+        if (!name || !email) {
+          addLog('❌ 字段为空，但 submit() 不会阻止提交！', 'submit');
+        } else {
+          addLog('✅ 字段已填写，submit() 将直接提交到服务器', 'submit');
+        }
+
+        // 实际环境中，这行代码会提交表单
+        // form1.submit();
+      } catch (error) {
+        addLog(`❌ 错误: ${error.message}`, 'submit');
+      }
+    }
+
+    // 使用 requestSubmit() 方法
+    function useRequestSubmit() {
+      addLog('🟢 调用 form2.requestSubmit() - 模拟点击提交按钮', 'request');
+
+      try {
+        // requestSubmit() 会触发表单验证
+        form2.requestSubmit();
+        addLog('✅ requestSubmit() 会触发上面的 submit 事件监听器', 'request');
+      } catch (error) {
+        addLog(`❌ 验证失败: ${error.message}`, 'request');
+      }
+    }
+
+    // 初始化日志
+    addLog('📝 页面加载完成，可以开始测试', 'info');
+    addLog('💡 提示：尝试在字段为空时点击按钮，观察两种方法的不同行为', 'info');
+  </script>
+</body>
+</html>

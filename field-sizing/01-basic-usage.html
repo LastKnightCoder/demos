@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>field-sizing 基础用法 - React + Tailwind</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- React CDN -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+    <!-- Babel Standalone -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        @supports not (field-sizing: content) {
+            .browser-warning { display: block !important; }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+
+        function ComparisonItem({ title, badge, children, description }) {
+            const badgeClass = badge === 'fixed'
+                ? 'bg-yellow-400 text-black'
+                : 'bg-green-500 text-white';
+
+            return (
+                <div className="bg-gray-50 p-5 rounded-xl border-2 border-gray-200">
+                    <h3 className="text-gray-700 text-lg mb-4 text-center font-semibold">
+                        {title}
+                        <span className={`${badgeClass} px-3 py-1 rounded-full text-xs font-semibold ml-2`}>
+                            {badge}
+                        </span>
+                    </h3>
+                    {children}
+                    <div className="mt-3 p-3 bg-blue-50 border-l-4 border-blue-400 rounded text-sm text-gray-600">
+                        {description}
+                    </div>
+                </div>
+            );
+        }
+
+        function CodeBlock({ children }) {
+            return (
+                <pre className="bg-gray-900 text-gray-100 p-4 rounded-xl overflow-x-auto text-sm font-mono mt-4">
+                    <code>{children}</code>
+                </pre>
+            );
+        }
+
+        function App() {
+            const [inputFixed, setInputFixed] = useState('');
+            const [inputContent, setInputContent] = useState('');
+            const [textareaFixed, setTextareaFixed] = useState('');
+            const [textareaContent, setTextareaContent] = useState('');
+            const [liveInput, setLiveInput] = useState('');
+
+            return (
+                <div className="min-h-screen bg-gradient-to-br from-indigo-500 to-purple-600 py-10 px-5">
+                    <div className="max-w-4xl mx-auto">
+                        {/* Header */}
+                        <header className="text-center text-white mb-10">
+                            <h1 className="text-5xl font-bold mb-3 drop-shadow-lg">
+                                ✨ field-sizing 基础用法
+                            </h1>
+                            <p className="text-xl opacity-95">
+                                控制表单元素如何根据内容调整大小
+                            </p>
+                        </header>
+
+                        {/* Browser Warning */}
+                        <div className="hidden bg-yellow-100 border-2 border-yellow-400 rounded-xl p-4 mb-6 text-yellow-800 browser-warning">
+                            ⚠️ 您的浏览器可能不支持 field-sizing 属性。建议使用 Chrome 123+ 或 Edge 123+ 查看完整效果。
+                        </div>
+
+                        {/* Input Comparison */}
+                        <section className="bg-white rounded-3xl p-8 mb-8 shadow-2xl">
+                            <h2 className="text-3xl font-bold text-gray-800 mb-6 border-l-4 border-indigo-500 pl-5">
+                                📝 输入框尺寸对比
+                            </h2>
+
+                            <div className="grid md:grid-cols-2 gap-6">
+                                <ComparisonItem
+                                    title="传统固定尺寸"
+                                    badge="fixed"
+                                    description="使用 field-sizing: fixed（默认值），输入框保持固定宽度，长文本会水平滚动。"
+                                >
+                                    <label className="block mb-2 text-gray-700 font-medium">
+                                        尝试输入长文本：
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={inputFixed}
+                                        onChange={(e) => setInputFixed(e.target.value)}
+                                        placeholder="固定宽度，内容可能溢出..."
+                                        className="w-full p-3 border-2 border-gray-300 rounded-lg text-base focus:outline-none focus:border-indigo-500 transition-colors"
+                                        style={{ fieldSizing: 'fixed' }}
+                                    />
+                                </ComparisonItem>
+
+                                <ComparisonItem
+                                    title="内容自适应"
+                                    badge="content"
+                                    description="使用 field-sizing: content，输入框宽度随内容自动调整（设置了 min/max 约束）。"
+                                >
+                                    <label className="block mb-2 text-gray-700 font-medium">
+                                        尝试输入长文本：
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={inputContent}
+                                        onChange={(e) => setInputContent(e.target.value)}
+                                        placeholder="宽度会随内容增长..."
+                                        className="w-full p-3 border-2 border-gray-300 rounded-lg text-base focus:outline-none focus:border-indigo-500 transition-colors"
+                                        style={{ fieldSizing: 'content', minWidth: '10ch', maxWidth: '100%' }}
+                                    />
+                                </ComparisonItem>
+                            </div>
+
+                            <CodeBlock>
+{`.content-size {
+  field-sizing: content;
+  min-width: 10ch;  /* 最小10个字符宽度 */
+  max-width: 100%;  /* 最大不超过容器宽度 */
+}`}
+                            </CodeBlock>
+                        </section>
+
+                        {/* Textarea Comparison */}
+                        <section className="bg-white rounded-3xl p-8 mb-8 shadow-2xl">
+                            <h2 className="text-3xl font-bold text-gray-800 mb-6 border-l-4 border-indigo-500 pl-5">
+                                📄 文本域尺寸对比
+                            </h2>
+
+                            <div className="grid md:grid-cols-2 gap-6">
+                                <ComparisonItem
+                                    title="传统固定高度"
+                                    badge="fixed"
+                                    description="传统 textarea 需要设置 rows 属性，内容过多时会出现滚动条。"
+                                >
+                                    <label className="block mb-2 text-gray-700 font-medium">
+                                        尝试输入多行文本：
+                                    </label>
+                                    <textarea
+                                        value={textareaFixed}
+                                        onChange={(e) => setTextareaFixed(e.target.value)}
+                                        rows="4"
+                                        placeholder="固定4行高度，内容过多会出现滚动条..."
+                                        className="w-full p-3 border-2 border-gray-300 rounded-lg text-base focus:outline-none focus:border-indigo-500 transition-colors resize-none"
+                                        style={{ fieldSizing: 'fixed' }}
+                                    />
+                                </ComparisonItem>
+
+                                <ComparisonItem
+                                    title="自动增长"
+                                    badge="content"
+                                    description="使用 field-sizing: content，textarea 高度自动适应内容（3-15行）。"
+                                >
+                                    <label className="block mb-2 text-gray-700 font-medium">
+                                        尝试输入多行文本：
+                                    </label>
+                                    <textarea
+                                        value={textareaContent}
+                                        onChange={(e) => setTextareaContent(e.target.value)}
+                                        placeholder="高度会随内容自动增长...&#10;继续换行...&#10;无需滚动条！"
+                                        className="w-full p-3 border-2 border-gray-300 rounded-lg text-base focus:outline-none focus:border-indigo-500 transition-colors resize-none"
+                                        style={{ fieldSizing: 'content', minHeight: '3lh', maxHeight: '15lh' }}
+                                    />
+                                </ComparisonItem>
+                            </div>
+
+                            <CodeBlock>
+{`.content-size-textarea {
+  field-sizing: content;
+  min-height: 3lh;   /* 最小3行高度 */
+  max-height: 15lh;  /* 最大15行高度 */
+}`}
+                            </CodeBlock>
+                        </section>
+
+                        {/* Live Demo */}
+                        <section className="bg-white rounded-3xl p-8 mb-8 shadow-2xl">
+                            <h2 className="text-3xl font-bold text-gray-800 mb-6 border-l-4 border-indigo-500 pl-5">
+                                🎯 实时体验
+                            </h2>
+                            <p className="mb-5 text-gray-700">
+                                下面的输入框使用了 <code className="bg-gray-100 px-2 py-1 rounded">field-sizing: content</code>，尝试输入不同长度的文本，观察宽度变化：
+                            </p>
+
+                            <div className="text-center p-8 bg-gray-50 rounded-xl">
+                                <input
+                                    type="text"
+                                    value={liveInput}
+                                    onChange={(e) => setLiveInput(e.target.value)}
+                                    placeholder="开始输入..."
+                                    className="text-center text-xl p-3 border-2 border-indigo-500 rounded-lg focus:outline-none focus:border-indigo-600 focus:ring-4 focus:ring-indigo-200 transition-all"
+                                    style={{
+                                        fieldSizing: 'content',
+                                        minWidth: '15ch',
+                                        maxWidth: '80%'
+                                    }}
+                                />
+                            </div>
+
+                            <div className="mt-5 p-4 bg-blue-50 border-l-4 border-blue-400 rounded text-gray-700">
+                                💡 <strong>提示：</strong>输入框会在 15 个字符宽度（min-width）到容器 80% 宽度（max-width）之间自动调整。
+                            </div>
+                        </section>
+
+                        {/* Browser Support Note */}
+                        <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-3xl p-8 shadow-2xl text-white">
+                            <h3 className="text-2xl font-bold mb-4">🌐 浏览器支持情况</h3>
+                            <div className="grid md:grid-cols-2 gap-4">
+                                <div className="bg-white/10 backdrop-blur-sm p-4 rounded-xl">
+                                    <div className="text-3xl mb-2">✅</div>
+                                    <div className="font-semibold mb-1">完全支持</div>
+                                    <div className="text-sm opacity-90">Chrome 123+, Edge 123+</div>
+                                </div>
+                                <div className="bg-white/10 backdrop-blur-sm p-4 rounded-xl">
+                                    <div className="text-3xl mb-2">⏳</div>
+                                    <div className="font-semibold mb-1">开发中</div>
+                                    <div className="text-sm opacity-90">Safari, Firefox</div>
+                                </div>
+                            </div>
+                            <p className="mt-4 text-sm opacity-90">
+                                💡 建议使用 @supports 检测并提供降级方案
+                            </p>
+                        </div>
+
+                        {/* Back to Home */}
+                        <div className="text-center mt-8">
+                            <a
+                                href="index.html"
+                                className="inline-block bg-white text-indigo-600 px-10 py-4 rounded-full font-semibold shadow-xl hover:-translate-y-1 transition-transform"
+                            >
+                                ← 返回首页
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Render
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

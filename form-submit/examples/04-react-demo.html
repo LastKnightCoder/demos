@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>04 - React + Tailwind 综合示例</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- React & ReactDOM CDN -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+  <!-- Babel Standalone (用于在浏览器中转换 JSX) -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .fade-in {
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    .pulse {
+      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    // 日志组件
+    function LogViewer({ logs, onClear }) {
+      const logEndRef = useRef(null);
+
+      useEffect(() => {
+        logEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, [logs]);
+
+      const getLogColor = (type) => {
+        const colors = {
+          submit: 'bg-red-50 border-red-300 text-red-800',
+          request: 'bg-blue-50 border-blue-300 text-blue-800',
+          event: 'bg-green-50 border-green-300 text-green-800',
+          validation: 'bg-yellow-50 border-yellow-300 text-yellow-800',
+          success: 'bg-emerald-50 border-emerald-300 text-emerald-800',
+          error: 'bg-rose-50 border-rose-300 text-rose-800',
+          info: 'bg-gray-50 border-gray-300 text-gray-800'
+        };
+        return colors[type] || colors.info;
+      };
+
+      return (
+        <div className="bg-white rounded-lg shadow-lg p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-bold text-gray-800">事件日志</h2>
+            <button
+              onClick={onClear}
+              className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+            >
+              清空日志
+            </button>
+          </div>
+
+          <div className="bg-gray-900 rounded-lg p-4 max-h-96 overflow-y-auto space-y-2">
+            {logs.length === 0 ? (
+              <div className="text-gray-500 text-center py-8">暂无日志</div>
+            ) : (
+              logs.map((log, index) => (
+                <div
+                  key={index}
+                  className={`p-3 rounded border-l-4 ${getLogColor(log.type)} fade-in`}
+                >
+                  <div className="flex items-start gap-2">
+                    <span className="text-xs text-gray-500 font-mono">
+                      {log.timestamp}
+                    </span>
+                    <div
+                      className="flex-1 text-sm"
+                      dangerouslySetInnerHTML={{ __html: log.message }}
+                    />
+                  </div>
+                </div>
+              ))
+            )}
+            <div ref={logEndRef} />
+          </div>
+        </div>
+      );
+    }
+
+    // 表单组件
+    function FormDemo({ title, method, badge, onSubmit, children }) {
+      return (
+        <div className="bg-white rounded-lg shadow-lg p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <h2 className="text-2xl font-bold text-gray-800">{title}</h2>
+            <span className={`px-3 py-1 rounded-full text-sm font-semibold ${badge.className}`}>
+              {badge.text}
+            </span>
+          </div>
+
+          {children}
+
+          <button
+            onClick={onSubmit}
+            className={`w-full mt-6 px-6 py-3 rounded-lg font-semibold text-white transition-all transform hover:scale-105 ${
+              method === 'submit'
+                ? 'bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600'
+                : 'bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600'
+            }`}
+          >
+            {method === 'submit' ? '⚡ 使用 submit() 提交' : '✅ 使用 requestSubmit() 提交'}
+          </button>
+        </div>
+      );
+    }
+
+    // 输入框组件
+    function Input({ label, type = 'text', required = false, ...props }) {
+      return (
+        <div className="mb-4">
+          <label className="block text-gray-700 font-semibold mb-2">
+            {label}
+            {required && <span className="text-red-500 ml-1">*</span>}
+          </label>
+          <input
+            type={type}
+            required={required}
+            className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
+            {...props}
+          />
+        </div>
+      );
+    }
+
+    // 主应用组件
+    function App() {
+      const [logs, setLogs] = useState([]);
+      const [submitResult, setSubmitResult] = useState(null);
+      const [requestResult, setRequestResult] = useState(null);
+      const [isLoading, setIsLoading] = useState(false);
+
+      const form1Ref = useRef(null);
+      const form2Ref = useRef(null);
+
+      // 添加日志
+      const addLog = (message, type = 'info') => {
+        const timestamp = new Date().toLocaleTimeString('zh-CN', {
+          hour12: false,
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          fractionalSecondDigits: 3
+        });
+
+        setLogs(prev => [...prev, { message, type, timestamp }]);
+      };
+
+      // 清空日志
+      const clearLogs = () => {
+        setLogs([]);
+        setSubmitResult(null);
+        setRequestResult(null);
+      };
+
+      // 处理表单提交（用于 form2）
+      const handleFormSubmit = async (e) => {
+        e.preventDefault();
+
+        addLog('<strong>🎯 [submit event]</strong> 被触发', 'event');
+        addLog('<strong>preventDefault()</strong> 阻止了默认提交', 'event');
+
+        const formData = new FormData(e.target);
+        const data = Object.fromEntries(formData.entries());
+
+        addLog('📦 收集表单数据完成', 'success');
+        addLog(`📡 准备发送 AJAX 请求...`, 'request');
+
+        setIsLoading(true);
+        setRequestResult({ type: 'loading', message: '正在提交...' });
+
+        try {
+          const response = await fetch('/api/register', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+          });
+
+          const result = await response.json();
+
+          if (response.ok) {
+            addLog('✅ AJAX 请求成功', 'success');
+            addLog(`📥 服务器响应: ${result.message}`, 'success');
+
+            setRequestResult({
+              type: 'success',
+              message: result.message,
+              data: result.user
+            });
+          } else {
+            throw new Error(result.message);
+          }
+        } catch (error) {
+          addLog(`❌ 请求失败: ${error.message}`, 'error');
+          setRequestResult({
+            type: 'error',
+            message: error.message
+          });
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      // 使用 submit() 方法
+      const handleSubmitMethod = () => {
+        addLog('<strong>🔴 form.submit()</strong> 被调用', 'submit');
+        addLog('⚠️  <strong>注意:</strong> submit() 不会触发 submit 事件', 'submit');
+        addLog('⚠️  <strong>注意:</strong> submit() 绕过了表单验证', 'submit');
+
+        const form = form1Ref.current;
+
+        // 手动检查表单有效性
+        if (!form.checkValidity()) {
+          addLog('❌ 表单验证失败，但 submit() 仍会尝试提交', 'validation');
+
+          const invalidFields = Array.from(form.querySelectorAll('input')).filter(
+            input => !input.checkValidity()
+          );
+
+          setSubmitResult({
+            type: 'error',
+            message: '表单包含无效字段，但 submit() 会忽略验证',
+            fields: invalidFields.map(f => `${f.name}: ${f.validationMessage}`)
+          });
+        } else {
+          addLog('✅ 表单字段有效', 'validation');
+          addLog('⚠️  但是 submit() 不会触发事件处理器', 'submit');
+
+          setSubmitResult({
+            type: 'warning',
+            message: 'submit() 会直接提交到服务器，无法拦截执行 AJAX'
+          });
+        }
+
+        // 实际场景中会执行: form.submit();
+        addLog('ℹ️  为了演示，已阻止实际提交', 'info');
+      };
+
+      // 使用 requestSubmit() 方法
+      const handleRequestSubmitMethod = () => {
+        addLog('<strong>🟢 form.requestSubmit()</strong> 被调用', 'request');
+        addLog('🔍 requestSubmit() 触发表单验证...', 'validation');
+
+        const form = form2Ref.current;
+
+        try {
+          // requestSubmit() 会自动触发验证和 submit 事件
+          form.requestSubmit();
+          addLog('✅ 验证通过，触发 submit 事件', 'validation');
+        } catch (error) {
+          addLog(`❌ 验证失败: ${error.message}`, 'error');
+        }
+      };
+
+      useEffect(() => {
+        addLog('📄 页面加载完成', 'info');
+        addLog('💡 这是一个使用 <strong>React</strong> 和 <strong>Tailwind CSS</strong> 构建的示例', 'info');
+        addLog('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'info');
+      }, []);
+
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-purple-500 via-pink-500 to-red-500 py-8 px-4">
+          <div className="max-w-7xl mx-auto">
+            {/* 标题 */}
+            <div className="text-center mb-8">
+              <h1 className="text-5xl font-bold text-white mb-4 drop-shadow-lg">
+                React + Tailwind 综合示例
+              </h1>
+              <p className="text-xl text-white/90">
+                完整演示 submit() 和 requestSubmit() 在现代框架中的应用
+              </p>
+            </div>
+
+            {/* 表单区域 */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+              {/* 表单 1: submit() */}
+              <FormDemo
+                title="方法 1: submit()"
+                method="submit"
+                badge={{ text: '传统方法', className: 'bg-yellow-200 text-yellow-800' }}
+                onSubmit={handleSubmitMethod}
+              >
+                <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
+                  <h3 className="font-semibold text-red-800 mb-2">特点：</h3>
+                  <ul className="text-red-700 text-sm space-y-1">
+                    <li>❌ 不触发 submit 事件</li>
+                    <li>❌ 不执行表单验证</li>
+                    <li>❌ 无法使用 preventDefault()</li>
+                  </ul>
+                </div>
+
+                <form ref={form1Ref}>
+                  <Input label="用户名" name="username" required placeholder="输入用户名" />
+                  <Input label="邮箱" type="email" name="email" required placeholder="your@email.com" />
+                  <Input label="密码" type="password" name="password" required placeholder="至少8个字符" />
+                </form>
+
+                {submitResult && (
+                  <div
+                    className={`mt-4 p-4 rounded-lg border-l-4 fade-in ${
+                      submitResult.type === 'error'
+                        ? 'bg-red-50 border-red-500 text-red-800'
+                        : 'bg-yellow-50 border-yellow-500 text-yellow-800'
+                    }`}
+                  >
+                    <p className="font-semibold mb-2">{submitResult.message}</p>
+                    {submitResult.fields && (
+                      <ul className="text-sm space-y-1 ml-4">
+                        {submitResult.fields.map((field, i) => (
+                          <li key={i}>• {field}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                )}
+              </FormDemo>
+
+              {/* 表单 2: requestSubmit() */}
+              <FormDemo
+                title="方法 2: requestSubmit()"
+                method="request"
+                badge={{ text: '现代方法', className: 'bg-green-200 text-green-800' }}
+                onSubmit={handleRequestSubmitMethod}
+              >
+                <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-4">
+                  <h3 className="font-semibold text-blue-800 mb-2">特点：</h3>
+                  <ul className="text-blue-700 text-sm space-y-1">
+                    <li>✅ 触发 submit 事件</li>
+                    <li>✅ 执行表单验证</li>
+                    <li>✅ 支持 AJAX 提交</li>
+                  </ul>
+                </div>
+
+                <form ref={form2Ref} onSubmit={handleFormSubmit}>
+                  <Input label="用户名" name="username" required placeholder="输入用户名" />
+                  <Input label="邮箱" type="email" name="email" required placeholder="your@email.com" />
+                  <Input label="密码" type="password" name="password" required placeholder="至少8个字符" />
+                </form>
+
+                {requestResult && (
+                  <div
+                    className={`mt-4 p-4 rounded-lg border-l-4 fade-in ${
+                      requestResult.type === 'loading'
+                        ? 'bg-blue-50 border-blue-500 text-blue-800'
+                        : requestResult.type === 'success'
+                        ? 'bg-green-50 border-green-500 text-green-800'
+                        : 'bg-red-50 border-red-500 text-red-800'
+                    }`}
+                  >
+                    {requestResult.type === 'loading' && (
+                      <div className="flex items-center gap-3">
+                        <div className="w-5 h-5 border-3 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                        <p>{requestResult.message}</p>
+                      </div>
+                    )}
+
+                    {requestResult.type === 'success' && (
+                      <>
+                        <p className="font-semibold mb-2">✅ {requestResult.message}</p>
+                        {requestResult.data && (
+                          <pre className="text-sm bg-white p-3 rounded mt-2 overflow-x-auto">
+                            {JSON.stringify(requestResult.data, null, 2)}
+                          </pre>
+                        )}
+                      </>
+                    )}
+
+                    {requestResult.type === 'error' && (
+                      <p className="font-semibold">❌ {requestResult.message}</p>
+                    )}
+                  </div>
+                )}
+              </FormDemo>
+            </div>
+
+            {/* 日志查看器 */}
+            <LogViewer logs={logs} onClear={clearLogs} />
+
+            {/* 技术栈说明 */}
+            <div className="mt-6 bg-white rounded-lg shadow-lg p-6">
+              <h3 className="text-xl font-bold text-gray-800 mb-4">🛠 技术栈说明</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg">
+                  <h4 className="font-semibold text-blue-900 mb-2">⚛️ React 18</h4>
+                  <p className="text-sm text-blue-700">
+                    使用 React Hooks (useState, useEffect, useRef) 管理状态和副作用
+                  </p>
+                </div>
+                <div className="bg-gradient-to-br from-cyan-50 to-cyan-100 p-4 rounded-lg">
+                  <h4 className="font-semibold text-cyan-900 mb-2">🎨 Tailwind CSS</h4>
+                  <p className="text-sm text-cyan-700">
+                    使用 Tailwind 实用类快速构建美观的响应式界面
+                  </p>
+                </div>
+                <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-lg">
+                  <h4 className="font-semibold text-purple-900 mb-2">🚀 Modern APIs</h4>
+                  <p className="text-sm text-purple-700">
+                    使用 Fetch API 进行 AJAX 请求，FormData 收集表单数据
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // 渲染应用
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>

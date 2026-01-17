@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>表单对话框演示</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class'
+    }
+  </script>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useRef, useEffect } = React;
+
+    function App() {
+      const loginDialogRef = useRef(null);
+      const feedbackDialogRef = useRef(null);
+      const [isDark, setIsDark] = useState(false);
+      const [users, setUsers] = useState([]);
+      const [feedbacks, setFeedbacks] = useState([]);
+
+      useEffect(() => {
+        if (isDark) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      }, [isDark]);
+
+      const handleLoginSubmit = (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const user = {
+          username: formData.get('username'),
+          email: formData.get('email')
+        };
+        setUsers([...users, user]);
+        loginDialogRef.current?.close();
+        e.target.reset();
+      };
+
+      const handleFeedbackSubmit = (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const feedback = {
+          name: formData.get('name'),
+          rating: formData.get('rating'),
+          message: formData.get('message')
+        };
+        setFeedbacks([...feedbacks, feedback]);
+        feedbackDialogRef.current?.close();
+        e.target.reset();
+      };
+
+      return (
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex justify-between items-center mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">表单对话框演示</h1>
+            <button
+              onClick={() => setIsDark(!isDark)}
+              className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white"
+            >
+              {isDark ? '🌞 浅色' : '🌙 深色'}
+            </button>
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-2">
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+              <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">登录表单</h2>
+              <p className="text-gray-600 dark:text-gray-300 mb-4">
+                使用 method="dialog" 的表单会在提交时自动关闭对话框。
+              </p>
+              <button
+                onClick={() => loginDialogRef.current?.showModal()}
+                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition w-full"
+              >
+                打开登录表单
+              </button>
+              {users.length > 0 && (
+                <div className="mt-4 space-y-2">
+                  <h3 className="font-semibold text-gray-900 dark:text-white">已注册用户:</h3>
+                  {users.map((user, i) => (
+                    <div key={i} className="p-2 bg-gray-100 dark:bg-gray-700 rounded text-sm text-gray-900 dark:text-white">
+                      {user.username} ({user.email})
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+              <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">反馈表单</h2>
+              <p className="text-gray-600 dark:text-gray-300 mb-4">
+                包含多种输入类型的表单，展示表单验证功能。
+              </p>
+              <button
+                onClick={() => feedbackDialogRef.current?.showModal()}
+                className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition w-full"
+              >
+                打开反馈表单
+              </button>
+              {feedbacks.length > 0 && (
+                <div className="mt-4 space-y-2">
+                  <h3 className="font-semibold text-gray-900 dark:text-white">收到的反馈:</h3>
+                  {feedbacks.map((fb, i) => (
+                    <div key={i} className="p-2 bg-gray-100 dark:bg-gray-700 rounded text-sm text-gray-900 dark:text-white">
+                      <div className="font-semibold">{fb.name} - {'⭐'.repeat(fb.rating)}</div>
+                      <div className="text-gray-600 dark:text-gray-300">{fb.message}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <dialog
+            ref={loginDialogRef}
+            className="backdrop:bg-black/50 bg-white dark:bg-gray-800 rounded-lg shadow-xl p-0 border-0"
+          >
+            <div className="p-6 min-w-[400px]">
+              <h3 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">用户登录</h3>
+              <form onSubmit={handleLoginSubmit}>
+                <div className="space-y-4 mb-6">
+                  <div>
+                    <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-white">
+                      用户名
+                    </label>
+                    <input
+                      type="text"
+                      name="username"
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                      placeholder="请输入用户名"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-white">
+                      邮箱
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                      placeholder="请输入邮箱"
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-3 justify-end">
+                  <button
+                    type="button"
+                    onClick={() => loginDialogRef.current?.close()}
+                    className="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg transition"
+                  >
+                    取消
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+                  >
+                    登录
+                  </button>
+                </div>
+              </form>
+            </div>
+          </dialog>
+
+          <dialog
+            ref={feedbackDialogRef}
+            className="backdrop:bg-black/50 bg-white dark:bg-gray-800 rounded-lg shadow-xl p-0 border-0"
+          >
+            <div className="p-6 min-w-[500px]">
+              <h3 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">提交反馈</h3>
+              <form onSubmit={handleFeedbackSubmit}>
+                <div className="space-y-4 mb-6">
+                  <div>
+                    <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-white">
+                      姓名
+                    </label>
+                    <input
+                      type="text"
+                      name="name"
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500"
+                      placeholder="请输入姓名"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-white">
+                      评分
+                    </label>
+                    <select
+                      name="rating"
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500"
+                    >
+                      <option value="">请选择评分</option>
+                      <option value="5">⭐⭐⭐⭐⭐ 非常满意</option>
+                      <option value="4">⭐⭐⭐⭐ 满意</option>
+                      <option value="3">⭐⭐⭐ 一般</option>
+                      <option value="2">⭐⭐ 不满意</option>
+                      <option value="1">⭐ 非常不满意</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-white">
+                      反馈内容
+                    </label>
+                    <textarea
+                      name="message"
+                      required
+                      rows="4"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500"
+                      placeholder="请输入您的反馈..."
+                    ></textarea>
+                  </div>
+                </div>
+                <div className="flex gap-3 justify-end">
+                  <button
+                    type="button"
+                    onClick={() => feedbackDialogRef.current?.close()}
+                    className="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg transition"
+                  >
+                    取消
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition"
+                  >
+                    提交
+                  </button>
+                </div>
+              </form>
+            </div>
+          </dialog>
+        </div>
+      );
+    }
+
+    ReactDOM.render(<App />, document.getElementById('root'));
+  </script>
+</body>
+</html>

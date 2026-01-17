@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>动画对话框演示</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class'
+    }
+  </script>
+  <style>
+    @keyframes slideIn {
+      from {
+        transform: translateY(-100px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    @keyframes slideOut {
+      from {
+        transform: translateY(0);
+        opacity: 1;
+      }
+      to {
+        transform: translateY(-100px);
+        opacity: 0;
+      }
+    }
+
+    @keyframes scaleIn {
+      from {
+        transform: scale(0.8);
+        opacity: 0;
+      }
+      to {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    @keyframes scaleOut {
+      from {
+        transform: scale(1);
+        opacity: 1;
+      }
+      to {
+        transform: scale(0.8);
+        opacity: 0;
+      }
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes fadeOut {
+      from {
+        opacity: 1;
+      }
+      to {
+        opacity: 0;
+      }
+    }
+
+    dialog[open].slide-dialog {
+      animation: slideIn 0.3s ease-out;
+    }
+
+    dialog.slide-dialog.closing {
+      animation: slideOut 0.3s ease-in;
+    }
+
+    dialog[open].scale-dialog {
+      animation: scaleIn 0.3s ease-out;
+    }
+
+    dialog.scale-dialog.closing {
+      animation: scaleOut 0.3s ease-in;
+    }
+
+    dialog[open].fade-dialog {
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    dialog.fade-dialog.closing {
+      animation: fadeOut 0.3s ease-in;
+    }
+
+    dialog[open]::backdrop {
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    dialog.closing::backdrop {
+      animation: fadeOut 0.3s ease-in;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useRef, useEffect } = React;
+
+    function App() {
+      const slideDialogRef = useRef(null);
+      const scaleDialogRef = useRef(null);
+      const fadeDialogRef = useRef(null);
+      const [isDark, setIsDark] = useState(false);
+
+      useEffect(() => {
+        if (isDark) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      }, [isDark]);
+
+      const openDialog = (ref) => {
+        ref.current?.showModal();
+      };
+
+      const closeDialog = (ref) => {
+        const dialog = ref.current;
+        dialog.classList.add('closing');
+        setTimeout(() => {
+          dialog.classList.remove('closing');
+          dialog.close();
+        }, 300);
+      };
+
+      return (
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex justify-between items-center mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">动画对话框演示</h1>
+            <button
+              onClick={() => setIsDark(!isDark)}
+              className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white"
+            >
+              {isDark ? '🌞 浅色' : '🌙 深色'}
+            </button>
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+              <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">滑入动画</h2>
+              <p className="text-gray-600 dark:text-gray-300 mb-4">
+                对话框从顶部滑入，关闭时滑出。
+              </p>
+              <button
+                onClick={() => openDialog(slideDialogRef)}
+                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition w-full"
+              >
+                打开滑入对话框
+              </button>
+            </div>
+
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+              <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">缩放动画</h2>
+              <p className="text-gray-600 dark:text-gray-300 mb-4">
+                对话框从中心缩放进入和退出。
+              </p>
+              <button
+                onClick={() => openDialog(scaleDialogRef)}
+                className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition w-full"
+              >
+                打开缩放对话框
+              </button>
+            </div>
+
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+              <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">淡入动画</h2>
+              <p className="text-gray-600 dark:text-gray-300 mb-4">
+                对话框淡入淡出效果。
+              </p>
+              <button
+                onClick={() => openDialog(fadeDialogRef)}
+                className="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition w-full"
+              >
+                打开淡入对话框
+              </button>
+            </div>
+          </div>
+
+          <dialog
+            ref={slideDialogRef}
+            className="slide-dialog backdrop:bg-black/50 bg-white dark:bg-gray-800 rounded-lg shadow-xl p-0 border-0"
+          >
+            <div className="p-6 min-w-[400px]">
+              <h3 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">滑入动画</h3>
+              <p className="text-gray-600 dark:text-gray-300 mb-6">
+                这个对话框使用滑入动画效果。从顶部滑入，关闭时向上滑出。
+              </p>
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => closeDialog(slideDialogRef)}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+                >
+                  关闭
+                </button>
+              </div>
+            </div>
+          </dialog>
+
+          <dialog
+            ref={scaleDialogRef}
+            className="scale-dialog backdrop:bg-black/50 bg-white dark:bg-gray-800 rounded-lg shadow-xl p-0 border-0"
+          >
+            <div className="p-6 min-w-[400px]">
+              <h3 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">缩放动画</h3>
+              <p className="text-gray-600 dark:text-gray-300 mb-6">
+                这个对话框使用缩放动画效果。从中心缩放进入，关闭时缩小退出。
+              </p>
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => closeDialog(scaleDialogRef)}
+                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition"
+                >
+                  关闭
+                </button>
+              </div>
+            </div>
+          </dialog>
+
+          <dialog
+            ref={fadeDialogRef}
+            className="fade-dialog backdrop:bg-black/50 bg-white dark:bg-gray-800 rounded-lg shadow-xl p-0 border-0"
+          >
+            <div className="p-6 min-w-[400px]">
+              <h3 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">淡入动画</h3>
+              <p className="text-gray-600 dark:text-gray-300 mb-6">
+                这个对话框使用淡入淡出动画效果。平滑地出现和消失。
+              </p>
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => closeDialog(fadeDialogRef)}
+                  className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition"
+                >
+                  关闭
+                </button>
+              </div>
+            </div>
+          </dialog>
+        </div>
+      );
+    }
+
+    ReactDOM.render(<App />, document.getElementById('root'));
+  </script>
+</body>
+</html>

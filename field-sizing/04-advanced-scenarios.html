@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>高级应用场景 - field-sizing</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.95;
+        }
+
+        .scenario-card {
+            background: white;
+            border-radius: 20px;
+            padding: 35px;
+            margin-bottom: 30px;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.15);
+        }
+
+        .scenario-card h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.6rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .icon {
+            font-size: 2rem;
+        }
+
+        /* 场景1: 搜索框 */
+        .search-container {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            background: #f8f9fa;
+            border-radius: 50px;
+            padding: 8px 20px;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s;
+            max-width: 100%;
+        }
+
+        .search-container:focus-within {
+            border-color: #fa709a;
+            box-shadow: 0 0 0 3px rgba(250, 112, 154, 0.1);
+        }
+
+        .search-icon {
+            color: #6c757d;
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+
+        .search-input {
+            border: none;
+            background: transparent;
+            outline: none;
+            font-size: 1rem;
+            field-sizing: content;
+            min-width: 20ch;
+            max-width: 60ch;
+            padding: 8px 0;
+        }
+
+        /* 场景2: 聊天界面 */
+        .chat-container {
+            background: #f8f9fa;
+            border-radius: 16px;
+            padding: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .chat-message {
+            margin-bottom: 15px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-message.user {
+            flex-direction: row-reverse;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .chat-message.user .avatar {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .chat-bubble {
+            background: white;
+            padding: 12px 16px;
+            border-radius: 16px;
+            max-width: 70%;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .chat-message.user .chat-bubble {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            color: white;
+        }
+
+        .chat-input-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            align-items: flex-end;
+        }
+
+        .chat-input {
+            flex: 1;
+            field-sizing: content;
+            min-height: 2lh;
+            max-height: 8lh;
+            resize: none;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 12px;
+            font-size: 1rem;
+            font-family: inherit;
+        }
+
+        .send-btn {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+
+        .send-btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* 场景3: 可编辑表格 */
+        .editable-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .editable-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .editable-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .editable-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .editable-table input {
+            border: 1px solid transparent;
+            background: transparent;
+            padding: 6px;
+            font-size: 0.95rem;
+            field-sizing: content;
+            min-width: 8ch;
+            max-width: 100%;
+            border-radius: 6px;
+            transition: all 0.3s;
+        }
+
+        .editable-table input:hover {
+            border-color: #e9ecef;
+            background: #f8f9fa;
+        }
+
+        .editable-table input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+        }
+
+        /* 场景4: 动态标题编辑 */
+        .title-editor {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            padding: 40px;
+            border-radius: 16px;
+            text-align: center;
+        }
+
+        .editable-title {
+            border: none;
+            background: transparent;
+            color: white;
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-align: center;
+            field-sizing: content;
+            min-width: 10ch;
+            max-width: 100%;
+            outline: none;
+            border-bottom: 3px solid transparent;
+            transition: border-color 0.3s;
+            padding: 10px;
+        }
+
+        .editable-title:focus {
+            border-bottom-color: white;
+        }
+
+        .editable-subtitle {
+            border: none;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.2rem;
+            text-align: center;
+            field-sizing: content;
+            min-width: 15ch;
+            max-width: 100%;
+            outline: none;
+            margin-top: 10px;
+            padding: 8px;
+        }
+
+        /* 场景5: 代码编辑器 */
+        .code-editor {
+            background: #2d2d2d;
+            border-radius: 12px;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            color: #f8f8f2;
+        }
+
+        .code-line {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 8px;
+            align-items: center;
+        }
+
+        .line-number {
+            color: #6c757d;
+            min-width: 30px;
+            text-align: right;
+            user-select: none;
+        }
+
+        .code-line input {
+            background: transparent;
+            border: none;
+            color: #f8f8f2;
+            font-family: inherit;
+            font-size: 0.95rem;
+            field-sizing: content;
+            min-width: 20ch;
+            max-width: 100%;
+            outline: none;
+            padding: 4px;
+            border-radius: 4px;
+            flex: 1;
+        }
+
+        .code-line input:focus {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* 工具提示 */
+        .tooltip {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 0.95rem;
+            color: #555;
+        }
+
+        .demo-actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .demo-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.3s;
+        }
+
+        .demo-btn:hover {
+            background: #5568d3;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .scenario-card {
+                padding: 25px;
+            }
+
+            .editable-title {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 高级应用场景</h1>
+            <p class="subtitle">探索 field-sizing 的更多创意用法</p>
+        </header>
+
+        <!-- 场景1: 智能搜索框 -->
+        <div class="scenario-card">
+            <h2><span class="icon">🔍</span> 智能搜索框</h2>
+            <p style="margin-bottom: 20px; color: #6c757d;">搜索框宽度随搜索词自动调整</p>
+
+            <div style="text-align: center; padding: 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px;">
+                <div class="search-container">
+                    <span class="search-icon">🔍</span>
+                    <input
+                        type="text"
+                        class="search-input"
+                        placeholder="输入搜索关键词..."
+                        value="JavaScript"
+                    >
+                </div>
+            </div>
+
+            <div class="tooltip">
+                💡 <strong>应用场景：</strong>导航栏搜索、工具栏搜索、内联搜索框等。搜索框会根据输入内容长度自动调整宽度（20-60字符）。
+            </div>
+        </div>
+
+        <!-- 场景2: 聊天界面 -->
+        <div class="scenario-card">
+            <h2><span class="icon">💬</span> 聊天消息输入</h2>
+            <p style="margin-bottom: 20px; color: #6c757d;">输入框高度随消息内容自动增长</p>
+
+            <div class="chat-container" id="chatContainer">
+                <div class="chat-message">
+                    <div class="avatar">AI</div>
+                    <div class="chat-bubble">你好！有什么我可以帮助你的吗？</div>
+                </div>
+                <div class="chat-message user">
+                    <div class="avatar">我</div>
+                    <div class="chat-bubble">我想了解 field-sizing 的用法</div>
+                </div>
+                <div class="chat-message">
+                    <div class="avatar">AI</div>
+                    <div class="chat-bubble">field-sizing 是一个很棒的 CSS 属性！它可以让表单元素根据内容自动调整大小，特别适合聊天输入框这样的场景。</div>
+                </div>
+            </div>
+
+            <div class="chat-input-container">
+                <textarea
+                    class="chat-input"
+                    placeholder="输入消息..."
+                    id="chatInput"
+                ></textarea>
+                <button class="send-btn" onclick="sendMessage()">发送</button>
+            </div>
+
+            <div class="tooltip">
+                💡 <strong>应用场景：</strong>即时通讯应用、客服聊天、评论系统等。输入框会从2行高度增长到最多8行。
+            </div>
+        </div>
+
+        <!-- 场景3: 可编辑表格 -->
+        <div class="scenario-card">
+            <h2><span class="icon">📊</span> 可编辑数据表格</h2>
+            <p style="margin-bottom: 20px; color: #6c757d;">单元格输入框宽度自适应内容</p>
+
+            <table class="editable-table">
+                <thead>
+                    <tr>
+                        <th>产品名称</th>
+                        <th>价格</th>
+                        <th>库存</th>
+                        <th>备注</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><input type="text" value="MacBook Pro"></td>
+                        <td><input type="text" value="¥12,999"></td>
+                        <td><input type="text" value="50"></td>
+                        <td><input type="text" value="热销商品"></td>
+                    </tr>
+                    <tr>
+                        <td><input type="text" value="iPad Air"></td>
+                        <td><input type="text" value="¥4,799"></td>
+                        <td><input type="text" value="120"></td>
+                        <td><input type="text" value="新品推荐"></td>
+                    </tr>
+                    <tr>
+                        <td><input type="text" value="AirPods Pro"></td>
+                        <td><input type="text" value="¥1,999"></td>
+                        <td><input type="text" value="200"></td>
+                        <td><input type="text" value=""></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="tooltip">
+                💡 <strong>应用场景：</strong>数据管理系统、Excel 类应用、在线协作工具等。输入框宽度随内容自动调整，节省空间。
+            </div>
+        </div>
+
+        <!-- 场景4: 动态标题编辑 -->
+        <div class="scenario-card">
+            <h2><span class="icon">✏️</span> 内联标题编辑</h2>
+            <p style="margin-bottom: 20px; color: #6c757d;">点击标题和副标题进行编辑，宽度自动调整</p>
+
+            <div class="title-editor">
+                <input
+                    type="text"
+                    class="editable-title"
+                    value="我的精彩项目"
+                >
+                <br>
+                <input
+                    type="text"
+                    class="editable-subtitle"
+                    value="一个令人惊叹的创意作品"
+                >
+            </div>
+
+            <div class="tooltip">
+                💡 <strong>应用场景：</strong>幻灯片编辑器、文档编辑器、网页构建器等。标题宽度随文本自动调整，保持视觉居中。
+            </div>
+        </div>
+
+        <!-- 场景5: 代码编辑器 -->
+        <div class="scenario-card">
+            <h2><span class="icon">💻</span> 轻量级代码编辑</h2>
+            <p style="margin-bottom: 20px; color: #6c757d;">每行代码宽度自适应</p>
+
+            <div class="demo-actions">
+                <button class="demo-btn" onclick="formatCode()">格式化代码</button>
+                <button class="demo-btn" onclick="clearCode()">清空</button>
+            </div>
+
+            <div class="code-editor" id="codeEditor">
+                <div class="code-line">
+                    <span class="line-number">1</span>
+                    <input type="text" value="function greet(name) {">
+                </div>
+                <div class="code-line">
+                    <span class="line-number">2</span>
+                    <input type="text" value="  return `Hello, ${name}!`;">
+                </div>
+                <div class="code-line">
+                    <span class="line-number">3</span>
+                    <input type="text" value="}">
+                </div>
+                <div class="code-line">
+                    <span class="line-number">4</span>
+                    <input type="text" value="">
+                </div>
+                <div class="code-line">
+                    <span class="line-number">5</span>
+                    <input type="text" value="greet('World');">
+                </div>
+            </div>
+
+            <div class="tooltip">
+                💡 <strong>应用场景：</strong>代码片段编辑器、配置文件编辑、简单的 IDE 界面等。每行输入框宽度随代码长度自动调整。
+            </div>
+        </div>
+
+        <!-- 技术要点 -->
+        <div class="scenario-card">
+            <h2><span class="icon">📚</span> 核心技术要点</h2>
+
+            <div style="background: #f8f9fa; padding: 25px; border-radius: 12px;">
+                <h3 style="color: #333; margin-bottom: 15px; font-size: 1.2rem;">1. 逻辑单位的使用</h3>
+                <ul style="color: #555; line-height: 1.8; margin-bottom: 20px; margin-left: 20px;">
+                    <li><code>ch</code> - 字符宽度单位（基于 "0" 字符宽度）</li>
+                    <li><code>lh</code> - 行高单位（基于元素的 line-height）</li>
+                    <li><code>%</code> - 相对于父元素的百分比</li>
+                </ul>
+
+                <h3 style="color: #333; margin-bottom: 15px; font-size: 1.2rem;">2. 约束设置的重要性</h3>
+                <ul style="color: #555; line-height: 1.8; margin-bottom: 20px; margin-left: 20px;">
+                    <li>始终设置 <code>min-width/min-height</code> 防止元素过小</li>
+                    <li>始终设置 <code>max-width/max-height</code> 防止布局破坏</li>
+                    <li>使用 <code>resize: none</code> 防止手动调整大小</li>
+                </ul>
+
+                <h3 style="color: #333; margin-bottom: 15px; font-size: 1.2rem;">3. 浏览器兼容性处理</h3>
+                <div style="background: #2d2d2d; color: #f8f8f2; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.9rem;">
+<code>@supports (field-sizing: content) {
+  textarea {
+    field-sizing: content;
+    min-height: 3lh;
+    max-height: 20lh;
+  }
+}
+
+@supports not (field-sizing: content) {
+  textarea {
+    height: 100px;
+    resize: vertical;
+  }
+}</code>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 聊天消息发送
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+
+            if (message) {
+                const chatContainer = document.getElementById('chatContainer');
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'chat-message user';
+                messageDiv.innerHTML = `
+                    <div class="avatar">我</div>
+                    <div class="chat-bubble">${message}</div>
+                `;
+                chatContainer.appendChild(messageDiv);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+                input.value = '';
+
+                // 模拟AI回复
+                setTimeout(() => {
+                    const aiMessage = document.createElement('div');
+                    aiMessage.className = 'chat-message';
+                    aiMessage.innerHTML = `
+                        <div class="avatar">AI</div>
+                        <div class="chat-bubble">收到！这是一个很好的问题。</div>
+                    `;
+                    chatContainer.appendChild(aiMessage);
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                }, 1000);
+            }
+        }
+
+        // 回车发送消息
+        document.getElementById('chatInput').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // 代码格式化
+        function formatCode() {
+            alert('代码格式化功能演示');
+        }
+
+        // 清空代码
+        function clearCode() {
+            const inputs = document.querySelectorAll('#codeEditor input');
+            inputs.forEach(input => input.value = '');
+        }
+    </script>
+</body>
+</html>

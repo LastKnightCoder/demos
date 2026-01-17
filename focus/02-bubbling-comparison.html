@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>焦点事件冒泡行为对比</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class'
+        }
+    </script>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        function BubblingDemo() {
+            const [logs, setLogs] = useState([]);
+            const [isDark, setIsDark] = useState(false);
+            const containerFocusRef = useRef(null);
+            const containerFocusinRef = useRef(null);
+
+            useEffect(() => {
+                if (isDark) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            }, [isDark]);
+
+            const addLog = (eventType, target, phase) => {
+                const timestamp = new Date().toLocaleTimeString('zh-CN', {
+                    hour12: false,
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    fractionalSecondDigits: 3
+                });
+                setLogs(prev => [...prev, {
+                    id: Date.now() + Math.random(),
+                    time: timestamp,
+                    event: eventType,
+                    target: target,
+                    phase: phase,
+                    color: getEventColor(eventType)
+                }]);
+            };
+
+            const getEventColor = (eventType) => {
+                const colors = {
+                    'focus': 'text-blue-600 dark:text-blue-400',
+                    'blur': 'text-orange-600 dark:text-orange-400',
+                    'focusin': 'text-green-600 dark:text-green-400',
+                    'focusout': 'text-red-600 dark:text-red-400'
+                };
+                return colors[eventType] || 'text-gray-600';
+            };
+
+            const clearLogs = () => {
+                setLogs([]);
+            };
+
+            useEffect(() => {
+                const containerFocus = containerFocusRef.current;
+                const containerFocusin = containerFocusinRef.current;
+
+                // focus/blur 容器（不会捕获到子元素的焦点事件）
+                containerFocus.addEventListener('focus', (e) => {
+                    addLog('focus', '父容器', '捕获阶段');
+                }, true);
+
+                containerFocus.addEventListener('focus', (e) => {
+                    addLog('focus', '父容器', '冒泡阶段');
+                }, false);
+
+                containerFocus.addEventListener('blur', (e) => {
+                    addLog('blur', '父容器', '捕获阶段');
+                }, true);
+
+                containerFocus.addEventListener('blur', (e) => {
+                    addLog('blur', '父容器', '冒泡阶段');
+                }, false);
+
+                // 子元素的 focus/blur
+                const focusInputs = containerFocus.querySelectorAll('input');
+                focusInputs.forEach((input, index) => {
+                    input.addEventListener('focus', () => {
+                        addLog('focus', `子元素 ${index + 1}`, '目标元素');
+                    });
+                    input.addEventListener('blur', () => {
+                        addLog('blur', `子元素 ${index + 1}`, '目标元素');
+                    });
+                });
+
+                // focusin/focusout 容器（会捕获到子元素的焦点事件）
+                containerFocusin.addEventListener('focusin', (e) => {
+                    addLog('focusin', '父容器', '捕获阶段');
+                }, true);
+
+                containerFocusin.addEventListener('focusin', (e) => {
+                    addLog('focusin', '父容器', '冒泡阶段');
+                }, false);
+
+                containerFocusin.addEventListener('focusout', (e) => {
+                    addLog('focusout', '父容器', '捕获阶段');
+                }, true);
+
+                containerFocusin.addEventListener('focusout', (e) => {
+                    addLog('focusout', '父容器', '冒泡阶段');
+                }, false);
+
+                // 子元素的 focusin/focusout
+                const focusinInputs = containerFocusin.querySelectorAll('input');
+                focusinInputs.forEach((input, index) => {
+                    input.addEventListener('focusin', () => {
+                        addLog('focusin', `子元素 ${index + 1}`, '目标元素');
+                    });
+                    input.addEventListener('focusout', () => {
+                        addLog('focusout', `子元素 ${index + 1}`, '目标元素');
+                    });
+                });
+            }, []);
+
+            return (
+                <div className="max-w-7xl mx-auto p-8">
+                    {/* Header */}
+                    <div className="flex justify-between items-center mb-8">
+                        <div>
+                            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                                焦点事件冒泡行为对比
+                            </h1>
+                            <p className="text-gray-600 dark:text-gray-400">
+                                对比 focus/blur（不冒泡）和 focusin/focusout（冒泡）的行为差异
+                            </p>
+                        </div>
+                        <button
+                            onClick={() => setIsDark(!isDark)}
+                            className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                        >
+                            {isDark ? '🌞 浅色' : '🌙 深色'}
+                        </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        {/* Left Panel - focus/blur */}
+                        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+                            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+                                focus / blur
+                                <span className="ml-2 text-sm font-normal text-red-600 dark:text-red-400">
+                                    ❌ 不冒泡
+                                </span>
+                            </h2>
+                            <div
+                                ref={containerFocusRef}
+                                className="space-y-4 p-4 border-2 border-dashed border-blue-300 dark:border-blue-600 rounded-lg bg-blue-50 dark:bg-blue-900/20"
+                            >
+                                <div className="text-sm text-blue-900 dark:text-blue-300 font-semibold mb-2">
+                                    父容器（监听 focus/blur）
+                                </div>
+                                <input
+                                    type="text"
+                                    placeholder="输入框 1"
+                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                />
+                                <input
+                                    type="text"
+                                    placeholder="输入框 2"
+                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                />
+                                <input
+                                    type="text"
+                                    placeholder="输入框 3"
+                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                />
+                            </div>
+                            <div className="mt-4 p-3 bg-orange-50 dark:bg-orange-900/20 rounded text-sm text-orange-900 dark:text-orange-300">
+                                <strong>结果：</strong> 父容器只能监听到自己的 focus/blur 事件，无法监听到子元素的焦点变化
+                            </div>
+                        </div>
+
+                        {/* Middle Panel - focusin/focusout */}
+                        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+                            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+                                focusin / focusout
+                                <span className="ml-2 text-sm font-normal text-green-600 dark:text-green-400">
+                                    ✅ 支持冒泡
+                                </span>
+                            </h2>
+                            <div
+                                ref={containerFocusinRef}
+                                className="space-y-4 p-4 border-2 border-dashed border-green-300 dark:border-green-600 rounded-lg bg-green-50 dark:bg-green-900/20"
+                            >
+                                <div className="text-sm text-green-900 dark:text-green-300 font-semibold mb-2">
+                                    父容器（监听 focusin/focusout）
+                                </div>
+                                <input
+                                    type="text"
+                                    placeholder="输入框 1"
+                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                />
+                                <input
+                                    type="text"
+                                    placeholder="输入框 2"
+                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                />
+                                <input
+                                    type="text"
+                                    placeholder="输入框 3"
+                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                />
+                            </div>
+                            <div className="mt-4 p-3 bg-green-50 dark:bg-green-900/20 rounded text-sm text-green-900 dark:text-green-300">
+                                <strong>结果：</strong> 父容器可以监听到子元素的 focusin/focusout 事件，因为这些事件会冒泡
+                            </div>
+                        </div>
+
+                        {/* Right Panel - Event Logs */}
+                        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+                            <div className="flex justify-between items-center mb-4">
+                                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                                    事件日志
+                                </h2>
+                                <button
+                                    onClick={clearLogs}
+                                    className="px-3 py-1 text-sm bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
+                                >
+                                    清空
+                                </button>
+                            </div>
+                            <div className="h-[500px] overflow-y-auto bg-gray-50 dark:bg-gray-900 rounded-lg p-3 font-mono text-xs">
+                                {logs.length === 0 ? (
+                                    <div className="text-center text-gray-400 dark:text-gray-600 mt-8">
+                                        点击输入框观察事件...
+                                    </div>
+                                ) : (
+                                    <div className="space-y-1">
+                                        {logs.map((log) => (
+                                            <div
+                                                key={log.id}
+                                                className="p-2 bg-white dark:bg-gray-800 rounded border-l-4 border-gray-300 dark:border-gray-600 animate-fade-in"
+                                            >
+                                                <div className="flex items-center space-x-2">
+                                                    <span className={`font-bold ${log.color}`}>
+                                                        {log.event}
+                                                    </span>
+                                                    <span className="text-gray-600 dark:text-gray-400">
+                                                        @ {log.target}
+                                                    </span>
+                                                </div>
+                                                <div className="text-gray-500 dark:text-gray-500 text-xs mt-1">
+                                                    {log.time} | {log.phase}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Info Boxes */}
+                    <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg p-6">
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                                🔵 focus / blur 特点
+                            </h3>
+                            <ul className="space-y-2 text-gray-700 dark:text-gray-300 text-sm">
+                                <li>• <strong>不支持冒泡：</strong>事件不会向父元素传播</li>
+                                <li>• <strong>只能监听直接目标：</strong>父元素无法感知子元素的焦点变化</li>
+                                <li>• <strong>需要逐个绑定：</strong>如果要监听多个子元素，需要分别绑定事件</li>
+                                <li>• <strong>性能优势：</strong>在不需要冒泡的场景下，性能更好</li>
+                            </ul>
+                        </div>
+
+                        <div className="bg-gradient-to-br from-green-50 to-teal-50 dark:from-green-900/20 dark:to-teal-900/20 rounded-lg p-6">
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                                🟢 focusin / focusout 特点
+                            </h3>
+                            <ul className="space-y-2 text-gray-700 dark:text-gray-300 text-sm">
+                                <li>• <strong>支持冒泡：</strong>事件会向父元素传播</li>
+                                <li>• <strong>方便的事件委托：</strong>在父元素上监听即可捕获所有子元素的焦点变化</li>
+                                <li>• <strong>适合动态内容：</strong>新增的子元素会自动被父元素监听到</li>
+                                <li>• <strong>实用场景：</strong>表单验证、焦点追踪、自定义组件等</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <style>{`
+                        @keyframes fade-in {
+                            from {
+                                opacity: 0;
+                                transform: translateY(-5px);
+                            }
+                            to {
+                                opacity: 1;
+                                transform: translateY(0);
+                            }
+                        }
+                        .animate-fade-in {
+                            animation: fade-in 0.2s ease-out;
+                        }
+                    `}</style>
+                </div>
+            );
+        }
+
+        ReactDOM.render(<BubblingDemo />, document.getElementById('root'));
+    </script>
+</body>
+</html>

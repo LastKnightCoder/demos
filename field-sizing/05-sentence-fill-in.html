@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>句子填空 - field-sizing 实用案例</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class'
+        }
+    </script>
+
+    <!-- React CDN -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+    <!-- Babel Standalone -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // 主题切换组件
+        function ThemeToggle() {
+            const [isDark, setIsDark] = useState(false);
+
+            useEffect(() => {
+                const savedTheme = localStorage.getItem('theme');
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const shouldBeDark = savedTheme === 'dark' || (!savedTheme && prefersDark);
+
+                setIsDark(shouldBeDark);
+                if (shouldBeDark) {
+                    document.documentElement.classList.add('dark');
+                }
+            }, []);
+
+            const toggleTheme = () => {
+                setIsDark(!isDark);
+                if (!isDark) {
+                    document.documentElement.classList.add('dark');
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                    localStorage.setItem('theme', 'light');
+                }
+            };
+
+            return (
+                <button
+                    onClick={toggleTheme}
+                    className="fixed top-6 right-6 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 p-3 rounded-full shadow-xl hover:shadow-2xl transition-all hover:scale-110 z-50"
+                    aria-label="Toggle theme"
+                >
+                    {isDark ? '🌞' : '🌙'}
+                </button>
+            );
+        }
+
+        // 宽度指示器组件
+        function WidthIndicator({ id, value }) {
+            if (!value) return null;
+            return (
+                <div className="text-sm text-gray-600 dark:text-gray-400 font-mono mt-2">
+                    📏 {id}: 字符数 {value.length}
+                </div>
+            );
+        }
+
+        // 主应用组件
+        function App() {
+            const [name1, setName1] = useState('');
+            const [age1, setAge1] = useState('');
+            const [city, setCity] = useState('');
+            const [job, setJob] = useState('');
+            const [country, setCountry] = useState('');
+            const [capital, setCapital] = useState('');
+            const [nameCn, setNameCn] = useState('');
+            const [ageCn, setAgeCn] = useState('');
+
+            const fillExample1 = () => {
+                setName1('Christopher');
+                setAge1('25');
+                setCity('New York');
+                setJob('Software Engineer');
+                setCountry('France');
+                setCapital('Paris');
+            };
+
+            const fillExample2 = () => {
+                setName1('Bob');
+                setAge1('8');
+                setCity('LA');
+                setJob('Designer');
+                setCountry('Japan');
+                setCapital('Tokyo');
+            };
+
+            const clearAll = () => {
+                setName1('');
+                setAge1('');
+                setCity('');
+                setJob('');
+                setCountry('');
+                setCapital('');
+                setNameCn('');
+                setAgeCn('');
+            };
+
+            return (
+                <div className="min-h-screen bg-gradient-to-br from-cyan-300 to-blue-400 dark:from-gray-800 dark:to-gray-900 py-10 px-5">
+                    <ThemeToggle />
+
+                    <div className="max-w-4xl mx-auto">
+                        {/* Header */}
+                        <header className="text-center text-white mb-10">
+                            <h1 className="text-5xl font-bold mb-3 drop-shadow-lg">
+                                📝 句子填空演示
+                            </h1>
+                            <p className="text-xl opacity-95">
+                                使用 field-sizing 实现自适应宽度的填空输入框
+                            </p>
+                        </header>
+
+                        {/* 基础演示 */}
+                        <div className="bg-white dark:bg-gray-800 rounded-3xl p-10 mb-8 shadow-2xl">
+                            <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-6 border-l-4 border-blue-400 dark:border-blue-500 pl-5">
+                                🎯 基础填空示例
+                            </h2>
+
+                            <div className="bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-400 dark:border-blue-500 p-4 rounded-lg mb-5">
+                                <p className="text-gray-700 dark:text-gray-300">
+                                    💡 尝试输入不同长度的文字，观察输入框宽度如何自动调整，让句子看起来更自然流畅。
+                                </p>
+                            </div>
+
+                            <div className="flex gap-3 mb-6 flex-wrap">
+                                <button
+                                    onClick={fillExample1}
+                                    className="bg-blue-400 dark:bg-blue-600 text-white px-5 py-2 rounded-lg font-medium hover:bg-blue-500 dark:hover:bg-blue-700 transition-colors"
+                                >
+                                    填充示例 1
+                                </button>
+                                <button
+                                    onClick={fillExample2}
+                                    className="bg-blue-400 dark:bg-blue-600 text-white px-5 py-2 rounded-lg font-medium hover:bg-blue-500 dark:hover:bg-blue-700 transition-colors"
+                                >
+                                    填充示例 2
+                                </button>
+                                <button
+                                    onClick={clearAll}
+                                    className="bg-gray-400 dark:bg-gray-600 text-white px-5 py-2 rounded-lg font-medium hover:bg-gray-500 dark:hover:bg-gray-700 transition-colors"
+                                >
+                                    清空所有
+                                </button>
+                            </div>
+
+                            <div className="text-2xl leading-relaxed text-gray-800 dark:text-gray-200 mb-4 p-5 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+                                My name is
+                                <input
+                                    type="text"
+                                    value={name1}
+                                    onChange={(e) => setName1(e.target.value)}
+                                    placeholder="your name"
+                                    className="border-none border-b-2 border-blue-400 dark:border-blue-500 bg-transparent outline-none font-semibold text-blue-600 dark:text-blue-400 px-2 mx-1 transition-all duration-200 focus:border-blue-600 dark:focus:border-blue-300 focus:bg-blue-50/50 dark:focus:bg-blue-900/20 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                    style={{ fieldSizing: 'content', minWidth: '5ch', maxWidth: '20ch' }}
+                                />
+                                and I am
+                                <input
+                                    type="text"
+                                    value={age1}
+                                    onChange={(e) => setAge1(e.target.value)}
+                                    placeholder="25"
+                                    className="border-none border-b-2 border-blue-400 dark:border-blue-500 bg-transparent outline-none font-semibold text-blue-600 dark:text-blue-400 px-2 mx-1 transition-all duration-200 focus:border-blue-600 dark:focus:border-blue-300 focus:bg-blue-50/50 dark:focus:bg-blue-900/20 text-center placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                    style={{ fieldSizing: 'content', minWidth: '2ch', maxWidth: '5ch' }}
+                                />
+                                years old.
+                            </div>
+
+                            <WidthIndicator id="name" value={name1} />
+                            <WidthIndicator id="age" value={age1} />
+
+                            <div className="text-xl leading-relaxed text-gray-800 dark:text-gray-200 mb-4 p-5 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+                                I live in
+                                <input
+                                    type="text"
+                                    value={city}
+                                    onChange={(e) => setCity(e.target.value)}
+                                    placeholder="city"
+                                    className="border-none border-b-2 border-blue-400 dark:border-blue-500 bg-transparent outline-none font-semibold text-blue-600 dark:text-blue-400 px-2 mx-1 transition-all duration-200 focus:border-blue-600 dark:focus:border-blue-300 focus:bg-blue-50/50 dark:focus:bg-blue-900/20 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                    style={{ fieldSizing: 'content', minWidth: '5ch', maxWidth: '20ch' }}
+                                />
+                                and work as a
+                                <input
+                                    type="text"
+                                    value={job}
+                                    onChange={(e) => setJob(e.target.value)}
+                                    placeholder="profession"
+                                    className="border-none border-b-2 border-blue-400 dark:border-blue-500 bg-transparent outline-none font-semibold text-blue-600 dark:text-blue-400 px-2 mx-1 transition-all duration-200 focus:border-blue-600 dark:focus:border-blue-300 focus:bg-blue-50/50 dark:focus:bg-blue-900/20 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                    style={{ fieldSizing: 'content', minWidth: '10ch', maxWidth: '40ch' }}
+                                />.
+                            </div>
+
+                            <div className="text-xl leading-relaxed text-gray-800 dark:text-gray-200 p-5 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+                                The capital of
+                                <input
+                                    type="text"
+                                    value={country}
+                                    onChange={(e) => setCountry(e.target.value)}
+                                    placeholder="country"
+                                    className="border-none border-b-2 border-blue-400 dark:border-blue-500 bg-transparent outline-none font-semibold text-blue-600 dark:text-blue-400 px-2 mx-1 transition-all duration-200 focus:border-blue-600 dark:focus:border-blue-300 focus:bg-blue-50/50 dark:focus:bg-blue-900/20 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                    style={{ fieldSizing: 'content', minWidth: '5ch', maxWidth: '20ch' }}
+                                />
+                                is
+                                <input
+                                    type="text"
+                                    value={capital}
+                                    onChange={(e) => setCapital(e.target.value)}
+                                    placeholder="capital city"
+                                    className="border-none border-b-2 border-blue-400 dark:border-blue-500 bg-transparent outline-none font-semibold text-blue-600 dark:text-blue-400 px-2 mx-1 transition-all duration-200 focus:border-blue-600 dark:focus:border-blue-300 focus:bg-blue-50/50 dark:focus:bg-blue-900/20 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                    style={{ fieldSizing: 'content', minWidth: '5ch', maxWidth: '20ch' }}
+                                />.
+                            </div>
+                        </div>
+
+                        {/* 不同样式的填空 */}
+                        <div className="bg-white dark:bg-gray-800 rounded-3xl p-10 mb-8 shadow-2xl">
+                            <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-6 border-l-4 border-blue-400 dark:border-blue-500 pl-5">
+                                🎨 不同下划线样式
+                            </h2>
+
+                            <div className="text-xl leading-relaxed text-gray-800 dark:text-gray-200 mb-6 p-5 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+                                <strong>虚线样式：</strong><br />
+                                In
+                                <input
+                                    type="text"
+                                    placeholder="year"
+                                    className="border-none bg-transparent outline-none font-semibold text-blue-600 dark:text-blue-400 px-2 mx-1 transition-all duration-200 focus:bg-blue-50/50 dark:focus:bg-blue-900/20 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                    style={{ fieldSizing: 'content', minWidth: '5ch', maxWidth: '20ch', borderBottom: '2px dashed #60a5fa' }}
+                                />,
+                                <input
+                                    type="text"
+                                    placeholder="person"
+                                    className="border-none bg-transparent outline-none font-semibold text-blue-600 dark:text-blue-400 px-2 mx-1 transition-all duration-200 focus:bg-blue-50/50 dark:focus:bg-blue-900/20 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                    style={{ fieldSizing: 'content', minWidth: '5ch', maxWidth: '20ch', borderBottom: '2px dashed #60a5fa' }}
+                                />
+                                invented the
+                                <input
+                                    type="text"
+                                    placeholder="invention"
+                                    className="border-none bg-transparent outline-none font-semibold text-blue-600 dark:text-blue-400 px-2 mx-1 transition-all duration-200 focus:bg-blue-50/50 dark:focus:bg-blue-900/20 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                    style={{ fieldSizing: 'content', minWidth: '10ch', maxWidth: '40ch', borderBottom: '2px dashed #60a5fa' }}
+                                />.
+                            </div>
+
+                            <div className="text-xl leading-relaxed text-gray-800 dark:text-gray-200 mb-6 p-5 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+                                <strong>点线样式：</strong><br />
+                                The
+                                <input
+                                    type="text"
+                                    placeholder="adjective"
+                                    className="border-none bg-transparent outline-none font-semibold text-blue-600 dark:text-blue-400 px-2 mx-1 transition-all duration-200 focus:bg-blue-50/50 dark:focus:bg-blue-900/20 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                    style={{ fieldSizing: 'content', minWidth: '5ch', maxWidth: '20ch', borderBottom: '3px dotted #60a5fa' }}
+                                />
+                                <input
+                                    type="text"
+                                    placeholder="animal"
+                                    className="border-none bg-transparent outline-none font-semibold text-blue-600 dark:text-blue-400 px-2 mx-1 transition-all duration-200 focus:bg-blue-50/50 dark:focus:bg-blue-900/20 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                    style={{ fieldSizing: 'content', minWidth: '5ch', maxWidth: '20ch', borderBottom: '3px dotted #60a5fa' }}
+                                />
+                                jumped over the
+                                <input
+                                    type="text"
+                                    placeholder="obstacle"
+                                    className="border-none bg-transparent outline-none font-semibold text-blue-600 dark:text-blue-400 px-2 mx-1 transition-all duration-200 focus:bg-blue-50/50 dark:focus:bg-blue-900/20 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                    style={{ fieldSizing: 'content', minWidth: '5ch', maxWidth: '20ch', borderBottom: '3px dotted #60a5fa' }}
+                                />.
+                            </div>
+
+                            <div className="text-xl leading-relaxed text-gray-800 dark:text-gray-200 mb-6 p-5 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+                                <strong>双线样式：</strong><br />
+                                <input
+                                    type="text"
+                                    placeholder="number"
+                                    className="border-none bg-transparent outline-none font-semibold text-blue-600 dark:text-blue-400 px-2 mx-1 transition-all duration-200 focus:bg-blue-50/50 dark:focus:bg-blue-900/20 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                    style={{ fieldSizing: 'content', minWidth: '5ch', maxWidth: '20ch', borderBottom: '3px double #60a5fa' }}
+                                />
+                                plus
+                                <input
+                                    type="text"
+                                    placeholder="number"
+                                    className="border-none bg-transparent outline-none font-semibold text-blue-600 dark:text-blue-400 px-2 mx-1 transition-all duration-200 focus:bg-blue-50/50 dark:focus:bg-blue-900/20 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                    style={{ fieldSizing: 'content', minWidth: '5ch', maxWidth: '20ch', borderBottom: '3px double #60a5fa' }}
+                                />
+                                equals
+                                <input
+                                    type="text"
+                                    placeholder="result"
+                                    className="border-none bg-transparent outline-none font-semibold text-blue-600 dark:text-blue-400 px-2 mx-1 text-center transition-all duration-200 focus:bg-blue-50/50 dark:focus:bg-blue-900/20 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                    style={{ fieldSizing: 'content', minWidth: '2ch', maxWidth: '5ch', borderBottom: '3px double #60a5fa' }}
+                                />.
+                            </div>
+
+                            <div className="text-xl leading-relaxed text-gray-800 dark:text-gray-200 p-5 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+                                <strong>高亮样式：</strong><br />
+                                My favorite
+                                <input
+                                    type="text"
+                                    placeholder="color"
+                                    className="border-none bg-yellow-100 dark:bg-yellow-900/30 outline-none font-semibold text-blue-600 dark:text-blue-400 px-2 mx-1 rounded transition-all duration-200 focus:bg-yellow-200 dark:focus:bg-yellow-900/50 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                    style={{ fieldSizing: 'content', minWidth: '5ch', maxWidth: '20ch', borderBottom: '3px solid #ffd700' }}
+                                />
+                                is
+                                <input
+                                    type="text"
+                                    placeholder="item"
+                                    className="border-none bg-yellow-100 dark:bg-yellow-900/30 outline-none font-semibold text-blue-600 dark:text-blue-400 px-2 mx-1 rounded transition-all duration-200 focus:bg-yellow-200 dark:focus:bg-yellow-900/50 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                    style={{ fieldSizing: 'content', minWidth: '5ch', maxWidth: '20ch', borderBottom: '3px solid #ffd700' }}
+                                />.
+                            </div>
+                        </div>
+
+                        {/* 古诗填空示例 */}
+                        <div className="bg-white dark:bg-gray-800 rounded-3xl p-10 mb-8 shadow-2xl">
+                            <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-6 border-l-4 border-blue-400 dark:border-blue-500 pl-5">
+                                📜 古诗填空（极简模式）
+                            </h2>
+
+                            <div className="bg-amber-50 dark:bg-amber-900/30 border-l-4 border-amber-400 dark:border-amber-500 p-4 rounded-lg mb-5">
+                                <p className="text-gray-700 dark:text-gray-300">
+                                    💡 此示例使用 <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">minWidth: 1ch</code> 且不限制最大宽度，让输入框完全根据内容自由扩展。
+                                </p>
+                            </div>
+
+                            <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 p-8 rounded-2xl mb-6">
+                                <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4 text-center">《春晓》 - 孟浩然</h3>
+                                <div className="text-2xl leading-loose text-gray-800 dark:text-gray-200 text-center space-y-3">
+                                    <div className="p-4 bg-white dark:bg-gray-800/50 rounded-xl">
+                                        春眠不觉
+                                        <input
+                                            type="text"
+                                            placeholder="晓"
+                                            className="border-none border-b-2 border-amber-500 dark:border-amber-400 bg-transparent outline-none font-semibold text-amber-600 dark:text-amber-400 px-1 mx-1 transition-all duration-200 focus:border-amber-700 dark:focus:border-amber-300 focus:bg-amber-50/50 dark:focus:bg-amber-900/20 placeholder:text-amber-300 dark:placeholder:text-amber-600"
+                                            style={{ fieldSizing: 'content', minWidth: '1ch' }}
+                                        />
+                                        ，处处闻啼
+                                        <input
+                                            type="text"
+                                            placeholder="鸟"
+                                            className="border-none border-b-2 border-amber-500 dark:border-amber-400 bg-transparent outline-none font-semibold text-amber-600 dark:text-amber-400 px-1 mx-1 transition-all duration-200 focus:border-amber-700 dark:focus:border-amber-300 focus:bg-amber-50/50 dark:focus:bg-amber-900/20 placeholder:text-amber-300 dark:placeholder:text-amber-600"
+                                            style={{ fieldSizing: 'content', minWidth: '1ch' }}
+                                        />
+                                        。
+                                    </div>
+                                    <div className="p-4 bg-white dark:bg-gray-800/50 rounded-xl">
+                                        夜来风雨
+                                        <input
+                                            type="text"
+                                            placeholder="声"
+                                            className="border-none border-b-2 border-amber-500 dark:border-amber-400 bg-transparent outline-none font-semibold text-amber-600 dark:text-amber-400 px-1 mx-1 transition-all duration-200 focus:border-amber-700 dark:focus:border-amber-300 focus:bg-amber-50/50 dark:focus:bg-amber-900/20 placeholder:text-amber-300 dark:placeholder:text-amber-600"
+                                            style={{ fieldSizing: 'content', minWidth: '1ch' }}
+                                        />
+                                        ，花落知多
+                                        <input
+                                            type="text"
+                                            placeholder="少"
+                                            className="border-none border-b-2 border-amber-500 dark:border-amber-400 bg-transparent outline-none font-semibold text-amber-600 dark:text-amber-400 px-1 mx-1 transition-all duration-200 focus:border-amber-700 dark:focus:border-amber-300 focus:bg-amber-50/50 dark:focus:bg-amber-900/20 placeholder:text-amber-300 dark:placeholder:text-amber-600"
+                                            style={{ fieldSizing: 'content', minWidth: '1ch' }}
+                                        />
+                                        。
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-8 rounded-2xl mb-6">
+                                <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4 text-center">《静夜思》 - 李白</h3>
+                                <div className="text-2xl leading-loose text-gray-800 dark:text-gray-200 text-center space-y-3">
+                                    <div className="p-4 bg-white dark:bg-gray-800/50 rounded-xl">
+                                        床前明月
+                                        <input
+                                            type="text"
+                                            placeholder="光"
+                                            className="border-none border-b-2 border-blue-500 dark:border-blue-400 bg-transparent outline-none font-semibold text-blue-600 dark:text-blue-400 px-1 mx-1 transition-all duration-200 focus:border-blue-700 dark:focus:border-blue-300 focus:bg-blue-50/50 dark:focus:bg-blue-900/20 placeholder:text-blue-300 dark:placeholder:text-blue-600"
+                                            style={{ fieldSizing: 'content', minWidth: '1ch' }}
+                                        />
+                                        ，疑是地上
+                                        <input
+                                            type="text"
+                                            placeholder="霜"
+                                            className="border-none border-b-2 border-blue-500 dark:border-blue-400 bg-transparent outline-none font-semibold text-blue-600 dark:text-blue-400 px-1 mx-1 transition-all duration-200 focus:border-blue-700 dark:focus:border-blue-300 focus:bg-blue-50/50 dark:focus:bg-blue-900/20 placeholder:text-blue-300 dark:placeholder:text-blue-600"
+                                            style={{ fieldSizing: 'content', minWidth: '1ch' }}
+                                        />
+                                        。
+                                    </div>
+                                    <div className="p-4 bg-white dark:bg-gray-800/50 rounded-xl">
+                                        举头望明
+                                        <input
+                                            type="text"
+                                            placeholder="月"
+                                            className="border-none border-b-2 border-blue-500 dark:border-blue-400 bg-transparent outline-none font-semibold text-blue-600 dark:text-blue-400 px-1 mx-1 transition-all duration-200 focus:border-blue-700 dark:focus:border-blue-300 focus:bg-blue-50/50 dark:focus:bg-blue-900/20 placeholder:text-blue-300 dark:placeholder:text-blue-600"
+                                            style={{ fieldSizing: 'content', minWidth: '1ch' }}
+                                        />
+                                        ，低头思故
+                                        <input
+                                            type="text"
+                                            placeholder="乡"
+                                            className="border-none border-b-2 border-blue-500 dark:border-blue-400 bg-transparent outline-none font-semibold text-blue-600 dark:text-blue-400 px-1 mx-1 transition-all duration-200 focus:border-blue-700 dark:focus:border-blue-300 focus:bg-blue-50/50 dark:focus:bg-blue-900/20 placeholder:text-blue-300 dark:placeholder:text-blue-600"
+                                            style={{ fieldSizing: 'content', minWidth: '1ch' }}
+                                        />
+                                        。
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 p-8 rounded-2xl">
+                                <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4 text-center">《登鹳雀楼》 - 王之涣</h3>
+                                <div className="text-2xl leading-loose text-gray-800 dark:text-gray-200 text-center space-y-3">
+                                    <div className="p-4 bg-white dark:bg-gray-800/50 rounded-xl">
+                                        白日依山
+                                        <input
+                                            type="text"
+                                            placeholder="尽"
+                                            className="border-none border-b-2 border-green-500 dark:border-green-400 bg-transparent outline-none font-semibold text-green-600 dark:text-green-400 px-1 mx-1 transition-all duration-200 focus:border-green-700 dark:focus:border-green-300 focus:bg-green-50/50 dark:focus:bg-green-900/20 placeholder:text-green-300 dark:placeholder:text-green-600"
+                                            style={{ fieldSizing: 'content', minWidth: '1ch' }}
+                                        />
+                                        ，黄河入海
+                                        <input
+                                            type="text"
+                                            placeholder="流"
+                                            className="border-none border-b-2 border-green-500 dark:border-green-400 bg-transparent outline-none font-semibold text-green-600 dark:text-green-400 px-1 mx-1 transition-all duration-200 focus:border-green-700 dark:focus:border-green-300 focus:bg-green-50/50 dark:focus:bg-green-900/20 placeholder:text-green-300 dark:placeholder:text-green-600"
+                                            style={{ fieldSizing: 'content', minWidth: '1ch' }}
+                                        />
+                                        。
+                                    </div>
+                                    <div className="p-4 bg-white dark:bg-gray-800/50 rounded-xl">
+                                        欲穷千里
+                                        <input
+                                            type="text"
+                                            placeholder="目"
+                                            className="border-none border-b-2 border-green-500 dark:border-green-400 bg-transparent outline-none font-semibold text-green-600 dark:text-green-400 px-1 mx-1 transition-all duration-200 focus:border-green-700 dark:focus:border-green-300 focus:bg-green-50/50 dark:focus:bg-green-900/20 placeholder:text-green-300 dark:placeholder:text-green-600"
+                                            style={{ fieldSizing: 'content', minWidth: '1ch' }}
+                                        />
+                                        ，更上一层
+                                        <input
+                                            type="text"
+                                            placeholder="楼"
+                                            className="border-none border-b-2 border-green-500 dark:border-green-400 bg-transparent outline-none font-semibold text-green-600 dark:text-green-400 px-1 mx-1 transition-all duration-200 focus:border-green-700 dark:focus:border-green-300 focus:bg-green-50/50 dark:focus:bg-green-900/20 placeholder:text-green-300 dark:placeholder:text-green-600"
+                                            style={{ fieldSizing: 'content', minWidth: '1ch' }}
+                                        />
+                                        。
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* 课文填空示例 */}
+                        <div className="bg-white dark:bg-gray-800 rounded-3xl p-10 mb-8 shadow-2xl">
+                            <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-6 border-l-4 border-blue-400 dark:border-blue-500 pl-5">
+                                📖 经典课文填空（极简模式）
+                            </h2>
+
+                            <div className="bg-indigo-50 dark:bg-indigo-900/30 border-l-4 border-indigo-400 dark:border-indigo-500 p-4 rounded-lg mb-5">
+                                <p className="text-gray-700 dark:text-gray-300">
+                                    💡 此示例使用 <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">minWidth: 1ch</code>，最少填入两个字，让输入框完全根据内容自由扩展。
+                                </p>
+                            </div>
+
+                            <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 p-8 rounded-2xl mb-6">
+                                <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4 text-center">《背影》节选 - 朱自清</h3>
+                                <div className="text-xl leading-loose text-gray-800 dark:text-gray-200 space-y-4">
+                                    <div className="p-5 bg-white dark:bg-gray-800/50 rounded-xl">
+                                        我与父亲不相见已
+                                        <input
+                                            type="text"
+                                            className="border-none bg-transparent outline-none font-semibold text-indigo-600 dark:text-indigo-400 px-2 mx-1 rounded transition-all duration-200 focus:bg-indigo-50 dark:focus:bg-indigo-900/30 focus:shadow-sm focus:text-center"
+                                            style={{ fieldSizing: 'content', minWidth: '3ch', borderBottom: '2px dotted rgba(99, 102, 241, 0.4)' }}
+                                        />
+                                        了，我最不能
+                                        <input
+                                            type="text"
+                                            className="border-none bg-transparent outline-none font-semibold text-indigo-600 dark:text-indigo-400 px-2 mx-1 rounded transition-all duration-200 focus:bg-indigo-50 dark:focus:bg-indigo-900/30 focus:shadow-sm focus:text-center"
+                                            style={{ fieldSizing: 'content', minWidth: '3ch', borderBottom: '2px dotted rgba(99, 102, 241, 0.4)' }}
+                                        />
+                                        的是他的背影。
+                                    </div>
+
+                                    <div className="p-5 bg-white dark:bg-gray-800/50 rounded-xl">
+                                        我看见他
+                                        <input
+                                            type="text"
+                                            className="border-none bg-transparent outline-none font-semibold text-indigo-600 dark:text-indigo-400 px-2 mx-1 rounded transition-all duration-200 focus:bg-indigo-50 dark:focus:bg-indigo-900/30 focus:shadow-sm focus:text-center"
+                                            style={{ fieldSizing: 'content', minWidth: '3ch', borderBottom: '2px dotted rgba(99, 102, 241, 0.4)' }}
+                                        />
+                                        黑布小帽，穿着黑布
+                                        <input
+                                            type="text"
+                                            className="border-none bg-transparent outline-none font-semibold text-indigo-600 dark:text-indigo-400 px-2 mx-1 rounded transition-all duration-200 focus:bg-indigo-50 dark:focus:bg-indigo-900/30 focus:shadow-sm focus:text-center"
+                                            style={{ fieldSizing: 'content', minWidth: '3ch', borderBottom: '2px dotted rgba(99, 102, 241, 0.4)' }}
+                                        />
+                                        ，深青布
+                                        <input
+                                            type="text"
+                                            className="border-none bg-transparent outline-none font-semibold text-indigo-600 dark:text-indigo-400 px-2 mx-1 rounded transition-all duration-200 focus:bg-indigo-50 dark:focus:bg-indigo-900/30 focus:shadow-sm focus:text-center"
+                                            style={{ fieldSizing: 'content', minWidth: '3ch', borderBottom: '2px dotted rgba(99, 102, 241, 0.4)' }}
+                                        />
+                                        ，
+                                        <input
+                                            type="text"
+                                            className="border-none bg-transparent outline-none font-semibold text-indigo-600 dark:text-indigo-400 px-2 mx-1 rounded transition-all duration-200 focus:bg-indigo-50 dark:focus:bg-indigo-900/30 focus:shadow-sm focus:text-center"
+                                            style={{ fieldSizing: 'content', minWidth: '3ch', borderBottom: '2px dotted rgba(99, 102, 241, 0.4)' }}
+                                        />
+                                        地走到铁道边，慢慢
+                                        <input
+                                            type="text"
+                                            className="border-none bg-transparent outline-none font-semibold text-indigo-600 dark:text-indigo-400 px-2 mx-1 rounded transition-all duration-200 focus:bg-indigo-50 dark:focus:bg-indigo-900/30 focus:shadow-sm focus:text-center"
+                                            style={{ fieldSizing: 'content', minWidth: '3ch', borderBottom: '2px dotted rgba(99, 102, 241, 0.4)' }}
+                                        />
+                                        下去，尚不大难。
+                                    </div>
+
+                                    <div className="p-5 bg-white dark:bg-gray-800/50 rounded-xl">
+                                        可是他穿过铁道，要
+                                        <input
+                                            type="text"
+                                            className="border-none bg-transparent outline-none font-semibold text-indigo-600 dark:text-indigo-400 px-2 mx-1 rounded transition-all duration-200 focus:bg-indigo-50 dark:focus:bg-indigo-900/30 focus:shadow-sm focus:text-center"
+                                            style={{ fieldSizing: 'content', minWidth: '3ch', borderBottom: '2px dotted rgba(99, 102, 241, 0.4)' }}
+                                        />
+                                        那边月台，就不容易了。他用两手
+                                        <input
+                                            type="text"
+                                            className="border-none bg-transparent outline-none font-semibold text-indigo-600 dark:text-indigo-400 px-2 mx-1 rounded transition-all duration-200 focus:bg-indigo-50 dark:focus:bg-indigo-900/30 focus:shadow-sm focus:text-center"
+                                            style={{ fieldSizing: 'content', minWidth: '3ch', borderBottom: '2px dotted rgba(99, 102, 241, 0.4)' }}
+                                        />
+                                        上面，两脚再向上
+                                        <input
+                                            type="text"
+                                            className="border-none bg-transparent outline-none font-semibold text-indigo-600 dark:text-indigo-400 px-2 mx-1 rounded transition-all duration-200 focus:bg-indigo-50 dark:focus:bg-indigo-900/30 focus:shadow-sm focus:text-center"
+                                            style={{ fieldSizing: 'content', minWidth: '3ch', borderBottom: '2px dotted rgba(99, 102, 241, 0.4)' }}
+                                        />
+                                        ；他肥胖的身子向左微
+                                        <input
+                                            type="text"
+                                            className="border-none bg-transparent outline-none font-semibold text-indigo-600 dark:text-indigo-400 px-2 mx-1 rounded transition-all duration-200 focus:bg-indigo-50 dark:focus:bg-indigo-900/30 focus:shadow-sm focus:text-center"
+                                            style={{ fieldSizing: 'content', minWidth: '3ch', borderBottom: '2px dotted rgba(99, 102, 241, 0.4)' }}
+                                        />
+                                        ，显出努力的样子。
+                                    </div>
+
+                                    <div className="p-5 bg-white dark:bg-gray-800/50 rounded-xl">
+                                        这时我看见他的
+                                        <input
+                                            type="text"
+                                            className="border-none bg-transparent outline-none font-semibold text-indigo-600 dark:text-indigo-400 px-2 mx-1 rounded transition-all duration-200 focus:bg-indigo-50 dark:focus:bg-indigo-900/30 focus:shadow-sm focus:text-center"
+                                            style={{ fieldSizing: 'content', minWidth: '3ch', borderBottom: '2px dotted rgba(99, 102, 241, 0.4)' }}
+                                        />
+                                        ，我的
+                                        <input
+                                            type="text"
+                                            className="border-none bg-transparent outline-none font-semibold text-indigo-600 dark:text-indigo-400 px-2 mx-1 rounded transition-all duration-200 focus:bg-indigo-50 dark:focus:bg-indigo-900/30 focus:shadow-sm focus:text-center"
+                                            style={{ fieldSizing: 'content', minWidth: '3ch', borderBottom: '2px dotted rgba(99, 102, 241, 0.4)' }}
+                                        />
+                                        很快地
+                                        <input
+                                            type="text"
+                                            className="border-none bg-transparent outline-none font-semibold text-indigo-600 dark:text-indigo-400 px-2 mx-1 rounded transition-all duration-200 focus:bg-indigo-50 dark:focus:bg-indigo-900/30 focus:shadow-sm focus:text-center"
+                                            style={{ fieldSizing: 'content', minWidth: '3ch', borderBottom: '2px dotted rgba(99, 102, 241, 0.4)' }}
+                                        />
+                                        了。
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* 中文填空示例 */}
+                        <div className="bg-white dark:bg-gray-800 rounded-3xl p-10 mb-8 shadow-2xl">
+                            <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-6 border-l-4 border-blue-400 dark:border-blue-500 pl-5">
+                                🇨🇳 中文句子填空
+                            </h2>
+
+                            <div className="text-2xl leading-relaxed text-gray-800 dark:text-gray-200 mb-6 p-5 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+                                我叫
+                                <input
+                                    type="text"
+                                    value={nameCn}
+                                    onChange={(e) => setNameCn(e.target.value)}
+                                    placeholder="姓名"
+                                    className="border-none border-b-2 border-blue-400 dark:border-blue-500 bg-transparent outline-none font-semibold text-blue-600 dark:text-blue-400 px-2 mx-1 transition-all duration-200 focus:border-blue-600 dark:focus:border-blue-300 focus:bg-blue-50/50 dark:focus:bg-blue-900/20 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                    style={{ fieldSizing: 'content', minWidth: '5ch', maxWidth: '20ch' }}
+                                />，
+                                今年
+                                <input
+                                    type="text"
+                                    value={ageCn}
+                                    onChange={(e) => setAgeCn(e.target.value)}
+                                    placeholder="年龄"
+                                    className="border-none border-b-2 border-blue-400 dark:border-blue-500 bg-transparent outline-none font-semibold text-blue-600 dark:text-blue-400 px-2 mx-1 text-center transition-all duration-200 focus:border-blue-600 dark:focus:border-blue-300 focus:bg-blue-50/50 dark:focus:bg-blue-900/20 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                    style={{ fieldSizing: 'content', minWidth: '2ch', maxWidth: '5ch' }}
+                                />
+                                岁。
+                            </div>
+
+                            <div className="text-xl leading-relaxed text-gray-800 dark:text-gray-200 mb-4 p-5 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+                                我来自
+                                <input
+                                    type="text"
+                                    placeholder="城市"
+                                    className="border-none border-b-2 border-blue-400 dark:border-blue-500 bg-transparent outline-none font-semibold text-blue-600 dark:text-blue-400 px-2 mx-1 transition-all duration-200 focus:border-blue-600 dark:focus:border-blue-300 focus:bg-blue-50/50 dark:focus:bg-blue-900/20 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                    style={{ fieldSizing: 'content', minWidth: '5ch', maxWidth: '20ch' }}
+                                />，
+                                从事
+                                <input
+                                    type="text"
+                                    placeholder="职业"
+                                    className="border-none border-b-2 border-blue-400 dark:border-blue-500 bg-transparent outline-none font-semibold text-blue-600 dark:text-blue-400 px-2 mx-1 transition-all duration-200 focus:border-blue-600 dark:focus:border-blue-300 focus:bg-blue-50/50 dark:focus:bg-blue-900/20 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                    style={{ fieldSizing: 'content', minWidth: '5ch', maxWidth: '20ch' }}
+                                />
+                                工作，
+                                喜欢
+                                <input
+                                    type="text"
+                                    placeholder="爱好"
+                                    className="border-none border-b-2 border-blue-400 dark:border-blue-500 bg-transparent outline-none font-semibold text-blue-600 dark:text-blue-400 px-2 mx-1 transition-all duration-200 focus:border-blue-600 dark:focus:border-blue-300 focus:bg-blue-50/50 dark:focus:bg-blue-900/20 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                    style={{ fieldSizing: 'content', minWidth: '10ch', maxWidth: '40ch' }}
+                                />。
+                            </div>
+
+                            <div className="text-xl leading-relaxed text-gray-800 dark:text-gray-200 p-5 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+                                <input
+                                    type="text"
+                                    placeholder="年份"
+                                    className="border-none border-b-2 border-blue-400 dark:border-blue-500 bg-transparent outline-none font-semibold text-blue-600 dark:text-blue-400 px-2 mx-1 transition-all duration-200 focus:border-blue-600 dark:focus:border-blue-300 focus:bg-blue-50/50 dark:focus:bg-blue-900/20 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                    style={{ fieldSizing: 'content', minWidth: '5ch', maxWidth: '20ch' }}
+                                />
+                                年，
+                                <input
+                                    type="text"
+                                    placeholder="人物"
+                                    className="border-none border-b-2 border-blue-400 dark:border-blue-500 bg-transparent outline-none font-semibold text-blue-600 dark:text-blue-400 px-2 mx-1 transition-all duration-200 focus:border-blue-600 dark:focus:border-blue-300 focus:bg-blue-50/50 dark:focus:bg-blue-900/20 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                    style={{ fieldSizing: 'content', minWidth: '5ch', maxWidth: '20ch' }}
+                                />
+                                发明了
+                                <input
+                                    type="text"
+                                    placeholder="发明"
+                                    className="border-none border-b-2 border-blue-400 dark:border-blue-500 bg-transparent outline-none font-semibold text-blue-600 dark:text-blue-400 px-2 mx-1 transition-all duration-200 focus:border-blue-600 dark:focus:border-blue-300 focus:bg-blue-50/50 dark:focus:bg-blue-900/20 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                    style={{ fieldSizing: 'content', minWidth: '10ch', maxWidth: '40ch' }}
+                                />，
+                                改变了世界。
+                            </div>
+                        </div>
+
+                        {/* 实际应用场景 */}
+                        <div className="bg-white dark:bg-gray-800 rounded-3xl p-10 mb-8 shadow-2xl">
+                            <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-6 border-l-4 border-blue-400 dark:border-blue-500 pl-5">
+                                📚 实际应用场景
+                            </h2>
+
+                            <div className="grid md:grid-cols-2 gap-5 mb-6">
+                                <div className="bg-gradient-to-br from-purple-500 to-purple-700 dark:from-purple-700 dark:to-purple-900 text-white p-6 rounded-xl">
+                                    <h3 className="text-2xl font-bold mb-4">📖 在线教育</h3>
+                                    <div className="text-lg bg-white/10 backdrop-blur-sm p-4 rounded-lg">
+                                        The formula for water is
+                                        <input
+                                            type="text"
+                                            placeholder="H₂O"
+                                            className="border-none border-b-2 border-yellow-400 bg-transparent outline-none font-semibold text-yellow-400 px-2 mx-1 transition-all duration-200 focus:border-yellow-300 focus:bg-white/10 placeholder:text-yellow-200/50"
+                                            style={{ fieldSizing: 'content', minWidth: '5ch', maxWidth: '20ch' }}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="bg-gradient-to-br from-purple-500 to-purple-700 dark:from-purple-700 dark:to-purple-900 text-white p-6 rounded-xl">
+                                    <h3 className="text-2xl font-bold mb-4">📝 问卷调查</h3>
+                                    <div className="text-lg bg-white/10 backdrop-blur-sm p-4 rounded-lg">
+                                        Rate from 1 to
+                                        <input
+                                            type="text"
+                                            placeholder="10"
+                                            className="border-none border-b-2 border-yellow-400 bg-transparent outline-none font-semibold text-yellow-400 px-2 mx-1 text-center transition-all duration-200 focus:border-yellow-300 focus:bg-white/10 placeholder:text-yellow-200/50"
+                                            style={{ fieldSizing: 'content', minWidth: '2ch', maxWidth: '5ch' }}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="bg-gray-50 dark:bg-gray-700/50 p-6 rounded-xl">
+                                <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-5">📋 表单填写示例</h3>
+                                <div className="bg-white dark:bg-gray-800 p-5 rounded-lg text-gray-800 dark:text-gray-200 space-y-3 text-lg">
+                                    <div><strong>个人信息表：</strong></div>
+                                    <div>
+                                        姓名：<input
+                                            type="text"
+                                            placeholder="请输入"
+                                            className="border-none border-b-2 border-blue-400 dark:border-blue-500 bg-transparent outline-none font-semibold text-blue-600 dark:text-blue-400 px-2 mx-1 transition-all duration-200 focus:border-blue-600 dark:focus:border-blue-300 focus:bg-blue-50/50 dark:focus:bg-blue-900/20 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                            style={{ fieldSizing: 'content', minWidth: '5ch', maxWidth: '20ch' }}
+                                        />
+                                    </div>
+                                    <div>
+                                        年龄：<input
+                                            type="text"
+                                            placeholder="岁"
+                                            className="border-none border-b-2 border-blue-400 dark:border-blue-500 bg-transparent outline-none font-semibold text-blue-600 dark:text-blue-400 px-2 mx-1 transition-all duration-200 focus:border-blue-600 dark:focus:border-blue-300 focus:bg-blue-50/50 dark:focus:bg-blue-900/20 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                            style={{ fieldSizing: 'content', minWidth: '2ch', maxWidth: '5ch' }}
+                                        />
+                                    </div>
+                                    <div>
+                                        邮箱：<input
+                                            type="text"
+                                            placeholder="example@email.com"
+                                            className="border-none border-b-2 border-blue-400 dark:border-blue-500 bg-transparent outline-none font-semibold text-blue-600 dark:text-blue-400 px-2 mx-1 transition-all duration-200 focus:border-blue-600 dark:focus:border-blue-300 focus:bg-blue-50/50 dark:focus:bg-blue-900/20 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                            style={{ fieldSizing: 'content', minWidth: '10ch', maxWidth: '40ch' }}
+                                        />
+                                    </div>
+                                    <div>
+                                        电话：<input
+                                            type="text"
+                                            placeholder="手机号码"
+                                            className="border-none border-b-2 border-blue-400 dark:border-blue-500 bg-transparent outline-none font-semibold text-blue-600 dark:text-blue-400 px-2 mx-1 transition-all duration-200 focus:border-blue-600 dark:focus:border-blue-300 focus:bg-blue-50/50 dark:focus:bg-blue-900/20 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                            style={{ fieldSizing: 'content', minWidth: '5ch', maxWidth: '20ch' }}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* 核心代码 */}
+                        <div className="bg-white dark:bg-gray-800 rounded-3xl p-10 mb-8 shadow-2xl">
+                            <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-6 border-l-4 border-blue-400 dark:border-blue-500 pl-5">
+                                💻 核心实现代码
+                            </h2>
+
+                            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-3">HTML 结构：</h3>
+                            <pre className="bg-gray-900 dark:bg-gray-950 text-gray-100 p-5 rounded-xl overflow-x-auto text-sm font-mono mb-6">
+{`<div class="sentence">
+  My name is
+  <input type="text" class="fill-in-blank medium" placeholder="your name">
+  and I am
+  <input type="text" class="fill-in-blank short" placeholder="25">
+  years old.
+</div>`}
+                            </pre>
+
+                            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-3">CSS 样式：</h3>
+                            <pre className="bg-gray-900 dark:bg-gray-950 text-gray-100 p-5 rounded-xl overflow-x-auto text-sm font-mono">
+{`/* 基础填空输入框样式 */
+.fill-in-blank {
+  border: none;
+  border-bottom: 2px solid #60a5fa;
+  background: transparent;
+  outline: none;
+  font-size: inherit;
+  font-family: inherit;
+  color: #0066cc;
+  padding: 2px 8px;
+  margin: 0 4px;
+
+  /* 🔑 关键：使用 field-sizing 自适应宽度 */
+  field-sizing: content;
+  min-width: 3ch;      /* 最小宽度 */
+  max-width: 30ch;     /* 最大宽度 */
+}
+
+/* 短输入框（如年龄、数字） */
+.fill-in-blank.short {
+  min-width: 2ch;
+  max-width: 5ch;
+  text-align: center;
+}
+
+/* 中等输入框（如姓名、城市） */
+.fill-in-blank.medium {
+  min-width: 5ch;
+  max-width: 20ch;
+}
+
+/* 长输入框（如地址、描述） */
+.fill-in-blank.long {
+  min-width: 10ch;
+  max-width: 40ch;
+}`}
+                            </pre>
+
+                            <div className="mt-6 bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-400 dark:border-blue-500 p-4 rounded-lg">
+                                <strong className="text-gray-800 dark:text-gray-100">💡 关键技巧：</strong>
+                                <ul className="mt-3 ml-5 space-y-2 text-gray-700 dark:text-gray-300 list-disc">
+                                    <li>使用 <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">field-sizing: content</code> 让输入框宽度跟随内容</li>
+                                    <li>设置 <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">min-width</code> 确保输入框有最小宽度（即使为空）</li>
+                                    <li>设置 <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">max-width</code> 防止输入框过长破坏布局</li>
+                                    <li>使用 <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">ch</code> 单位（字符宽度）更精确控制尺寸</li>
+                                    <li><code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">font-size: inherit</code> 继承父元素字体大小，保持一致</li>
+                                    <li><code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">border-bottom</code> 创建下划线效果</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        {/* 优势对比 */}
+                        <div className="bg-white dark:bg-gray-800 rounded-3xl p-10 mb-8 shadow-2xl">
+                            <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-6 border-l-4 border-blue-400 dark:border-blue-500 pl-5">
+                                ⚡ 为什么使用 field-sizing？
+                            </h2>
+
+                            <div className="grid md:grid-cols-2 gap-5">
+                                <div className="bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-400 dark:border-yellow-600 p-5 rounded-xl">
+                                    <h3 className="text-yellow-800 dark:text-yellow-400 font-bold text-lg mb-4">❌ 传统方法的问题</h3>
+                                    <ul className="text-yellow-700 dark:text-yellow-300 space-y-2 ml-5 list-disc">
+                                        <li>固定宽度：<code className="bg-yellow-100 dark:bg-yellow-900/50 px-1 rounded">width: 100px</code></li>
+                                        <li>短文本浪费空间</li>
+                                        <li>长文本被截断</li>
+                                        <li>需要 JavaScript 动态调整</li>
+                                        <li>代码复杂，性能开销</li>
+                                    </ul>
+                                </div>
+
+                                <div className="bg-green-50 dark:bg-green-900/20 border-2 border-green-500 dark:border-green-600 p-5 rounded-xl">
+                                    <h3 className="text-green-800 dark:text-green-400 font-bold text-lg mb-4">✅ field-sizing 的优势</h3>
+                                    <ul className="text-green-700 dark:text-green-300 space-y-2 ml-5 list-disc">
+                                        <li>自动调整宽度</li>
+                                        <li>完美适应内容</li>
+                                        <li>纯 CSS 实现</li>
+                                        <li>无需 JavaScript</li>
+                                        <li>性能更好，代码更简洁</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* 返回首页 */}
+                        <div className="text-center">
+                            <a
+                                href="index.html"
+                                className="inline-block bg-white dark:bg-gray-700 text-blue-400 dark:text-blue-300 px-10 py-4 rounded-full font-semibold shadow-xl hover:-translate-y-1 transition-transform"
+                            >
+                                ← 返回首页
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Render
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
