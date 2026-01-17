@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>示例1: 四个伪类基础对比</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* :valid 和 :invalid - 立即生效 */
+    .demo-valid-invalid input:valid {
+      border-color: #10b981;
+      background-color: #d1fae5;
+    }
+    .demo-valid-invalid input:invalid {
+      border-color: #ef4444;
+      background-color: #fee2e2;
+    }
+
+    /* :user-valid 和 :user-invalid - 用户交互后生效 */
+    .demo-user-valid-invalid input:user-valid {
+      border-color: #10b981;
+      background-color: #d1fae5;
+    }
+    .demo-user-valid-invalid input:user-invalid {
+      border-color: #ef4444;
+      background-color: #fee2e2;
+    }
+
+    /* 深色模式适配 */
+    @media (prefers-color-scheme: dark) {
+      .demo-valid-invalid input:valid {
+        background-color: #064e3b;
+      }
+      .demo-valid-invalid input:invalid {
+        background-color: #7f1d1d;
+      }
+      .demo-user-valid-invalid input:user-valid {
+        background-color: #064e3b;
+      }
+      .demo-user-valid-invalid input:user-invalid {
+        background-color: #7f1d1d;
+      }
+    }
+  </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    function App() {
+      return (
+        <div className="min-h-screen p-8">
+          <div className="max-w-4xl mx-auto">
+            <h1 className="text-3xl font-bold mb-2 text-gray-900 dark:text-white">
+              CSS 表单验证伪类对比
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400 mb-8">
+              观察页面加载时和输入后的样式变化
+            </p>
+
+            <div className="grid md:grid-cols-2 gap-8">
+              {/* :valid 和 :invalid */}
+              <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+                <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
+                  :valid 和 :invalid
+                </h2>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                  ⚠️ 页面加载时立即显示验证状态
+                </p>
+
+                <div className="demo-valid-invalid space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+                      邮箱 (必填)
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      placeholder="请输入邮箱"
+                      className="w-full px-4 py-2 border-2 rounded-lg transition-colors dark:text-gray-900"
+                    />
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      注意: 空值时立即显示红色边框
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+                      年龄 (18-100)
+                    </label>
+                    <input
+                      type="number"
+                      min="18"
+                      max="100"
+                      required
+                      placeholder="请输入年龄"
+                      className="w-full px-4 py-2 border-2 rounded-lg transition-colors dark:text-gray-900"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* :user-valid 和 :user-invalid */}
+              <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+                <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
+                  :user-valid 和 :user-invalid
+                </h2>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                  ✅ 仅在用户交互后显示验证状态
+                </p>
+
+                <div className="demo-user-valid-invalid space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+                      邮箱 (必填)
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      placeholder="请输入邮箱"
+                      className="w-full px-4 py-2 border-2 rounded-lg transition-colors dark:text-gray-900"
+                    />
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      注意: 初始状态无样式，输入后才显示
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+                      年龄 (18-100)
+                    </label>
+                    <input
+                      type="number"
+                      min="18"
+                      max="100"
+                      required
+                      placeholder="请输入年龄"
+                      className="w-full px-4 py-2 border-2 rounded-lg transition-colors dark:text-gray-900"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 说明 */}
+            <div className="mt-8 bg-blue-50 dark:bg-blue-900/20 p-6 rounded-lg">
+              <h3 className="text-lg font-semibold mb-3 text-blue-900 dark:text-blue-300">
+                关键区别
+              </h3>
+              <ul className="space-y-2 text-sm text-blue-800 dark:text-blue-200">
+                <li>• <strong>左侧</strong>: 使用 :valid/:invalid，页面加载时空输入框立即显示红色（invalid 状态）</li>
+                <li>• <strong>右侧</strong>: 使用 :user-valid/:user-invalid，初始状态无样式，只有在用户开始输入后才显示验证状态</li>
+                <li>• <strong>用户体验</strong>: :user-* 伪类提供更友好的体验，避免在用户操作前显示错误</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.render(<App />, document.getElementById('root'));
+  </script>
+</body>
+</html>

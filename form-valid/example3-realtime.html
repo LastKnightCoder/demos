@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>示例3: 实时验证对比</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* 传统方式: :valid 和 :invalid */
+    .traditional input:valid {
+      border-color: #10b981;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2310b981'%3E%3Cpath d='M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      background-size: 20px;
+      padding-right: 40px;
+    }
+    .traditional input:invalid {
+      border-color: #ef4444;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ef4444'%3E%3Cpath d='M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      background-size: 20px;
+      padding-right: 40px;
+    }
+
+    /* 现代方式: :user-valid 和 :user-invalid */
+    .modern input:user-valid {
+      border-color: #10b981;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2310b981'%3E%3Cpath d='M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      background-size: 20px;
+      padding-right: 40px;
+    }
+    .modern input:user-invalid {
+      border-color: #ef4444;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ef4444'%3E%3Cpath d='M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      background-size: 20px;
+      padding-right: 40px;
+    }
+
+    /* 深色模式 */
+    @media (prefers-color-scheme: dark) {
+      .traditional input:valid,
+      .modern input:user-valid {
+        background-color: #064e3b;
+      }
+      .traditional input:invalid,
+      .modern input:user-invalid {
+        background-color: #7f1d1d;
+      }
+    }
+  </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    function App() {
+      const [stats, setStats] = React.useState({
+        traditional: { valid: 0, invalid: 0 },
+        modern: { valid: 0, invalid: 0 }
+      });
+
+      const validationRules = [
+        { type: 'email', label: '邮箱', placeholder: 'user@example.com', required: true },
+        { type: 'url', label: '网站', placeholder: 'https://example.com', required: true },
+        { type: 'tel', label: '电话', placeholder: '13800138000', pattern: '[0-9]{11}', required: true },
+        { type: 'text', label: '邮政编码', placeholder: '100000', pattern: '[0-9]{6}', required: true }
+      ];
+
+      return (
+        <div className="min-h-screen p-8">
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-8">
+              <h1 className="text-4xl font-bold mb-3 text-gray-900 dark:text-white">
+                实时验证体验对比
+              </h1>
+              <p className="text-gray-600 dark:text-gray-400">
+                左侧使用传统伪类，右侧使用现代伪类
+              </p>
+            </div>
+
+            <div className="grid lg:grid-cols-2 gap-8">
+              {/* 传统方式 */}
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                      传统方式
+                    </h2>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      :valid 和 :invalid
+                    </p>
+                  </div>
+                  <div className="bg-red-100 dark:bg-red-900/30 px-3 py-1 rounded-full">
+                    <span className="text-red-700 dark:text-red-300 text-sm font-semibold">
+                      ⚠️ 立即显示
+                    </span>
+                  </div>
+                </div>
+
+                <div className="traditional space-y-4">
+                  {validationRules.map((rule, index) => (
+                    <div key={index}>
+                      <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+                        {rule.label}
+                      </label>
+                      <input
+                        type={rule.type}
+                        placeholder={rule.placeholder}
+                        pattern={rule.pattern}
+                        required={rule.required}
+                        className="w-full px-4 py-3 border-2 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-6 p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                  <p className="text-sm text-red-800 dark:text-red-200">
+                    <strong>问题</strong>: 页面加载时，所有空的必填字段立即显示为无效状态（红色），这可能让用户感到困惑或压力。
+                  </p>
+                </div>
+              </div>
+
+              {/* 现代方式 */}
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                      现代方式
+                    </h2>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      :user-valid 和 :user-invalid
+                    </p>
+                  </div>
+                  <div className="bg-green-100 dark:bg-green-900/30 px-3 py-1 rounded-full">
+                    <span className="text-green-700 dark:text-green-300 text-sm font-semibold">
+                      ✅ 交互后显示
+                    </span>
+                  </div>
+                </div>
+
+                <div className="modern space-y-4">
+                  {validationRules.map((rule, index) => (
+                    <div key={index}>
+                      <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+                        {rule.label}
+                      </label>
+                      <input
+                        type={rule.type}
+                        placeholder={rule.placeholder}
+                        pattern={rule.pattern}
+                        required={rule.required}
+                        className="w-full px-4 py-3 border-2 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-6 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                  <p className="text-sm text-green-800 dark:text-green-200">
+                    <strong>优势</strong>: 初始状态干净整洁，只有在用户开始输入后才显示验证反馈，提供更自然的用户体验。
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* 详细说明 */}
+            <div className="mt-8 grid md:grid-cols-3 gap-6">
+              <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
+                <div className="text-3xl mb-3">🎯</div>
+                <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">
+                  触发时机
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  传统伪类在页面加载时立即生效，现代伪类仅在用户与输入框交互（输入、失焦等）后才生效。
+                </p>
+              </div>
+
+              <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
+                <div className="text-3xl mb-3">💡</div>
+                <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">
+                  用户体验
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  :user-invalid 避免了"未开始就显示错误"的问题，让表单验证更加人性化和友好。
+                </p>
+              </div>
+
+              <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
+                <div className="text-3xl mb-3">🔧</div>
+                <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">
+                  最佳实践
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  优先使用 :user-valid 和 :user-invalid，为不支持的浏览器提供 JavaScript 降级方案。
+                </p>
+              </div>
+            </div>
+
+            {/* 代码示例 */}
+            <div className="mt-8 bg-gray-900 dark:bg-gray-950 rounded-xl p-6 overflow-x-auto">
+              <h3 className="text-lg font-semibold mb-4 text-white">CSS 代码示例</h3>
+              <pre className="text-sm text-gray-300">
+{`/* 传统方式 - 立即生效 */
+input:valid {
+  border-color: green;
+}
+input:invalid {
+  border-color: red;
+}
+
+/* 现代方式 - 用户交互后生效 */
+input:user-valid {
+  border-color: green;
+}
+input:user-invalid {
+  border-color: red;
+}`}
+              </pre>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.render(<App />, document.getElementById('root'));
+  </script>
+</body>
+</html>

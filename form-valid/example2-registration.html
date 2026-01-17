@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>示例2: 用户注册表单</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* 使用 :user-invalid 提供友好的验证反馈 */
+    input:user-invalid {
+      border-color: #ef4444;
+    }
+    input:user-valid {
+      border-color: #10b981;
+    }
+
+    /* 添加图标指示器 */
+    .input-wrapper {
+      position: relative;
+    }
+    .input-wrapper input:user-valid ~ .icon-valid {
+      display: block;
+    }
+    .input-wrapper input:user-invalid ~ .icon-invalid {
+      display: block;
+    }
+    .icon-valid, .icon-invalid {
+      display: none;
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    /* 深色模式 */
+    @media (prefers-color-scheme: dark) {
+      input:user-invalid {
+        background-color: #7f1d1d;
+      }
+      input:user-valid {
+        background-color: #064e3b;
+      }
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    function App() {
+      const [formData, setFormData] = React.useState({
+        username: '',
+        email: '',
+        password: '',
+        confirmPassword: '',
+        age: ''
+      });
+
+      const handleSubmit = (e) => {
+        e.preventDefault();
+        if (e.target.checkValidity()) {
+          alert('表单验证通过！\n\n' + JSON.stringify(formData, null, 2));
+        }
+      };
+
+      return (
+        <div className="min-h-screen flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 w-full max-w-md">
+            <h1 className="text-3xl font-bold text-center mb-2 text-gray-900 dark:text-white">
+              用户注册
+            </h1>
+            <p className="text-center text-gray-600 dark:text-gray-400 mb-6">
+              使用 :user-valid 和 :user-invalid
+            </p>
+
+            <form onSubmit={handleSubmit} className="space-y-5">
+              {/* 用户名 */}
+              <div>
+                <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+                  用户名
+                </label>
+                <div className="input-wrapper">
+                  <input
+                    type="text"
+                    required
+                    minLength="3"
+                    maxLength="20"
+                    pattern="[a-zA-Z0-9_]+"
+                    value={formData.username}
+                    onChange={(e) => setFormData({...formData, username: e.target.value})}
+                    placeholder="3-20个字符，仅字母数字下划线"
+                    className="w-full px-4 py-3 border-2 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                  />
+                  <span className="icon-valid text-green-500 text-xl">✓</span>
+                  <span className="icon-invalid text-red-500 text-xl">✗</span>
+                </div>
+              </div>
+
+              {/* 邮箱 */}
+              <div>
+                <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+                  邮箱地址
+                </label>
+                <div className="input-wrapper">
+                  <input
+                    type="email"
+                    required
+                    value={formData.email}
+                    onChange={(e) => setFormData({...formData, email: e.target.value})}
+                    placeholder="your@email.com"
+                    className="w-full px-4 py-3 border-2 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                  />
+                  <span className="icon-valid text-green-500 text-xl">✓</span>
+                  <span className="icon-invalid text-red-500 text-xl">✗</span>
+                </div>
+              </div>
+
+              {/* 密码 */}
+              <div>
+                <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+                  密码
+                </label>
+                <div className="input-wrapper">
+                  <input
+                    type="password"
+                    required
+                    minLength="8"
+                    value={formData.password}
+                    onChange={(e) => setFormData({...formData, password: e.target.value})}
+                    placeholder="至少8个字符"
+                    className="w-full px-4 py-3 border-2 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                  />
+                  <span className="icon-valid text-green-500 text-xl">✓</span>
+                  <span className="icon-invalid text-red-500 text-xl">✗</span>
+                </div>
+              </div>
+
+              {/* 确认密码 */}
+              <div>
+                <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+                  确认密码
+                </label>
+                <div className="input-wrapper">
+                  <input
+                    type="password"
+                    required
+                    pattern={formData.password}
+                    value={formData.confirmPassword}
+                    onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
+                    placeholder="再次输入密码"
+                    className="w-full px-4 py-3 border-2 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                  />
+                  <span className="icon-valid text-green-500 text-xl">✓</span>
+                  <span className="icon-invalid text-red-500 text-xl">✗</span>
+                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  密码必须匹配
+                </p>
+              </div>
+
+              {/* 年龄 */}
+              <div>
+                <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+                  年龄
+                </label>
+                <div className="input-wrapper">
+                  <input
+                    type="number"
+                    required
+                    min="18"
+                    max="120"
+                    value={formData.age}
+                    onChange={(e) => setFormData({...formData, age: e.target.value})}
+                    placeholder="18-120"
+                    className="w-full px-4 py-3 border-2 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                  />
+                  <span className="icon-valid text-green-500 text-xl">✓</span>
+                  <span className="icon-invalid text-red-500 text-xl">✗</span>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition-colors mt-6"
+              >
+                注册
+              </button>
+            </form>
+
+            <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+              <p className="text-xs text-gray-600 dark:text-gray-400">
+                💡 <strong>体验要点</strong>: 注意输入框在你开始输入后才会显示验证状态（绿色边框表示有效，红色边框表示无效）。这比传统的 :valid/:invalid 更友好，因为它不会在页面加载时就显示错误。
+              </p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.render(<App />, document.getElementById('root'));
+  </script>
+</body>
+</html>
