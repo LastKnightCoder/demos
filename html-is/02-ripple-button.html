@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>波纹效果按钮 - is 属性</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 900px;
+      margin: 50px auto;
+      padding: 20px;
+      line-height: 1.6;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+    }
+
+    .container {
+      background: white;
+      border-radius: 12px;
+      padding: 40px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    }
+
+    h1 {
+      color: #333;
+      border-bottom: 3px solid #667eea;
+      padding-bottom: 15px;
+      margin-bottom: 30px;
+    }
+
+    .demo-section {
+      margin: 30px 0;
+      padding: 30px;
+      background: #f8f9fa;
+      border-radius: 8px;
+    }
+
+    /* 波纹按钮基础样式 */
+    button[is="ripple-button"] {
+      position: relative;
+      overflow: hidden;
+      padding: 15px 30px;
+      font-size: 16px;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin: 10px;
+      background: #667eea;
+      color: white;
+      transition: background 0.3s, transform 0.1s;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    button[is="ripple-button"]:hover {
+      background: #5568d3;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+    }
+
+    button[is="ripple-button"]:active {
+      transform: translateY(0);
+    }
+
+    /* 波纹动画 */
+    .ripple {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.6);
+      transform: scale(0);
+      animation: ripple-animation 0.6s ease-out;
+      pointer-events: none;
+    }
+
+    @keyframes ripple-animation {
+      to {
+        transform: scale(4);
+        opacity: 0;
+      }
+    }
+
+    /* 不同颜色的按钮 */
+    button[is="ripple-button"].success {
+      background: #28a745;
+      box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
+    }
+
+    button[is="ripple-button"].success:hover {
+      background: #218838;
+    }
+
+    button[is="ripple-button"].danger {
+      background: #dc3545;
+      box-shadow: 0 4px 15px rgba(220, 53, 69, 0.4);
+    }
+
+    button[is="ripple-button"].danger:hover {
+      background: #c82333;
+    }
+
+    button[is="ripple-button"].warning {
+      background: #ffc107;
+      color: #333;
+      box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
+    }
+
+    button[is="ripple-button"].warning:hover {
+      background: #e0a800;
+    }
+
+    .code-block {
+      background: #282c34;
+      color: #abb2bf;
+      padding: 20px;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 20px 0;
+      font-size: 14px;
+    }
+
+    .code-block pre {
+      margin: 0;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .code-block code {
+      font-family: 'Courier New', monospace;
+      line-height: 1.5;
+    }
+
+    .feature-list {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      border-left: 4px solid #667eea;
+    }
+
+    .feature-list li {
+      margin: 10px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🌊 波纹效果按钮</h1>
+
+    <div class="demo-section">
+      <h2>点击按钮查看波纹效果</h2>
+      <p>使用 <code>is="ripple-button"</code> 扩展原生按钮，添加 Material Design 风格的波纹效果：</p>
+
+      <div style="text-align: center; padding: 20px;">
+        <button is="ripple-button">默认按钮</button>
+        <button is="ripple-button" class="success">成功按钮</button>
+        <button is="ripple-button" class="danger">危险按钮</button>
+        <button is="ripple-button" class="warning">警告按钮</button>
+      </div>
+    </div>
+
+    <div class="demo-section">
+      <h2>实现原理</h2>
+
+      <div class="feature-list">
+        <h3>核心功能：</h3>
+        <ul>
+          <li>✅ 继承原生 <code>&lt;button&gt;</code> 的所有功能</li>
+          <li>✅ 自动计算点击位置，生成波纹动画</li>
+          <li>✅ 动画结束后自动清理 DOM 元素</li>
+          <li>✅ 支持多次快速点击</li>
+          <li>✅ 保留按钮的可访问性和语义</li>
+        </ul>
+      </div>
+
+      <h3>HTML 使用方式</h3>
+      <div class="code-block">
+        <pre><code>&lt;button is="ripple-button"&gt;点击我&lt;/button&gt;
+&lt;button is="ripple-button" class="success"&gt;成功&lt;/button&gt;</code></pre>
+      </div>
+
+      <h3>JavaScript 实现</h3>
+      <div class="code-block">
+        <pre><code>class RippleButton extends HTMLButtonElement {
+  connectedCallback() {
+    this.addEventListener('click', this.createRipple);
+  }
+
+  createRipple = (event) => {
+    const ripple = document.createElement('span');
+    ripple.classList.add('ripple');
+
+    // 计算波纹位置
+    const rect = this.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height);
+    const x = event.clientX - rect.left - size / 2;
+    const y = event.clientY - rect.top - size / 2;
+
+    ripple.style.width = ripple.style.height = size + 'px';
+    ripple.style.left = x + 'px';
+    ripple.style.top = y + 'px';
+
+    this.appendChild(ripple);
+
+    // 动画结束后移除元素
+    ripple.addEventListener('animationend', () => {
+      ripple.remove();
+    });
+  }
+}
+
+customElements.define('ripple-button', RippleButton, {
+  extends: 'button'
+});</code></pre>
+      </div>
+    </div>
+
+    <div class="demo-section">
+      <h2>为什么使用 is 属性？</h2>
+      <div class="feature-list">
+        <ul>
+          <li><strong>保留语义：</strong>仍然是一个真正的 <code>&lt;button&gt;</code>，屏幕阅读器能正确识别</li>
+          <li><strong>继承功能：</strong>自动支持表单提交、焦点管理、键盘导航等</li>
+          <li><strong>渐进增强：</strong>如果浏览器不支持，仍然是一个可用的按钮</li>
+          <li><strong>样式灵活：</strong>可以像普通按钮一样添加 class 和样式</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 定义波纹按钮类
+    class RippleButton extends HTMLButtonElement {
+      connectedCallback() {
+        console.log('RippleButton 已连接到 DOM');
+        this.addEventListener('click', this.createRipple);
+      }
+
+      disconnectedCallback() {
+        console.log('RippleButton 已从 DOM 移除');
+        this.removeEventListener('click', this.createRipple);
+      }
+
+      createRipple = (event) => {
+        // 创建波纹元素
+        const ripple = document.createElement('span');
+        ripple.classList.add('ripple');
+
+        // 计算波纹的位置和大小
+        const rect = this.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        const x = event.clientX - rect.left - size / 2;
+        const y = event.clientY - rect.top - size / 2;
+
+        // 设置波纹样式
+        ripple.style.width = ripple.style.height = size + 'px';
+        ripple.style.left = x + 'px';
+        ripple.style.top = y + 'px';
+
+        // 添加到按钮中
+        this.appendChild(ripple);
+
+        // 动画结束后移除波纹元素
+        ripple.addEventListener('animationend', () => {
+          ripple.remove();
+        });
+
+        console.log(`波纹效果已触发，位置: (${x.toFixed(0)}, ${y.toFixed(0)})`);
+      }
+    }
+
+    // 注册自定义元素
+    customElements.define('ripple-button', RippleButton, { extends: 'button' });
+
+    // 浏览器兼容性检测
+    if (!customElements || !document.createElement('button', { is: 'ripple-button' })) {
+      console.warn('您的浏览器可能不完全支持自定义内置元素');
+    }
+  </script>
+</body>
+</html>

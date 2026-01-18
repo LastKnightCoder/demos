@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>基础示例 - is 属性</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      line-height: 1.6;
+    }
+
+    h1 {
+      color: #333;
+      border-bottom: 2px solid #007bff;
+      padding-bottom: 10px;
+    }
+
+    .demo-section {
+      margin: 30px 0;
+      padding: 20px;
+      background: #f8f9fa;
+      border-radius: 8px;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin: 5px;
+    }
+
+    .normal-button {
+      background: #6c757d;
+      color: white;
+    }
+
+    .normal-button:hover {
+      background: #5a6268;
+    }
+
+    /* 自定义按钮的样式 */
+    fancy-button,
+    button[is="fancy-button"] {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    fancy-button:hover,
+    button[is="fancy-button"]:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+
+    .click-count {
+      display: inline-block;
+      margin-left: 10px;
+      padding: 5px 10px;
+      background: #fff;
+      border-radius: 20px;
+      font-size: 14px;
+      color: #667eea;
+      font-weight: bold;
+    }
+
+    .code-block {
+      background: #282c34;
+      color: #abb2bf;
+      padding: 15px;
+      border-radius: 5px;
+      overflow-x: auto;
+      margin: 15px 0;
+    }
+
+    .code-block pre {
+      margin: 0;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .code-block code {
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <h1>基础示例：扩展按钮元素</h1>
+
+  <div class="demo-section">
+    <h2>普通按钮 vs 自定义按钮</h2>
+    <p>下面展示了普通按钮和使用 <code>is</code> 属性扩展的自定义按钮的区别：</p>
+
+    <button class="normal-button">普通按钮</button>
+    <button is="fancy-button">自定义按钮（带点击计数）</button>
+    <span class="click-count" id="clickCount">点击次数: 0</span>
+  </div>
+
+  <div class="demo-section">
+    <h2>代码说明</h2>
+
+    <h3>HTML 部分</h3>
+    <div class="code-block">
+      <pre><code>&lt;button is="fancy-button"&gt;自定义按钮&lt;/button&gt;</code></pre>
+    </div>
+
+    <h3>JavaScript 部分</h3>
+    <div class="code-block">
+      <pre><code>class FancyButton extends HTMLButtonElement {
+  constructor() {
+    super();
+    this.clickCount = 0;
+  }
+
+  connectedCallback() {
+    this.addEventListener('click', this.handleClick);
+  }
+
+  handleClick = () => {
+    this.clickCount++;
+    console.log(`按钮被点击了 ${this.clickCount} 次`);
+  }
+}
+
+customElements.define('fancy-button', FancyButton, {
+  extends: 'button'
+});</code></pre>
+    </div>
+  </div>
+
+  <div class="demo-section">
+    <h2>关键点</h2>
+    <ul>
+      <li><strong>继承 HTMLButtonElement</strong>：保留了按钮的所有原生功能</li>
+      <li><strong>使用 extends 选项</strong>：告诉浏览器这是扩展的内置元素</li>
+      <li><strong>connectedCallback</strong>：元素插入 DOM 时自动调用</li>
+      <li><strong>保留语义</strong>：屏幕阅读器仍然识别为按钮</li>
+    </ul>
+  </div>
+
+  <script>
+    // 定义自定义按钮类
+    class FancyButton extends HTMLButtonElement {
+      constructor() {
+        super();
+        this.clickCount = 0;
+      }
+
+      connectedCallback() {
+        console.log('FancyButton 已连接到 DOM');
+        this.addEventListener('click', this.handleClick);
+      }
+
+      disconnectedCallback() {
+        console.log('FancyButton 已从 DOM 移除');
+        this.removeEventListener('click', this.handleClick);
+      }
+
+      handleClick = () => {
+        this.clickCount++;
+        console.log(`按钮被点击了 ${this.clickCount} 次`);
+
+        // 更新页面上的计数显示
+        const countDisplay = document.getElementById('clickCount');
+        if (countDisplay) {
+          countDisplay.textContent = `点击次数: ${this.clickCount}`;
+        }
+
+        // 添加一个简单的动画效果
+        this.style.transform = 'scale(0.95)';
+        setTimeout(() => {
+          this.style.transform = '';
+        }, 100);
+      }
+    }
+
+    // 注册自定义元素
+    // 注意：第三个参数 { extends: 'button' } 是必需的
+    customElements.define('fancy-button', FancyButton, { extends: 'button' });
+
+    // 检测浏览器支持
+    if (!customElements || !customElements.define) {
+      alert('您的浏览器不支持 Custom Elements API');
+    }
+  </script>
+</body>
+</html>

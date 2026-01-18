@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HTML is 属性示例集合</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 16px;
+      padding: 50px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+
+    h1 {
+      font-size: 48px;
+      color: #333;
+      margin-bottom: 20px;
+      text-align: center;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #666;
+      font-size: 18px;
+      margin-bottom: 40px;
+    }
+
+    .intro {
+      background: #f8f9fa;
+      padding: 25px;
+      border-radius: 12px;
+      margin-bottom: 40px;
+      border-left: 5px solid #667eea;
+    }
+
+    .intro h2 {
+      color: #333;
+      margin-bottom: 15px;
+      font-size: 24px;
+    }
+
+    .intro p {
+      color: #555;
+      margin-bottom: 10px;
+    }
+
+    .examples-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 25px;
+      margin-bottom: 40px;
+    }
+
+    .example-card {
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      border-radius: 12px;
+      padding: 25px;
+      transition: transform 0.3s, box-shadow 0.3s;
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+      border: 2px solid transparent;
+    }
+
+    .example-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      border-color: #667eea;
+    }
+
+    .example-card .number {
+      display: inline-block;
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 40px;
+      font-weight: bold;
+      margin-bottom: 15px;
+    }
+
+    .example-card h3 {
+      color: #333;
+      margin-bottom: 10px;
+      font-size: 20px;
+    }
+
+    .example-card p {
+      color: #555;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .example-card .tags {
+      margin-top: 15px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .example-card .tag {
+      background: rgba(102, 126, 234, 0.2);
+      color: #667eea;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .browser-support {
+      background: #fff3cd;
+      border: 2px solid #ffc107;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 30px;
+    }
+
+    .browser-support h3 {
+      color: #856404;
+      margin-bottom: 10px;
+    }
+
+    .browser-support ul {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    .browser-support li {
+      padding: 5px 0;
+      color: #856404;
+    }
+
+    .resources {
+      background: #e7f3ff;
+      border-radius: 12px;
+      padding: 25px;
+      border-left: 5px solid #007bff;
+    }
+
+    .resources h3 {
+      color: #007bff;
+      margin-bottom: 15px;
+    }
+
+    .resources ul {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    .resources li {
+      padding: 8px 0;
+    }
+
+    .resources a {
+      color: #007bff;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .resources a:hover {
+      text-decoration: underline;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 2px solid #e9ecef;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>HTML is 属性</h1>
+    <p class="subtitle">自定义内置元素示例集合</p>
+
+    <div class="intro">
+      <h2>什么是 is 属性？</h2>
+      <p><code>is</code> 是 HTML 的全局属性，用于创建<strong>自定义内置元素</strong>（Customized Built-in Elements）。</p>
+      <p>它允许你扩展现有的 HTML 元素，为其添加自定义行为，同时保留原生元素的所有功能、语义和可访问性。</p>
+    </div>
+
+    <div class="browser-support">
+      <h3>⚠️ 浏览器兼容性</h3>
+      <ul>
+        <li>✅ Chrome/Edge 67+</li>
+        <li>✅ Firefox 63+</li>
+        <li>❌ Safari（不支持，需要使用降级方案）</li>
+      </ul>
+    </div>
+
+    <h2 style="margin-bottom: 20px; color: #333;">📚 示例列表</h2>
+
+    <div class="examples-grid">
+      <a href="01-basic-example.html" class="example-card">
+        <div class="number">01</div>
+        <h3>基础示例</h3>
+        <p>了解如何使用 is 属性扩展按钮元素，添加点击计数功能。</p>
+        <div class="tags">
+          <span class="tag">入门</span>
+          <span class="tag">按钮</span>
+        </div>
+      </a>
+
+      <a href="02-ripple-button.html" class="example-card">
+        <div class="number">02</div>
+        <h3>波纹效果按钮</h3>
+        <p>实现 Material Design 风格的波纹点击效果，支持多种颜色主题。</p>
+        <div class="tags">
+          <span class="tag">动画</span>
+          <span class="tag">交互</span>
+        </div>
+      </a>
+
+      <a href="03-auto-save-input.html" class="example-card">
+        <div class="number">03</div>
+        <h3>自动保存输入框</h3>
+        <p>扩展输入框和文本域，实现自动保存到 localStorage 的功能。</p>
+        <div class="tags">
+          <span class="tag">表单</span>
+          <span class="tag">存储</span>
+        </div>
+      </a>
+
+      <a href="04-expandable-details.html" class="example-card">
+        <div class="number">04</div>
+        <h3>可展开详情元素</h3>
+        <p>增强 details 元素，添加平滑动画和使用统计功能。</p>
+        <div class="tags">
+          <span class="tag">动画</span>
+          <span class="tag">统计</span>
+        </div>
+      </a>
+
+      <a href="05-polyfill.html" class="example-card">
+        <div class="number">05</div>
+        <h3>Safari 兼容方案</h3>
+        <p>学习如何处理 Safari 不支持的问题，实现优雅降级。</p>
+        <div class="tags">
+          <span class="tag">兼容性</span>
+          <span class="tag">降级</span>
+        </div>
+      </a>
+    </div>
+
+    <div class="resources">
+      <h3>📖 参考资源</h3>
+      <ul>
+        <li>📄 <a href="README.md" target="_blank">查看完整文档</a></li>
+        <li>🌐 <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/is" target="_blank">MDN: is 属性</a></li>
+        <li>📚 <a href="https://html.spec.whatwg.org/multipage/custom-elements.html" target="_blank">Web Components 规范</a></li>
+      </ul>
+    </div>
+
+    <footer>
+      <p>HTML is 属性示例集合 | 学习自定义内置元素</p>
+    </footer>
+  </div>
+</body>
+</html>

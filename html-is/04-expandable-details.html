@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>可展开详情元素 - is 属性</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 900px;
+      margin: 50px auto;
+      padding: 20px;
+      line-height: 1.6;
+      background: #f5f5f5;
+    }
+
+    .container {
+      background: white;
+      border-radius: 12px;
+      padding: 40px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      color: #333;
+      border-bottom: 3px solid #007bff;
+      padding-bottom: 15px;
+    }
+
+    .demo-section {
+      margin: 30px 0;
+    }
+
+    /* 增强的 details 元素样式 */
+    details[is="fancy-details"] {
+      background: #f8f9fa;
+      border: 2px solid #dee2e6;
+      border-radius: 8px;
+      margin: 15px 0;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    details[is="fancy-details"]:hover {
+      border-color: #007bff;
+      box-shadow: 0 2px 8px rgba(0,123,255,0.1);
+    }
+
+    details[is="fancy-details"][open] {
+      border-color: #007bff;
+      box-shadow: 0 4px 12px rgba(0,123,255,0.15);
+    }
+
+    details[is="fancy-details"] summary {
+      padding: 15px 20px;
+      cursor: pointer;
+      font-weight: 600;
+      color: #333;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: background 0.2s;
+    }
+
+    details[is="fancy-details"] summary:hover {
+      background: #e9ecef;
+    }
+
+    details[is="fancy-details"] summary::after {
+      content: '▼';
+      font-size: 12px;
+      transition: transform 0.3s;
+      color: #007bff;
+    }
+
+    details[is="fancy-details"][open] summary::after {
+      transform: rotate(180deg);
+    }
+
+    details[is="fancy-details"] .content {
+      padding: 20px;
+      animation: slideDown 0.3s ease-out;
+      border-top: 1px solid #dee2e6;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* 不同主题 */
+    details[is="fancy-details"].info {
+      border-color: #17a2b8;
+    }
+
+    details[is="fancy-details"].info[open] {
+      border-color: #17a2b8;
+      background: #d1ecf1;
+    }
+
+    details[is="fancy-details"].success {
+      border-color: #28a745;
+    }
+
+    details[is="fancy-details"].success[open] {
+      border-color: #28a745;
+      background: #d4edda;
+    }
+
+    details[is="fancy-details"].warning {
+      border-color: #ffc107;
+    }
+
+    details[is="fancy-details"].warning[open] {
+      border-color: #ffc107;
+      background: #fff3cd;
+    }
+
+    .code-block {
+      background: #282c34;
+      color: #abb2bf;
+      padding: 20px;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 20px 0;
+    }
+
+    .code-block pre {
+      margin: 0;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .code-block code {
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .stats {
+      background: #e7f3ff;
+      padding: 15px;
+      border-radius: 6px;
+      margin-top: 20px;
+      border-left: 4px solid #007bff;
+    }
+
+    .stats p {
+      margin: 5px 0;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📋 可展开详情元素</h1>
+
+    <div class="demo-section">
+      <h2>增强的 &lt;details&gt; 元素</h2>
+      <p>使用 <code>is="fancy-details"</code> 扩展原生 <code>&lt;details&gt;</code> 元素，添加动画和统计功能：</p>
+
+      <details is="fancy-details">
+        <summary>什么是 HTML is 属性？</summary>
+        <div class="content">
+          <p><code>is</code> 属性允许你创建自定义内置元素，扩展现有 HTML 元素的功能。</p>
+          <p>它的主要优势是：</p>
+          <ul>
+            <li>保留原生元素的所有功能和语义</li>
+            <li>继承可访问性特性</li>
+            <li>添加自定义行为和样式</li>
+          </ul>
+        </div>
+      </details>
+
+      <details is="fancy-details" class="info">
+        <summary>浏览器兼容性如何？</summary>
+        <div class="content">
+          <p>自定义内置元素的浏览器支持情况：</p>
+          <ul>
+            <li>✅ Chrome/Edge 67+</li>
+            <li>✅ Firefox 63+</li>
+            <li>❌ Safari（不支持）</li>
+          </ul>
+          <p>对于 Safari，可以使用 polyfill 或回退到自主自定义元素。</p>
+        </div>
+      </details>
+
+      <details is="fancy-details" class="success">
+        <summary>使用场景有哪些？</summary>
+        <div class="content">
+          <p>适合使用 <code>is</code> 属性的场景：</p>
+          <ul>
+            <li>增强按钮功能（如添加波纹效果）</li>
+            <li>自动保存的表单输入</li>
+            <li>带统计的可展开元素</li>
+            <li>自定义列表项行为</li>
+          </ul>
+        </div>
+      </details>
+
+      <details is="fancy-details" class="warning">
+        <summary>注意事项</summary>
+        <div class="content">
+          <p>使用时需要注意：</p>
+          <ul>
+            <li>Safari 不支持，需要考虑降级方案</li>
+            <li>必须使用 <code>extends</code> 选项注册</li>
+            <li>继承的类必须是对应的 HTML 元素类</li>
+            <li>不能用于 void 元素（如 <code>&lt;img&gt;</code>）</li>
+          </ul>
+        </div>
+      </details>
+
+      <div class="stats">
+        <h3>📊 统计信息</h3>
+        <p id="openCount">打开次数: 0</p>
+        <p id="closeCount">关闭次数: 0</p>
+        <p id="totalTime">总打开时长: 0 秒</p>
+      </div>
+    </div>
+
+    <div class="demo-section">
+      <h2>实现原理</h2>
+
+      <h3>HTML 使用</h3>
+      <div class="code-block">
+        <pre><code>&lt;details is="fancy-details"&gt;
+  &lt;summary&gt;标题&lt;/summary&gt;
+  &lt;div class="content"&gt;
+    内容...
+  &lt;/div&gt;
+&lt;/details&gt;</code></pre>
+      </div>
+
+      <h3>JavaScript 实现</h3>
+      <div class="code-block">
+        <pre><code>class FancyDetails extends HTMLDetailsElement {
+  connectedCallback() {
+    this.addEventListener('toggle', this.handleToggle);
+    this.wrapContent();
+  }
+
+  wrapContent() {
+    // 将内容包装在 div 中以便添加动画
+    const summary = this.querySelector('summary');
+    const content = Array.from(this.childNodes)
+      .filter(node => node !== summary);
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'content';
+    content.forEach(node => wrapper.appendChild(node));
+    this.appendChild(wrapper);
+  }
+
+  handleToggle = () => {
+    // 统计打开/关闭次数
+    if (this.open) {
+      this.openTime = Date.now();
+    } else {
+      const duration = (Date.now() - this.openTime) / 1000;
+      console.log(\`打开了 \${duration} 秒\`);
+    }
+  }
+}</code></pre>
+      </div>
+
+      <h3>核心特性</h3>
+      <ul>
+        <li>✅ 继承原生 <code>&lt;details&gt;</code> 的所有功能</li>
+        <li>✅ 添加平滑的展开/收起动画</li>
+        <li>✅ 统计打开次数和时长</li>
+        <li>✅ 支持不同的主题样式</li>
+        <li>✅ 保留键盘导航和可访问性</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    // 统计数据
+    let stats = {
+      openCount: 0,
+      closeCount: 0,
+      totalTime: 0
+    };
+
+    // 定义增强的 details 元素
+    class FancyDetails extends HTMLDetailsElement {
+      connectedCallback() {
+        console.log('FancyDetails 已连接到 DOM');
+
+        // 包装内容以便添加动画
+        this.wrapContent();
+
+        // 监听 toggle 事件
+        this.addEventListener('toggle', this.handleToggle);
+      }
+
+      disconnectedCallback() {
+        this.removeEventListener('toggle', this.handleToggle);
+      }
+
+      wrapContent() {
+        // 查找 summary 元素
+        const summary = this.querySelector('summary');
+        if (!summary) return;
+
+        // 获取除 summary 外的所有内容
+        const content = Array.from(this.childNodes).filter(
+          node => node !== summary && node.nodeType !== Node.TEXT_NODE
+        );
+
+        // 如果内容已经被包装，跳过
+        if (content.length === 1 && content[0].classList?.contains('content')) {
+          return;
+        }
+
+        // 创建包装器
+        const wrapper = document.createElement('div');
+        wrapper.className = 'content';
+
+        // 移动内容到包装器
+        content.forEach(node => wrapper.appendChild(node));
+
+        // 添加包装器到 details
+        this.appendChild(wrapper);
+      }
+
+      handleToggle = () => {
+        if (this.open) {
+          // 记录打开时间
+          this.openTime = Date.now();
+          stats.openCount++;
+          console.log(`Details 已打开 (总计: ${stats.openCount} 次)`);
+        } else {
+          // 计算打开时长
+          if (this.openTime) {
+            const duration = (Date.now() - this.openTime) / 1000;
+            stats.totalTime += duration;
+            console.log(`Details 已关闭 (打开了 ${duration.toFixed(1)} 秒)`);
+          }
+          stats.closeCount++;
+        }
+
+        // 更新统计显示
+        updateStats();
+      }
+    }
+
+    // 注册自定义元素
+    customElements.define('fancy-details', FancyDetails, { extends: 'details' });
+
+    // 更新统计显示
+    function updateStats() {
+      document.getElementById('openCount').textContent = `打开次数: ${stats.openCount}`;
+      document.getElementById('closeCount').textContent = `关闭次数: ${stats.closeCount}`;
+      document.getElementById('totalTime').textContent = `总打开时长: ${stats.totalTime.toFixed(1)} 秒`;
+    }
+  </script>
+</body>
+</html>

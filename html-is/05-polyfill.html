@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Safari 兼容方案 - is 属性</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 900px;
+      margin: 50px auto;
+      padding: 20px;
+      line-height: 1.6;
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      min-height: 100vh;
+    }
+
+    .container {
+      background: white;
+      border-radius: 12px;
+      padding: 40px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    }
+
+    h1 {
+      color: #333;
+      border-bottom: 3px solid #f5576c;
+      padding-bottom: 15px;
+    }
+
+    .alert {
+      padding: 15px 20px;
+      border-radius: 8px;
+      margin: 20px 0;
+      border-left: 4px solid;
+    }
+
+    .alert-info {
+      background: #d1ecf1;
+      border-color: #17a2b8;
+      color: #0c5460;
+    }
+
+    .alert-warning {
+      background: #fff3cd;
+      border-color: #ffc107;
+      color: #856404;
+    }
+
+    .alert-success {
+      background: #d4edda;
+      border-color: #28a745;
+      color: #155724;
+    }
+
+    .demo-section {
+      margin: 30px 0;
+      padding: 25px;
+      background: #f8f9fa;
+      border-radius: 8px;
+    }
+
+    /* 按钮样式 */
+    button,
+    .custom-button {
+      padding: 12px 24px;
+      font-size: 16px;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin: 10px;
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      color: white;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 4px 15px rgba(245, 87, 108, 0.4);
+    }
+
+    button:hover,
+    .custom-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(245, 87, 108, 0.5);
+    }
+
+    .ripple {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.6);
+      transform: scale(0);
+      animation: ripple-animation 0.6s ease-out;
+      pointer-events: none;
+    }
+
+    @keyframes ripple-animation {
+      to {
+        transform: scale(4);
+        opacity: 0;
+      }
+    }
+
+    .code-block {
+      background: #282c34;
+      color: #abb2bf;
+      padding: 20px;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 20px 0;
+    }
+
+    .code-block pre {
+      margin: 0;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .code-block code {
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .comparison-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+    }
+
+    .comparison-table th,
+    .comparison-table td {
+      padding: 12px;
+      text-align: left;
+      border: 1px solid #dee2e6;
+    }
+
+    .comparison-table th {
+      background: #f093fb;
+      color: white;
+      font-weight: 600;
+    }
+
+    .comparison-table tr:nth-child(even) {
+      background: #f8f9fa;
+    }
+
+    .browser-support {
+      display: flex;
+      gap: 15px;
+      margin: 20px 0;
+    }
+
+    .browser-card {
+      flex: 1;
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .browser-card.supported {
+      background: #d4edda;
+      border: 2px solid #28a745;
+    }
+
+    .browser-card.not-supported {
+      background: #f8d7da;
+      border: 2px solid #dc3545;
+    }
+
+    .browser-card h3 {
+      margin: 0 0 10px 0;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔧 Safari 兼容方案</h1>
+
+    <div class="alert alert-warning" id="browserAlert">
+      <strong>检测中...</strong> 正在检测浏览器对自定义内置元素的支持...
+    </div>
+
+    <div class="demo-section">
+      <h2>浏览器支持情况</h2>
+
+      <div class="browser-support">
+        <div class="browser-card supported">
+          <h3>✅ Chrome/Edge</h3>
+          <p>完全支持</p>
+          <small>版本 67+</small>
+        </div>
+        <div class="browser-card supported">
+          <h3>✅ Firefox</h3>
+          <p>完全支持</p>
+          <small>版本 63+</small>
+        </div>
+        <div class="browser-card not-supported">
+          <h3>❌ Safari</h3>
+          <p>不支持</p>
+          <small>所有版本</small>
+        </div>
+      </div>
+    </div>
+
+    <div class="demo-section">
+      <h2>兼容方案演示</h2>
+      <p>下面的按钮会根据浏览器支持情况自动选择实现方式：</p>
+
+      <div style="text-align: center; padding: 20px;">
+        <!-- 在支持的浏览器中使用 is 属性 -->
+        <button is="ripple-button" id="nativeButton">原生实现（is 属性）</button>
+
+        <!-- 在不支持的浏览器中使用自主自定义元素 -->
+        <ripple-button-fallback>降级实现（自定义元素）</ripple-button-fallback>
+      </div>
+
+      <div id="implementationInfo" class="alert alert-info">
+        当前使用的实现方式将在这里显示...
+      </div>
+    </div>
+
+    <div class="demo-section">
+      <h2>两种实现方式对比</h2>
+
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th>特性</th>
+            <th>自定义内置元素 (is)</th>
+            <th>自主自定义元素</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>HTML 写法</td>
+            <td><code>&lt;button is="my-btn"&gt;</code></td>
+            <td><code>&lt;my-button&gt;</code></td>
+          </tr>
+          <tr>
+            <td>继承</td>
+            <td>继承原生元素</td>
+            <td>继承 HTMLElement</td>
+          </tr>
+          <tr>
+            <td>语义</td>
+            <td>保留原生语义</td>
+            <td>需要自定义</td>
+          </tr>
+          <tr>
+            <td>可访问性</td>
+            <td>自动继承</td>
+            <td>需要手动实现</td>
+          </tr>
+          <tr>
+            <td>Safari 支持</td>
+            <td>❌ 不支持</td>
+            <td>✅ 支持</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="demo-section">
+      <h2>推荐的兼容策略</h2>
+
+      <h3>方案 1: 特性检测 + 降级</h3>
+      <div class="code-block">
+        <pre><code>// 检测浏览器支持
+if ('customElements' in window &&
+    document.createElement('button', {is: 'test'}).constructor !== HTMLUnknownElement) {
+  // 使用自定义内置元素
+  customElements.define('ripple-button', RippleButton, {extends: 'button'});
+} else {
+  // 降级到自主自定义元素
+  customElements.define('ripple-button-fallback', RippleButtonFallback);
+}</code></pre>
+      </div>
+
+      <h3>方案 2: 使用 Polyfill</h3>
+      <div class="code-block">
+        <pre><code>&lt;!-- 引入 polyfill --&gt;
+&lt;script src="https://unpkg.com/@webcomponents/webcomponentsjs"&gt;&lt;/script&gt;
+&lt;script src="https://unpkg.com/@webcomponents/custom-elements"&gt;&lt;/script&gt;</code></pre>
+      </div>
+
+      <h3>方案 3: 只使用自主自定义元素</h3>
+      <div class="code-block">
+        <pre><code>&lt;!-- 放弃 is 属性，统一使用自主自定义元素 --&gt;
+&lt;ripple-button&gt;点击我&lt;/ripple-button&gt;
+
+&lt;script&gt;
+class RippleButton extends HTMLElement {
+  connectedCallback() {
+    this.innerHTML = \`
+      &lt;button&gt;\${this.textContent}&lt;/button&gt;
+    \`;
+    // 添加波纹逻辑...
+  }
+}
+&lt;/script&gt;</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 检测浏览器是否支持自定义内置元素
+    function supportsCustomizedBuiltInElements() {
+      try {
+        const button = document.createElement('button', { is: 'test-button' });
+        return button.constructor !== HTMLUnknownElement;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    const isSupported = supportsCustomizedBuiltInElements();
+
+    // 更新浏览器检测提示
+    const alertDiv = document.getElementById('browserAlert');
+    if (isSupported) {
+      alertDiv.className = 'alert alert-success';
+      alertDiv.innerHTML = '<strong>✅ 支持！</strong> 您的浏览器支持自定义内置元素（is 属性）。';
+    } else {
+      alertDiv.className = 'alert alert-warning';
+      alertDiv.innerHTML = '<strong>⚠️ 不支持</strong> 您的浏览器不支持自定义内置元素，将使用降级方案。';
+    }
+
+    // 定义自定义内置元素（用于支持的浏览器）
+    if (isSupported) {
+      class RippleButton extends HTMLButtonElement {
+        connectedCallback() {
+          this.addEventListener('click', this.createRipple);
+          console.log('使用原生 is 属性实现');
+        }
+
+        createRipple = (event) => {
+          const ripple = document.createElement('span');
+          ripple.classList.add('ripple');
+
+          const rect = this.getBoundingClientRect();
+          const size = Math.max(rect.width, rect.height);
+          const x = event.clientX - rect.left - size / 2;
+          const y = event.clientY - rect.top - size / 2;
+
+          ripple.style.width = ripple.style.height = size + 'px';
+          ripple.style.left = x + 'px';
+          ripple.style.top = y + 'px';
+
+          this.appendChild(ripple);
+
+          ripple.addEventListener('animationend', () => {
+            ripple.remove();
+          });
+        }
+      }
+
+      customElements.define('ripple-button', RippleButton, { extends: 'button' });
+
+      document.getElementById('implementationInfo').innerHTML =
+        '<strong>✅ 原生实现</strong><br>使用 <code>is="ripple-button"</code> 扩展原生按钮元素。';
+    }
+
+    // 定义自主自定义元素（降级方案）
+    class RippleButtonFallback extends HTMLElement {
+      connectedCallback() {
+        // 创建内部按钮
+        const button = document.createElement('button');
+        button.textContent = this.textContent;
+        button.className = 'custom-button';
+
+        // 复制属性
+        Array.from(this.attributes).forEach(attr => {
+          if (attr.name !== 'class') {
+            button.setAttribute(attr.name, attr.value);
+          }
+        });
+
+        this.innerHTML = '';
+        this.appendChild(button);
+
+        button.addEventListener('click', (event) => {
+          this.createRipple(event, button);
+        });
+
+        console.log('使用降级方案（自主自定义元素）');
+      }
+
+      createRipple(event, button) {
+        const ripple = document.createElement('span');
+        ripple.classList.add('ripple');
+
+        const rect = button.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        const x = event.clientX - rect.left - size / 2;
+        const y = event.clientY - rect.top - size / 2;
+
+        ripple.style.width = ripple.style.height = size + 'px';
+        ripple.style.left = x + 'px';
+        ripple.style.top = y + 'px';
+
+        button.appendChild(ripple);
+
+        ripple.addEventListener('animationend', () => {
+          ripple.remove();
+        });
+      }
+    }
+
+    customElements.define('ripple-button-fallback', RippleButtonFallback);
+
+    if (!isSupported) {
+      document.getElementById('implementationInfo').innerHTML =
+        '<strong>⚠️ 降级实现</strong><br>使用自主自定义元素 <code>&lt;ripple-button-fallback&gt;</code> 作为降级方案。';
+    }
+
+    // 隐藏不适用的按钮
+    if (isSupported) {
+      document.querySelector('ripple-button-fallback').style.display = 'none';
+    } else {
+      document.getElementById('nativeButton').style.display = 'none';
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>自动保存输入框 - is 属性</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      line-height: 1.6;
+      background: #f0f2f5;
+    }
+
+    .container {
+      background: white;
+      border-radius: 12px;
+      padding: 40px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      color: #333;
+      border-bottom: 3px solid #28a745;
+      padding-bottom: 15px;
+    }
+
+    .demo-section {
+      margin: 30px 0;
+      padding: 25px;
+      background: #f8f9fa;
+      border-radius: 8px;
+    }
+
+    /* 自动保存输入框样式 */
+    input[is="auto-save-input"],
+    textarea[is="auto-save-input"] {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      border: 2px solid #ddd;
+      border-radius: 6px;
+      transition: border-color 0.3s, box-shadow 0.3s;
+      box-sizing: border-box;
+    }
+
+    input[is="auto-save-input"]:focus,
+    textarea[is="auto-save-input"]:focus {
+      outline: none;
+      border-color: #28a745;
+      box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
+    }
+
+    /* 保存状态指示器 */
+    input[is="auto-save-input"].saving,
+    textarea[is="auto-save-input"].saving {
+      border-color: #ffc107;
+    }
+
+    input[is="auto-save-input"].saved,
+    textarea[is="auto-save-input"].saved {
+      border-color: #28a745;
+    }
+
+    .status-indicator {
+      display: inline-flex;
+      align-items: center;
+      margin-top: 10px;
+      padding: 8px 15px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.3s;
+    }
+
+    .status-indicator.saving {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .status-indicator.saved {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .status-indicator::before {
+      content: '';
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 8px;
+    }
+
+    .status-indicator.saving::before {
+      background: #ffc107;
+      animation: pulse 1s infinite;
+    }
+
+    .status-indicator.saved::before {
+      background: #28a745;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    textarea[is="auto-save-input"] {
+      min-height: 120px;
+      resize: vertical;
+      font-family: inherit;
+    }
+
+    .form-group {
+      margin-bottom: 25px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .saved-data {
+      background: #e7f3ff;
+      padding: 15px;
+      border-radius: 6px;
+      border-left: 4px solid #007bff;
+      margin-top: 20px;
+    }
+
+    .saved-data h3 {
+      margin-top: 0;
+      color: #007bff;
+    }
+
+    .saved-data pre {
+      background: white;
+      padding: 10px;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+
+    .code-block {
+      background: #282c34;
+      color: #abb2bf;
+      padding: 20px;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 20px 0;
+    }
+
+    .code-block pre {
+      margin: 0;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .code-block code {
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>💾 自动保存输入框</h1>
+
+    <div class="demo-section">
+      <h2>实时自动保存表单</h2>
+      <p>使用 <code>is="auto-save-input"</code> 扩展输入框，实现自动保存到 localStorage：</p>
+
+      <form id="demoForm">
+        <div class="form-group">
+          <label for="username">用户名</label>
+          <input
+            type="text"
+            id="username"
+            is="auto-save-input"
+            data-save-key="username"
+            placeholder="输入用户名，会自动保存">
+          <div class="status-indicator" id="username-status"></div>
+        </div>
+
+        <div class="form-group">
+          <label for="email">邮箱</label>
+          <input
+            type="email"
+            id="email"
+            is="auto-save-input"
+            data-save-key="email"
+            placeholder="输入邮箱地址">
+          <div class="status-indicator" id="email-status"></div>
+        </div>
+
+        <div class="form-group">
+          <label for="bio">个人简介</label>
+          <textarea
+            id="bio"
+            is="auto-save-input"
+            data-save-key="bio"
+            placeholder="介绍一下自己..."></textarea>
+          <div class="status-indicator" id="bio-status"></div>
+        </div>
+      </form>
+
+      <div class="saved-data">
+        <h3>已保存的数据（localStorage）</h3>
+        <pre id="savedDataDisplay">{}</pre>
+        <button onclick="clearSavedData()" style="margin-top: 10px; padding: 8px 16px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">清除所有数据</button>
+      </div>
+    </div>
+
+    <div class="demo-section">
+      <h2>实现原理</h2>
+
+      <h3>HTML 使用</h3>
+      <div class="code-block">
+        <pre><code>&lt;input
+  type="text"
+  is="auto-save-input"
+  data-save-key="username"
+  placeholder="自动保存的输入框"&gt;</code></pre>
+      </div>
+
+      <h3>JavaScript 实现</h3>
+      <div class="code-block">
+        <pre><code>class AutoSaveInput extends HTMLInputElement {
+  connectedCallback() {
+    this.saveKey = this.dataset.saveKey;
+    this.loadSavedValue();
+    this.addEventListener('input', this.handleInput);
+  }
+
+  loadSavedValue() {
+    const saved = localStorage.getItem(this.saveKey);
+    if (saved) this.value = saved;
+  }
+
+  handleInput = () => {
+    clearTimeout(this.saveTimeout);
+    this.showSaving();
+
+    this.saveTimeout = setTimeout(() => {
+      localStorage.setItem(this.saveKey, this.value);
+      this.showSaved();
+    }, 500);
+  }
+}</code></pre>
+      </div>
+
+      <h3>核心特性</h3>
+      <ul>
+        <li>✅ 输入时自动保存到 localStorage</li>
+        <li>✅ 防抖处理，避免频繁保存</li>
+        <li>✅ 页面刷新后自动恢复数据</li>
+        <li>✅ 视觉反馈显示保存状态</li>
+        <li>✅ 支持 input 和 textarea</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    // 定义自动保存输入框类
+    class AutoSaveInput extends HTMLInputElement {
+      connectedCallback() {
+        this.saveKey = this.dataset.saveKey;
+        if (!this.saveKey) {
+          console.error('AutoSaveInput 需要 data-save-key 属性');
+          return;
+        }
+
+        // 加载已保存的值
+        this.loadSavedValue();
+
+        // 监听输入事件
+        this.addEventListener('input', this.handleInput);
+
+        console.log(`AutoSaveInput 已连接: ${this.saveKey}`);
+      }
+
+      disconnectedCallback() {
+        this.removeEventListener('input', this.handleInput);
+        clearTimeout(this.saveTimeout);
+      }
+
+      loadSavedValue() {
+        const savedValue = localStorage.getItem(this.saveKey);
+        if (savedValue) {
+          this.value = savedValue;
+          console.log(`已加载保存的值: ${this.saveKey} = ${savedValue}`);
+        }
+      }
+
+      handleInput = () => {
+        // 清除之前的定时器（防抖）
+        clearTimeout(this.saveTimeout);
+
+        // 显示保存中状态
+        this.showSaving();
+
+        // 500ms 后保存
+        this.saveTimeout = setTimeout(() => {
+          localStorage.setItem(this.saveKey, this.value);
+          console.log(`已保存: ${this.saveKey} = ${this.value}`);
+          this.showSaved();
+          updateSavedDataDisplay();
+        }, 500);
+      }
+
+      showSaving() {
+        this.classList.remove('saved');
+        this.classList.add('saving');
+        this.updateStatusIndicator('saving', '保存中...');
+      }
+
+      showSaved() {
+        this.classList.remove('saving');
+        this.classList.add('saved');
+        this.updateStatusIndicator('saved', '已保存');
+
+        // 3秒后隐藏状态
+        setTimeout(() => {
+          this.classList.remove('saved');
+          this.updateStatusIndicator('', '');
+        }, 3000);
+      }
+
+      updateStatusIndicator(status, text) {
+        const indicator = document.getElementById(`${this.id}-status`);
+        if (indicator) {
+          indicator.className = `status-indicator ${status}`;
+          indicator.textContent = text;
+        }
+      }
+    }
+
+    // 注册自定义元素（支持 input 和 textarea）
+    customElements.define('auto-save-input', AutoSaveInput, { extends: 'input' });
+
+    // 为 textarea 创建相同的类
+    class AutoSaveTextarea extends HTMLTextAreaElement {
+      connectedCallback() {
+        AutoSaveInput.prototype.connectedCallback.call(this);
+      }
+      disconnectedCallback() {
+        AutoSaveInput.prototype.disconnectedCallback.call(this);
+      }
+      loadSavedValue() {
+        AutoSaveInput.prototype.loadSavedValue.call(this);
+      }
+      handleInput = AutoSaveInput.prototype.handleInput;
+      showSaving = AutoSaveInput.prototype.showSaving;
+      showSaved = AutoSaveInput.prototype.showSaved;
+      updateStatusIndicator = AutoSaveInput.prototype.updateStatusIndicator;
+    }
+
+    customElements.define('auto-save-textarea', AutoSaveTextarea, { extends: 'textarea' });
+
+    // 更新显示已保存的数据
+    function updateSavedDataDisplay() {
+      const savedData = {
+        username: localStorage.getItem('username') || '',
+        email: localStorage.getItem('email') || '',
+        bio: localStorage.getItem('bio') || ''
+      };
+      document.getElementById('savedDataDisplay').textContent =
+        JSON.stringify(savedData, null, 2);
+    }
+
+    // 清除所有保存的数据
+    function clearSavedData() {
+      localStorage.removeItem('username');
+      localStorage.removeItem('email');
+      localStorage.removeItem('bio');
+      document.getElementById('username').value = '';
+      document.getElementById('email').value = '';
+      document.getElementById('bio').value = '';
+      updateSavedDataDisplay();
+      alert('所有数据已清除');
+    }
+
+    // 页面加载时更新显示
+    updateSavedDataDisplay();
+  </script>
+</body>
+</html>
