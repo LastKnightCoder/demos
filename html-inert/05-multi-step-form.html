@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>inert 属性 - 多步骤表单演示</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      margin: 0;
+      padding: 20px;
+      line-height: 1.6;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      color: white;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .info-box {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 30px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .info-box h3 {
+      margin-top: 0;
+      color: #667eea;
+    }
+
+    /* 步骤指示器 */
+    .step-indicator {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 40px;
+      position: relative;
+    }
+
+    .step-indicator::before {
+      content: '';
+      position: absolute;
+      top: 20px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: rgba(255, 255, 255, 0.3);
+      z-index: 0;
+    }
+
+    .step {
+      flex: 1;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .step-circle {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.3);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 10px;
+      font-weight: bold;
+      transition: all 0.3s;
+    }
+
+    .step.active .step-circle {
+      background: white;
+      color: #667eea;
+      box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.3);
+    }
+
+    .step.completed .step-circle {
+      background: #28a745;
+      color: white;
+    }
+
+    .step-label {
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 14px;
+      transition: color 0.3s;
+    }
+
+    .step.active .step-label {
+      color: white;
+      font-weight: 600;
+    }
+
+    /* 表单容器 */
+    .form-container {
+      background: white;
+      border-radius: 12px;
+      padding: 40px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    }
+
+    .form-step {
+      transition: opacity 0.3s;
+    }
+
+    .form-step[inert] {
+      opacity: 0.4;
+      pointer-events: none;
+    }
+
+    .form-step.hidden {
+      display: none;
+    }
+
+    .form-step h2 {
+      color: #333;
+      margin-top: 0;
+      margin-bottom: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #555;
+      font-weight: 500;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #ddd;
+      border-radius: 6px;
+      font-size: 16px;
+      transition: border-color 0.3s;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: #667eea;
+      outline: none;
+    }
+
+    input.error {
+      border-color: #dc3545;
+    }
+
+    .error-message {
+      color: #dc3545;
+      font-size: 14px;
+      margin-top: 5px;
+    }
+
+    .radio-group, .checkbox-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .radio-group label, .checkbox-group label {
+      display: flex;
+      align-items: center;
+      font-weight: normal;
+      cursor: pointer;
+    }
+
+    .radio-group input, .checkbox-group input {
+      width: auto;
+      margin-right: 10px;
+    }
+
+    /* 按钮 */
+    .button-group {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 30px;
+      gap: 10px;
+    }
+
+    button {
+      padding: 12px 30px;
+      font-size: 16px;
+      cursor: pointer;
+      border: none;
+      border-radius: 6px;
+      transition: all 0.3s;
+      font-weight: 600;
+    }
+
+    .btn-primary {
+      background: #667eea;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #5568d3;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-secondary {
+      background: #6c757d;
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background: #5a6268;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    button:focus {
+      outline: 3px solid rgba(102, 126, 234, 0.5);
+      outline-offset: 2px;
+    }
+
+    /* 摘要页面 */
+    .summary-section {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 6px;
+      margin-bottom: 15px;
+    }
+
+    .summary-section h3 {
+      margin-top: 0;
+      color: #667eea;
+      font-size: 1.1em;
+    }
+
+    .summary-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #dee2e6;
+    }
+
+    .summary-item:last-child {
+      border-bottom: none;
+    }
+
+    .summary-label {
+      color: #666;
+    }
+
+    .summary-value {
+      color: #333;
+      font-weight: 500;
+    }
+
+    /* 成功消息 */
+    .success-message {
+      text-align: center;
+      padding: 40px;
+    }
+
+    .success-icon {
+      font-size: 80px;
+      margin-bottom: 20px;
+    }
+
+    .success-message h2 {
+      color: #28a745;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📋 多步骤注册表单</h1>
+
+    <div class="info-box">
+      <h3>场景说明</h3>
+      <p>
+        在多步骤表单中，使用 <code>inert</code> 属性可以：
+      </p>
+      <ul>
+        <li>确保用户按顺序完成每个步骤</li>
+        <li>防止跳过必要的信息填写</li>
+        <li>避免焦点意外进入未激活的步骤</li>
+        <li>提供清晰的流程引导</li>
+      </ul>
+    </div>
+
+    <!-- 步骤指示器 -->
+    <div class="step-indicator">
+      <div class="step active" id="indicator1">
+        <div class="step-circle">1</div>
+        <div class="step-label">基本信息</div>
+      </div>
+      <div class="step" id="indicator2">
+        <div class="step-circle">2</div>
+        <div class="step-label">账户设置</div>
+      </div>
+      <div class="step" id="indicator3">
+        <div class="step-circle">3</div>
+        <div class="step-label">偏好设置</div>
+      </div>
+      <div class="step" id="indicator4">
+        <div class="step-circle">4</div>
+        <div class="step-label">确认提交</div>
+      </div>
+    </div>
+
+    <!-- 表单容器 -->
+    <div class="form-container">
+      <!-- 步骤 1: 基本信息 -->
+      <div class="form-step" id="step1">
+        <h2>步骤 1: 基本信息</h2>
+        <div class="form-group">
+          <label>姓名 *</label>
+          <input type="text" id="name" placeholder="请输入您的姓名">
+          <div class="error-message" id="nameError"></div>
+        </div>
+        <div class="form-group">
+          <label>性别 *</label>
+          <div class="radio-group">
+            <label><input type="radio" name="gender" value="male"> 男</label>
+            <label><input type="radio" name="gender" value="female"> 女</label>
+            <label><input type="radio" name="gender" value="other"> 其他</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>出生日期 *</label>
+          <input type="date" id="birthdate">
+        </div>
+        <div class="button-group">
+          <button class="btn-secondary" disabled>上一步</button>
+          <button class="btn-primary" onclick="nextStep(1)">下一步</button>
+        </div>
+      </div>
+
+      <!-- 步骤 2: 账户设置 -->
+      <div class="form-step hidden" id="step2" inert>
+        <h2>步骤 2: 账户设置</h2>
+        <div class="form-group">
+          <label>邮箱地址 *</label>
+          <input type="email" id="email" placeholder="example@email.com">
+          <div class="error-message" id="emailError"></div>
+        </div>
+        <div class="form-group">
+          <label>用户名 *</label>
+          <input type="text" id="username" placeholder="请输入用户名">
+          <div class="error-message" id="usernameError"></div>
+        </div>
+        <div class="form-group">
+          <label>密码 *</label>
+          <input type="password" id="password" placeholder="至少8个字符">
+          <div class="error-message" id="passwordError"></div>
+        </div>
+        <div class="form-group">
+          <label>确认密码 *</label>
+          <input type="password" id="confirmPassword" placeholder="再次输入密码">
+          <div class="error-message" id="confirmPasswordError"></div>
+        </div>
+        <div class="button-group">
+          <button class="btn-secondary" onclick="prevStep(2)">上一步</button>
+          <button class="btn-primary" onclick="nextStep(2)">下一步</button>
+        </div>
+      </div>
+
+      <!-- 步骤 3: 偏好设置 -->
+      <div class="form-step hidden" id="step3" inert>
+        <h2>步骤 3: 偏好设置</h2>
+        <div class="form-group">
+          <label>职业</label>
+          <select id="occupation">
+            <option value="">请选择</option>
+            <option value="student">学生</option>
+            <option value="developer">开发者</option>
+            <option value="designer">设计师</option>
+            <option value="manager">管理者</option>
+            <option value="other">其他</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>兴趣爱好</label>
+          <div class="checkbox-group">
+            <label><input type="checkbox" name="interests" value="tech"> 科技</label>
+            <label><input type="checkbox" name="interests" value="sports"> 运动</label>
+            <label><input type="checkbox" name="interests" value="music"> 音乐</label>
+            <label><input type="checkbox" name="interests" value="travel"> 旅行</label>
+            <label><input type="checkbox" name="interests" value="reading"> 阅读</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>个人简介</label>
+          <textarea id="bio" rows="4" placeholder="介绍一下自己..."></textarea>
+        </div>
+        <div class="button-group">
+          <button class="btn-secondary" onclick="prevStep(3)">上一步</button>
+          <button class="btn-primary" onclick="nextStep(3)">下一步</button>
+        </div>
+      </div>
+
+      <!-- 步骤 4: 确认提交 -->
+      <div class="form-step hidden" id="step4" inert>
+        <h2>步骤 4: 确认信息</h2>
+        <div class="summary-section">
+          <h3>基本信息</h3>
+          <div class="summary-item">
+            <span class="summary-label">姓名:</span>
+            <span class="summary-value" id="summaryName"></span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">性别:</span>
+            <span class="summary-value" id="summaryGender"></span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">出生日期:</span>
+            <span class="summary-value" id="summaryBirthdate"></span>
+          </div>
+        </div>
+        <div class="summary-section">
+          <h3>账户信息</h3>
+          <div class="summary-item">
+            <span class="summary-label">邮箱:</span>
+            <span class="summary-value" id="summaryEmail"></span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">用户名:</span>
+            <span class="summary-value" id="summaryUsername"></span>
+          </div>
+        </div>
+        <div class="summary-section">
+          <h3>偏好设置</h3>
+          <div class="summary-item">
+            <span class="summary-label">职业:</span>
+            <span class="summary-value" id="summaryOccupation"></span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">兴趣:</span>
+            <span class="summary-value" id="summaryInterests"></span>
+          </div>
+        </div>
+        <div class="button-group">
+          <button class="btn-secondary" onclick="prevStep(4)">上一步</button>
+          <button class="btn-primary" onclick="submitForm()">提交注册</button>
+        </div>
+      </div>
+
+      <!-- 成功页面 -->
+      <div class="form-step hidden" id="stepSuccess" inert>
+        <div class="success-message">
+          <div class="success-icon">✅</div>
+          <h2>注册成功！</h2>
+          <p>欢迎加入我们，您的账户已创建成功。</p>
+          <button class="btn-primary" onclick="resetForm()">重新开始</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentStep = 1;
+    const formData = {};
+
+    function showStep(stepNumber) {
+      // 隐藏所有步骤
+      for (let i = 1; i <= 4; i++) {
+        const step = document.getElementById(`step${i}`);
+        const indicator = document.getElementById(`indicator${i}`);
+
+        if (i === stepNumber) {
+          step.classList.remove('hidden');
+          step.removeAttribute('inert');
+          indicator.classList.add('active');
+        } else {
+          step.classList.add('hidden');
+          step.setAttribute('inert', '');
+          indicator.classList.remove('active');
+        }
+
+        if (i < stepNumber) {
+          indicator.classList.add('completed');
+        } else {
+          indicator.classList.remove('completed');
+        }
+      }
+
+      currentStep = stepNumber;
+      console.log(`当前步骤: ${stepNumber}, 其他步骤已设置为 inert`);
+    }
+
+    function validateStep(stepNumber) {
+      if (stepNumber === 1) {
+        const name = document.getElementById('name').value.trim();
+        const gender = document.querySelector('input[name="gender"]:checked');
+        const birthdate = document.getElementById('birthdate').value;
+
+        if (!name) {
+          document.getElementById('nameError').textContent = '请输入姓名';
+          return false;
+        }
+        if (!gender) {
+          alert('请选择性别');
+          return false;
+        }
+        if (!birthdate) {
+          alert('请选择出生日期');
+          return false;
+        }
+
+        formData.name = name;
+        formData.gender = gender.value;
+        formData.birthdate = birthdate;
+        return true;
+      }
+
+      if (stepNumber === 2) {
+        const email = document.getElementById('email').value.trim();
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+
+        if (!email || !email.includes('@')) {
+          document.getElementById('emailError').textContent = '请输入有效的邮箱地址';
+          return false;
+        }
+        if (!username || username.length < 3) {
+          document.getElementById('usernameError').textContent = '用户名至少3个字符';
+          return false;
+        }
+        if (!password || password.length < 8) {
+          document.getElementById('passwordError').textContent = '密码至少8个字符';
+          return false;
+        }
+        if (password !== confirmPassword) {
+          document.getElementById('confirmPasswordError').textContent = '两次密码不一致';
+          return false;
+        }
+
+        formData.email = email;
+        formData.username = username;
+        return true;
+      }
+
+      if (stepNumber === 3) {
+        const occupation = document.getElementById('occupation').value;
+        const interests = Array.from(document.querySelectorAll('input[name="interests"]:checked'))
+          .map(cb => cb.value);
+        const bio = document.getElementById('bio').value.trim();
+
+        formData.occupation = occupation || '未填写';
+        formData.interests = interests.length > 0 ? interests.join(', ') : '未填写';
+        formData.bio = bio || '未填写';
+        return true;
+      }
+
+      return true;
+    }
+
+    function nextStep(stepNumber) {
+      // 清除错误消息
+      document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
+
+      if (!validateStep(stepNumber)) {
+        return;
+      }
+
+      if (stepNumber === 3) {
+        updateSummary();
+      }
+
+      showStep(stepNumber + 1);
+    }
+
+    function prevStep(stepNumber) {
+      showStep(stepNumber - 1);
+    }
+
+    function updateSummary() {
+      const genderMap = { male: '男', female: '女', other: '其他' };
+
+      document.getElementById('summaryName').textContent = formData.name;
+      document.getElementById('summaryGender').textContent = genderMap[formData.gender];
+      document.getElementById('summaryBirthdate').textContent = formData.birthdate;
+      document.getElementById('summaryEmail').textContent = formData.email;
+      document.getElementById('summaryUsername').textContent = formData.username;
+      document.getElementById('summaryOccupation').textContent = formData.occupation;
+      document.getElementById('summaryInterests').textContent = formData.interests;
+    }
+
+    function submitForm() {
+      console.log('提交表单数据:', formData);
+
+      // 隐藏所有步骤
+      for (let i = 1; i <= 4; i++) {
+        document.getElementById(`step${i}`).classList.add('hidden');
+        document.getElementById(`indicator${i}`).classList.add('completed');
+      }
+
+      // 显示成功页面
+      const successStep = document.getElementById('stepSuccess');
+      successStep.classList.remove('hidden');
+      successStep.removeAttribute('inert');
+    }
+
+    function resetForm() {
+      location.reload();
+    }
+
+    // 初始化
+    showStep(1);
+  </script>
+</body>
+</html>

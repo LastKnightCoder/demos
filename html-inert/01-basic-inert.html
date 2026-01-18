@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>inert 属性基础演示</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      line-height: 1.6;
+    }
+
+    h1 {
+      color: #333;
+      border-bottom: 3px solid #007bff;
+      padding-bottom: 10px;
+    }
+
+    .demo-section {
+      display: flex;
+      gap: 30px;
+      margin: 30px 0;
+    }
+
+    .demo-box {
+      flex: 1;
+      padding: 20px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      background: #f9f9f9;
+    }
+
+    .demo-box h2 {
+      margin-top: 0;
+      color: #555;
+      font-size: 1.2em;
+    }
+
+    .demo-box.inert-box {
+      border-color: #ff6b6b;
+      background: #fff5f5;
+    }
+
+    /* inert 元素的视觉样式 */
+    [inert] {
+      opacity: 0.5;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    button {
+      padding: 10px 20px;
+      margin: 5px;
+      font-size: 16px;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+      background: #007bff;
+      color: white;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    button:focus {
+      outline: 3px solid #80bdff;
+      outline-offset: 2px;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 8px;
+      margin: 5px 0;
+      border: 2px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+
+    input:focus, textarea:focus {
+      border-color: #007bff;
+      outline: none;
+    }
+
+    a {
+      color: #007bff;
+      text-decoration: none;
+      padding: 5px;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    a:focus {
+      outline: 3px solid #80bdff;
+      outline-offset: 2px;
+    }
+
+    .control-panel {
+      background: #e9ecef;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 30px;
+    }
+
+    .status {
+      display: inline-block;
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-weight: bold;
+      margin-left: 10px;
+    }
+
+    .status.active {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .status.inactive {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    .info-box {
+      background: #d1ecf1;
+      border: 1px solid #bee5eb;
+      border-radius: 5px;
+      padding: 15px;
+      margin: 20px 0;
+    }
+
+    .info-box h3 {
+      margin-top: 0;
+      color: #0c5460;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎯 inert 属性基础演示</h1>
+
+  <div class="info-box">
+    <h3>什么是 inert？</h3>
+    <p>
+      <code>inert</code> 是一个 HTML 全局属性，用于使元素及其所有后代元素变为"惰性"状态。
+      惰性元素无法被聚焦、点击或与之交互，对辅助技术也不可见。
+    </p>
+  </div>
+
+  <div class="control-panel">
+    <h2>控制面板</h2>
+    <button id="toggleInert">切换右侧区域的 inert 状态</button>
+    <span id="status" class="status active">当前状态: 可交互</span>
+  </div>
+
+  <div class="demo-section">
+    <!-- 左侧：正常可交互区域 -->
+    <div class="demo-box">
+      <h2>✅ 正常区域（始终可交互）</h2>
+
+      <p>这个区域始终可以交互</p>
+
+      <button onclick="alert('左侧按钮被点击了！')">点击我</button>
+
+      <input type="text" placeholder="输入文本...">
+
+      <textarea placeholder="多行文本..." rows="3"></textarea>
+
+      <p>
+        <a href="#" onclick="alert('链接被点击了！'); return false;">点击这个链接</a>
+      </p>
+
+      <label>
+        <input type="checkbox"> 复选框
+      </label>
+
+      <br><br>
+
+      <label>
+        <input type="radio" name="left" value="1"> 选项 1
+      </label>
+      <label>
+        <input type="radio" name="left" value="2"> 选项 2
+      </label>
+    </div>
+
+    <!-- 右侧：可切换 inert 的区域 -->
+    <div class="demo-box inert-box" id="inertBox">
+      <h2>🚫 可切换区域（当前可交互）</h2>
+
+      <p>点击左侧按钮切换此区域的 inert 状态</p>
+
+      <button onclick="alert('右侧按钮被点击了！')">点击我</button>
+
+      <input type="text" placeholder="输入文本...">
+
+      <textarea placeholder="多行文本..." rows="3"></textarea>
+
+      <p>
+        <a href="#" onclick="alert('链接被点击了！'); return false;">点击这个链接</a>
+      </p>
+
+      <label>
+        <input type="checkbox"> 复选框
+      </label>
+
+      <br><br>
+
+      <label>
+        <input type="radio" name="right" value="1"> 选项 1
+      </label>
+      <label>
+        <input type="radio" name="right" value="2"> 选项 2
+      </label>
+    </div>
+  </div>
+
+  <div class="info-box">
+    <h3>🧪 测试说明</h3>
+    <ul>
+      <li><strong>点击切换按钮</strong>：观察右侧区域的变化</li>
+      <li><strong>使用 Tab 键</strong>：当右侧区域为 inert 时，Tab 键会跳过所有右侧元素</li>
+      <li><strong>尝试点击</strong>：当右侧区域为 inert 时，所有点击事件都不会触发</li>
+      <li><strong>视觉反馈</strong>：inert 元素会变得半透明（通过 CSS 实现）</li>
+      <li><strong>屏幕阅读器</strong>：如果使用屏幕阅读器，inert 元素会被完全忽略</li>
+    </ul>
+  </div>
+
+  <div class="info-box">
+    <h3>💡 关键观察点</h3>
+    <ul>
+      <li>inert 属性会递归应用到所有子元素</li>
+      <li>inert 元素无法通过任何方式获得焦点</li>
+      <li>inert 不会改变元素的默认样式（需要通过 CSS 添加视觉反馈）</li>
+      <li>inert 可以通过 JavaScript 动态切换</li>
+    </ul>
+  </div>
+
+  <script>
+    const toggleBtn = document.getElementById('toggleInert');
+    const inertBox = document.getElementById('inertBox');
+    const status = document.getElementById('status');
+
+    toggleBtn.addEventListener('click', () => {
+      // 切换 inert 属性
+      if (inertBox.hasAttribute('inert')) {
+        inertBox.removeAttribute('inert');
+        status.textContent = '当前状态: 可交互';
+        status.className = 'status active';
+        toggleBtn.textContent = '切换右侧区域的 inert 状态';
+      } else {
+        inertBox.setAttribute('inert', '');
+        status.textContent = '当前状态: 不可交互 (inert)';
+        status.className = 'status inactive';
+        toggleBtn.textContent = '恢复右侧区域的交互';
+      }
+    });
+
+    // 监听焦点事件，显示哪些元素可以获得焦点
+    document.addEventListener('focusin', (e) => {
+      console.log('焦点进入:', e.target);
+    });
+
+    // 监听点击事件
+    inertBox.addEventListener('click', (e) => {
+      console.log('右侧区域被点击:', e.target);
+    });
+  </script>
+</body>
+</html>

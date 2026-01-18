@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>inert 属性 - 模态对话框演示</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      margin: 0;
+      padding: 20px;
+      line-height: 1.6;
+    }
+
+    h1 {
+      color: #333;
+      border-bottom: 3px solid #007bff;
+      padding-bottom: 10px;
+    }
+
+    /* 主内容区域 */
+    #mainContent {
+      max-width: 800px;
+      margin: 0 auto;
+      transition: opacity 0.3s;
+    }
+
+    #mainContent[inert] {
+      opacity: 0.4;
+      filter: blur(2px);
+    }
+
+    .card {
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    button {
+      padding: 12px 24px;
+      font-size: 16px;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+      background: #007bff;
+      color: white;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    button:focus {
+      outline: 3px solid #80bdff;
+      outline-offset: 2px;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border: 2px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    input:focus, textarea:focus {
+      border-color: #007bff;
+      outline: none;
+    }
+
+    /* 模态对话框遮罩 */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      animation: fadeIn 0.3s;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* 模态对话框 */
+    .modal {
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+      animation: slideUp 0.3s;
+    }
+
+    .modal h2 {
+      margin-top: 0;
+      color: #333;
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 20px;
+    }
+
+    .modal-buttons button {
+      padding: 10px 20px;
+    }
+
+    .modal-buttons .secondary {
+      background: #6c757d;
+    }
+
+    .modal-buttons .secondary:hover {
+      background: #545b62;
+    }
+
+    .info-box {
+      background: #d1ecf1;
+      border: 1px solid #bee5eb;
+      border-radius: 5px;
+      padding: 15px;
+      margin: 20px 0;
+    }
+
+    .info-box h3 {
+      margin-top: 0;
+      color: #0c5460;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(50px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .demo-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+  </style>
+</head>
+<body>
+  <div id="mainContent">
+    <h1>🎭 模态对话框与 inert 属性</h1>
+
+    <div class="info-box">
+      <h3>场景说明</h3>
+      <p>
+        当打开模态对话框时，背景内容应该变为不可交互状态。使用 <code>inert</code> 属性可以：
+      </p>
+      <ul>
+        <li>防止用户通过 Tab 键访问背景内容</li>
+        <li>阻止鼠标点击背景元素</li>
+        <li>让屏幕阅读器忽略背景内容</li>
+        <li>确保用户专注于对话框内容</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>用户信息表单</h2>
+      <form id="userForm">
+        <label>
+          姓名：
+          <input type="text" name="name" placeholder="请输入姓名">
+        </label>
+
+        <label>
+          邮箱：
+          <input type="email" name="email" placeholder="请输入邮箱">
+        </label>
+
+        <label>
+          个人简介：
+          <textarea name="bio" rows="4" placeholder="介绍一下自己..."></textarea>
+        </label>
+
+        <div class="demo-actions">
+          <button type="button" onclick="openModal('confirm')">提交表单</button>
+          <button type="button" onclick="openModal('info')">查看帮助</button>
+          <button type="button" onclick="openModal('delete')">删除账户</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>其他可交互内容</h2>
+      <p>这里有一些其他的交互元素：</p>
+      <button onclick="alert('按钮被点击了！')">点击我</button>
+      <input type="text" placeholder="输入一些文字...">
+    </div>
+
+    <div class="info-box">
+      <h3>🧪 测试说明</h3>
+      <ul>
+        <li>点击任意按钮打开模态对话框</li>
+        <li>观察背景内容变得模糊且不可交互</li>
+        <li>使用 Tab 键导航 - 焦点只会在对话框内循环</li>
+        <li>尝试点击背景内容 - 不会有任何响应</li>
+        <li>关闭对话框后，背景内容恢复可交互状态</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 确认对话框 -->
+  <div id="confirmModal" class="modal-overlay">
+    <div class="modal" role="dialog" aria-labelledby="confirmTitle" aria-modal="true">
+      <h2 id="confirmTitle">确认提交</h2>
+      <p>您确定要提交这个表单吗？提交后将无法修改。</p>
+      <div class="modal-buttons">
+        <button class="secondary" onclick="closeModal('confirm')">取消</button>
+        <button onclick="submitForm()">确认提交</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 信息对话框 -->
+  <div id="infoModal" class="modal-overlay">
+    <div class="modal" role="dialog" aria-labelledby="infoTitle" aria-modal="true">
+      <h2 id="infoTitle">帮助信息</h2>
+      <p>请填写完整的用户信息：</p>
+      <ul>
+        <li>姓名：2-20个字符</li>
+        <li>邮箱：有效的邮箱地址</li>
+        <li>个人简介：不超过500字</li>
+      </ul>
+      <div class="modal-buttons">
+        <button onclick="closeModal('info')">知道了</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 删除确认对话框 -->
+  <div id="deleteModal" class="modal-overlay">
+    <div class="modal" role="dialog" aria-labelledby="deleteTitle" aria-modal="true">
+      <h2 id="deleteTitle" style="color: #dc3545;">⚠️ 危险操作</h2>
+      <p>您确定要删除账户吗？此操作不可恢复！</p>
+      <input type="text" placeholder="输入 DELETE 确认" id="deleteConfirm">
+      <div class="modal-buttons">
+        <button class="secondary" onclick="closeModal('delete')">取消</button>
+        <button style="background: #dc3545;" onclick="deleteAccount()">确认删除</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const mainContent = document.getElementById('mainContent');
+    const modals = {
+      confirm: document.getElementById('confirmModal'),
+      info: document.getElementById('infoModal'),
+      delete: document.getElementById('deleteModal')
+    };
+
+    let currentModal = null;
+    let previousFocus = null;
+
+    function openModal(type) {
+      // 保存当前焦点元素
+      previousFocus = document.activeElement;
+
+      // 显示模态对话框
+      modals[type].classList.add('active');
+      currentModal = type;
+
+      // 将主内容设置为 inert
+      mainContent.inert = true;
+
+      // 将焦点移到对话框的第一个可聚焦元素
+      const firstFocusable = modals[type].querySelector('button, input, textarea');
+      if (firstFocusable) {
+        firstFocusable.focus();
+      }
+
+      console.log('模态对话框已打开，主内容已设置为 inert');
+    }
+
+    function closeModal(type) {
+      // 隐藏模态对话框
+      modals[type].classList.remove('active');
+      currentModal = null;
+
+      // 移除主内容的 inert 属性
+      mainContent.inert = false;
+
+      // 恢复之前的焦点
+      if (previousFocus) {
+        previousFocus.focus();
+      }
+
+      console.log('模态对话框已关闭，主内容已恢复可交互状态');
+    }
+
+    function submitForm() {
+      alert('表单已提交！');
+      closeModal('confirm');
+    }
+
+    function deleteAccount() {
+      const confirmInput = document.getElementById('deleteConfirm');
+      if (confirmInput.value === 'DELETE') {
+        alert('账户已删除！');
+        closeModal('delete');
+        confirmInput.value = '';
+      } else {
+        alert('请输入 DELETE 确认删除操作');
+      }
+    }
+
+    // 按 ESC 键关闭对话框
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && currentModal) {
+        closeModal(currentModal);
+      }
+    });
+
+    // 点击遮罩关闭对话框
+    Object.values(modals).forEach(modal => {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          const type = Object.keys(modals).find(key => modals[key] === modal);
+          closeModal(type);
+        }
+      });
+    });
+
+    // 监听焦点变化（用于调试）
+    document.addEventListener('focusin', (e) => {
+      console.log('焦点在:', e.target.tagName, e.target.textContent?.substring(0, 20));
+    });
+  </script>
+</body>
+</html>

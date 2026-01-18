@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>inert 属性 - 加载状态演示</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      margin: 0;
+      padding: 20px;
+      line-height: 1.6;
+      background: #f5f5f5;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      color: #333;
+      border-bottom: 3px solid #007bff;
+      padding-bottom: 10px;
+    }
+
+    .info-box {
+      background: #d1ecf1;
+      border: 1px solid #bee5eb;
+      border-radius: 5px;
+      padding: 15px;
+      margin: 20px 0;
+    }
+
+    .info-box h3 {
+      margin-top: 0;
+      color: #0c5460;
+    }
+
+    .demo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin: 30px 0;
+    }
+
+    .card {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      position: relative;
+      transition: opacity 0.3s;
+    }
+
+    .card h2 {
+      margin-top: 0;
+      color: #333;
+    }
+
+    .card[inert] {
+      opacity: 0.6;
+    }
+
+    /* 加载遮罩 */
+    .loading-overlay {
+      display: none;
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 8px;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      z-index: 10;
+    }
+
+    .loading-overlay.active {
+      display: flex;
+    }
+
+    /* 加载动画 */
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #007bff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      margin-top: 15px;
+      color: #666;
+      font-weight: 500;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+      background: #007bff;
+      color: white;
+      transition: background 0.3s;
+      margin: 5px;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    button:focus {
+      outline: 3px solid #80bdff;
+      outline-offset: 2px;
+    }
+
+    button.danger {
+      background: #dc3545;
+    }
+
+    button.danger:hover {
+      background: #c82333;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border: 2px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      border-color: #007bff;
+      outline: none;
+    }
+
+    .form-group {
+      margin: 15px 0;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      color: #555;
+      font-weight: 500;
+    }
+
+    .user-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .user-item {
+      padding: 10px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .user-item:last-child {
+      border-bottom: none;
+    }
+
+    .product-item {
+      display: flex;
+      gap: 15px;
+      padding: 15px 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    .product-item:last-child {
+      border-bottom: none;
+    }
+
+    .product-image {
+      width: 80px;
+      height: 80px;
+      background: #e9ecef;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 30px;
+    }
+
+    .product-info {
+      flex: 1;
+    }
+
+    .product-info h3 {
+      margin: 0 0 5px 0;
+      color: #333;
+    }
+
+    .product-price {
+      color: #007bff;
+      font-weight: bold;
+      font-size: 1.2em;
+    }
+
+    .control-panel {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+
+    .control-panel h2 {
+      margin-top: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>⏳ 加载状态与 inert 属性</h1>
+
+    <div class="info-box">
+      <h3>场景说明</h3>
+      <p>
+        在数据加载或处理过程中，使用 <code>inert</code> 属性可以：
+      </p>
+      <ul>
+        <li>防止用户在加载过程中与内容交互</li>
+        <li>避免重复提交或操作冲突</li>
+        <li>提供更好的用户体验</li>
+        <li>确保数据一致性</li>
+      </ul>
+    </div>
+
+    <div class="control-panel">
+      <h2>控制面板</h2>
+      <p>点击下面的按钮模拟不同的加载场景：</p>
+      <button onclick="loadUsers()">加载用户列表</button>
+      <button onclick="loadProducts()">加载商品数据</button>
+      <button onclick="submitForm()">提交表单</button>
+      <button class="danger" onclick="loadAll()">同时加载所有</button>
+    </div>
+
+    <div class="demo-grid">
+      <!-- 用户列表卡片 -->
+      <div class="card" id="userCard">
+        <h2>👥 用户列表</h2>
+        <ul class="user-list">
+          <li class="user-item">
+            <span>张三</span>
+            <button onclick="alert('编辑用户')">编辑</button>
+          </li>
+          <li class="user-item">
+            <span>李四</span>
+            <button onclick="alert('编辑用户')">编辑</button>
+          </li>
+          <li class="user-item">
+            <span>王五</span>
+            <button onclick="alert('编辑用户')">编辑</button>
+          </li>
+        </ul>
+        <button onclick="alert('添加用户')">添加新用户</button>
+
+        <div class="loading-overlay" id="userLoading">
+          <div class="spinner"></div>
+          <div class="loading-text">加载用户数据中...</div>
+        </div>
+      </div>
+
+      <!-- 商品列表卡片 -->
+      <div class="card" id="productCard">
+        <h2>🛍️ 商品列表</h2>
+        <div class="product-item">
+          <div class="product-image">📱</div>
+          <div class="product-info">
+            <h3>智能手机</h3>
+            <p>最新款旗舰手机</p>
+            <div class="product-price">¥4999</div>
+          </div>
+        </div>
+        <div class="product-item">
+          <div class="product-image">💻</div>
+          <div class="product-info">
+            <h3>笔记本电脑</h3>
+            <p>轻薄便携商务本</p>
+            <div class="product-price">¥6999</div>
+          </div>
+        </div>
+        <button onclick="alert('查看更多')">查看更多商品</button>
+
+        <div class="loading-overlay" id="productLoading">
+          <div class="spinner"></div>
+          <div class="loading-text">加载商品数据中...</div>
+        </div>
+      </div>
+
+      <!-- 表单卡片 -->
+      <div class="card" id="formCard">
+        <h2>📝 订单表单</h2>
+        <form>
+          <div class="form-group">
+            <label>商品名称</label>
+            <select>
+              <option>智能手机</option>
+              <option>笔记本电脑</option>
+              <option>平板电脑</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>数量</label>
+            <input type="number" value="1" min="1">
+          </div>
+
+          <div class="form-group">
+            <label>收货地址</label>
+            <textarea rows="3" placeholder="请输入详细地址..."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>
+              <input type="checkbox"> 同意服务条款
+            </label>
+          </div>
+
+          <button type="button" onclick="submitForm()">提交订单</button>
+        </form>
+
+        <div class="loading-overlay" id="formLoading">
+          <div class="spinner"></div>
+          <div class="loading-text">提交订单中...</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-box">
+      <h3>🧪 测试说明</h3>
+      <ul>
+        <li>点击"加载用户列表"按钮，观察用户卡片变为不可交互状态</li>
+        <li>在加载过程中，尝试点击卡片内的按钮 - 不会有任何响应</li>
+        <li>使用 Tab 键导航 - 焦点会跳过正在加载的卡片</li>
+        <li>点击"同时加载所有"按钮，观察所有卡片同时进入加载状态</li>
+        <li>加载完成后，卡片自动恢复可交互状态</li>
+      </ul>
+    </div>
+
+    <div class="info-box">
+      <h3>💡 实际应用场景</h3>
+      <ul>
+        <li><strong>表单提交</strong>：防止用户重复提交表单</li>
+        <li><strong>数据加载</strong>：在数据加载时禁用相关区域</li>
+        <li><strong>异步操作</strong>：在执行异步操作时锁定界面</li>
+        <li><strong>分步操作</strong>：在多步骤流程中禁用未完成的步骤</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    function simulateLoading(cardId, loadingId, duration = 2000) {
+      const card = document.getElementById(cardId);
+      const loading = document.getElementById(loadingId);
+
+      // 显示加载动画
+      loading.classList.add('active');
+
+      // 将卡片设置为 inert
+      card.inert = true;
+
+      console.log(`${cardId} 开始加载，已设置为 inert`);
+
+      // 模拟加载完成
+      setTimeout(() => {
+        loading.classList.remove('active');
+        card.inert = false;
+        console.log(`${cardId} 加载完成，已恢复可交互状态`);
+      }, duration);
+    }
+
+    function loadUsers() {
+      simulateLoading('userCard', 'userLoading', 2000);
+    }
+
+    function loadProducts() {
+      simulateLoading('productCard', 'productLoading', 2500);
+    }
+
+    function submitForm() {
+      simulateLoading('formCard', 'formLoading', 3000);
+      setTimeout(() => {
+        alert('订单提交成功！');
+      }, 3000);
+    }
+
+    function loadAll() {
+      loadUsers();
+      loadProducts();
+      submitForm();
+    }
+
+    // 监听焦点变化
+    document.addEventListener('focusin', (e) => {
+      console.log('焦点在:', e.target.tagName, e.target.textContent?.substring(0, 20));
+    });
+
+    // 监听点击事件
+    document.querySelectorAll('.card').forEach(card => {
+      card.addEventListener('click', (e) => {
+        if (card.hasAttribute('inert')) {
+          console.log('尝试点击 inert 元素，但被阻止了');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

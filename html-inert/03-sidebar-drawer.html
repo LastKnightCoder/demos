@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>inert 属性 - 侧边栏/抽屉演示</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* 顶部导航栏 */
+    .navbar {
+      background: #343a40;
+      color: white;
+      padding: 15px 20px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .navbar h1 {
+      font-size: 1.5em;
+      flex: 1;
+    }
+
+    .menu-btn {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .menu-btn:hover {
+      background: #0056b3;
+    }
+
+    /* 主容器 */
+    .container {
+      display: flex;
+      min-height: calc(100vh - 60px);
+    }
+
+    /* 主内容区域 */
+    .main-content {
+      flex: 1;
+      padding: 30px;
+      transition: opacity 0.3s, filter 0.3s;
+    }
+
+    .main-content[inert] {
+      opacity: 0.5;
+      filter: blur(3px);
+    }
+
+    /* 侧边栏 */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      right: -350px;
+      width: 350px;
+      height: 100vh;
+      background: white;
+      box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+      transition: right 0.3s;
+      z-index: 1000;
+      overflow-y: auto;
+    }
+
+    .sidebar.open {
+      right: 0;
+    }
+
+    .sidebar-header {
+      background: #007bff;
+      color: white;
+      padding: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .sidebar-header h2 {
+      font-size: 1.3em;
+    }
+
+    .close-btn {
+      background: transparent;
+      border: none;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      padding: 5px 10px;
+    }
+
+    .close-btn:hover {
+      background: rgba(255,255,255,0.1);
+      border-radius: 4px;
+    }
+
+    .sidebar-content {
+      padding: 20px;
+    }
+
+    .sidebar-section {
+      margin-bottom: 25px;
+    }
+
+    .sidebar-section h3 {
+      color: #333;
+      margin-bottom: 10px;
+      font-size: 1.1em;
+    }
+
+    .sidebar-menu {
+      list-style: none;
+    }
+
+    .sidebar-menu li {
+      margin: 8px 0;
+    }
+
+    .sidebar-menu a {
+      color: #007bff;
+      text-decoration: none;
+      padding: 8px 12px;
+      display: block;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+
+    .sidebar-menu a:hover {
+      background: #e9ecef;
+    }
+
+    .sidebar-menu a:focus {
+      outline: 2px solid #007bff;
+      outline-offset: 2px;
+    }
+
+    /* 遮罩层 */
+    .overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 999;
+    }
+
+    .overlay.active {
+      display: block;
+    }
+
+    /* 卡片样式 */
+    .card {
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .card h2 {
+      color: #333;
+      margin-bottom: 15px;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+      background: #007bff;
+      color: white;
+      transition: background 0.3s;
+      margin: 5px;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    button:focus {
+      outline: 3px solid #80bdff;
+      outline-offset: 2px;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border: 2px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    input:focus, textarea:focus {
+      border-color: #007bff;
+      outline: none;
+    }
+
+    .info-box {
+      background: #d1ecf1;
+      border: 1px solid #bee5eb;
+      border-radius: 5px;
+      padding: 15px;
+      margin: 20px 0;
+    }
+
+    .info-box h3 {
+      margin-top: 0;
+      color: #0c5460;
+    }
+
+    .form-group {
+      margin: 15px 0;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      color: #555;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <!-- 顶部导航栏 -->
+  <nav class="navbar">
+    <h1>📱 侧边栏演示应用</h1>
+    <button class="menu-btn" onclick="openSidebar()">
+      ☰ 打开菜单
+    </button>
+  </nav>
+
+  <!-- 主容器 -->
+  <div class="container">
+    <!-- 主内容区域 -->
+    <main class="main-content" id="mainContent">
+      <div class="info-box">
+        <h3>场景说明</h3>
+        <p>
+          当侧边栏（抽屉）打开时，主内容区域应该变为不可交互状态。使用 <code>inert</code> 属性可以：
+        </p>
+        <ul>
+          <li>防止用户在侧边栏打开时与主内容交互</li>
+          <li>确保键盘导航只在侧边栏内循环</li>
+          <li>提供更好的用户体验和可访问性</li>
+          <li>避免焦点陷阱问题</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2>文章编辑器</h2>
+        <form>
+          <div class="form-group">
+            <label>文章标题</label>
+            <input type="text" placeholder="输入标题...">
+          </div>
+
+          <div class="form-group">
+            <label>文章内容</label>
+            <textarea rows="8" placeholder="开始写作..."></textarea>
+          </div>
+
+          <button type="button">保存草稿</button>
+          <button type="button">发布文章</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2>快速操作</h2>
+        <p>这些按钮在侧边栏打开时将无法点击：</p>
+        <button onclick="alert('新建文档')">新建文档</button>
+        <button onclick="alert('打开文件')">打开文件</button>
+        <button onclick="alert('导出')">导出</button>
+        <button onclick="alert('分享')">分享</button>
+      </div>
+
+      <div class="info-box">
+        <h3>🧪 测试说明</h3>
+        <ul>
+          <li>点击右上角的"打开菜单"按钮</li>
+          <li>观察主内容区域变得模糊且不可交互</li>
+          <li>使用 Tab 键 - 焦点只会在侧边栏内循环</li>
+          <li>尝试点击主内容区域 - 不会有任何响应</li>
+          <li>点击遮罩层或关闭按钮关闭侧边栏</li>
+          <li>主内容区域恢复可交互状态</li>
+        </ul>
+      </div>
+    </main>
+  </div>
+
+  <!-- 遮罩层 -->
+  <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+  <!-- 侧边栏 -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <h2>导航菜单</h2>
+      <button class="close-btn" onclick="closeSidebar()" aria-label="关闭菜单">
+        ✕
+      </button>
+    </div>
+
+    <div class="sidebar-content">
+      <div class="sidebar-section">
+        <h3>主菜单</h3>
+        <ul class="sidebar-menu">
+          <li><a href="#" onclick="handleMenuClick('首页')">🏠 首页</a></li>
+          <li><a href="#" onclick="handleMenuClick('文档')">📄 我的文档</a></li>
+          <li><a href="#" onclick="handleMenuClick('收藏')">⭐ 收藏夹</a></li>
+          <li><a href="#" onclick="handleMenuClick('最近')">🕒 最近使用</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <h3>工具</h3>
+        <ul class="sidebar-menu">
+          <li><a href="#" onclick="handleMenuClick('设置')">⚙️ 设置</a></li>
+          <li><a href="#" onclick="handleMenuClick('帮助')">❓ 帮助中心</a></li>
+          <li><a href="#" onclick="handleMenuClick('反馈')">💬 反馈</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <h3>搜索</h3>
+        <input type="search" placeholder="搜索文档...">
+      </div>
+
+      <div class="sidebar-section">
+        <h3>快速设置</h3>
+        <label>
+          <input type="checkbox"> 自动保存
+        </label>
+        <br>
+        <label>
+          <input type="checkbox"> 夜间模式
+        </label>
+        <br>
+        <label>
+          <input type="checkbox"> 显示行号
+        </label>
+      </div>
+
+      <div class="sidebar-section">
+        <button onclick="alert('已登出'); closeSidebar();" style="background: #dc3545;">
+          登出
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <script>
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+    const mainContent = document.getElementById('mainContent');
+    let previousFocus = null;
+
+    function openSidebar() {
+      // 保存当前焦点
+      previousFocus = document.activeElement;
+
+      // 打开侧边栏和遮罩
+      sidebar.classList.add('open');
+      overlay.classList.add('active');
+
+      // 将主内容设置为 inert
+      mainContent.inert = true;
+
+      // 将焦点移到侧边栏的第一个可聚焦元素
+      const firstFocusable = sidebar.querySelector('button, a, input');
+      if (firstFocusable) {
+        setTimeout(() => firstFocusable.focus(), 100);
+      }
+
+      console.log('侧边栏已打开，主内容已设置为 inert');
+    }
+
+    function closeSidebar() {
+      // 关闭侧边栏和遮罩
+      sidebar.classList.remove('open');
+      overlay.classList.remove('active');
+
+      // 移除主内容的 inert 属性
+      mainContent.inert = false;
+
+      // 恢复之前的焦点
+      if (previousFocus) {
+        previousFocus.focus();
+      }
+
+      console.log('侧边栏已关闭，主内容已恢复可交互状态');
+    }
+
+    function handleMenuClick(item) {
+      alert(`你点击了：${item}`);
+      closeSidebar();
+      return false;
+    }
+
+    // 按 ESC 键关闭侧边栏
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && sidebar.classList.contains('open')) {
+        closeSidebar();
+      }
+    });
+
+    // 监听焦点变化（用于调试）
+    document.addEventListener('focusin', (e) => {
+      const location = mainContent.contains(e.target) ? '主内容' : '侧边栏';
+      console.log(`焦点在 ${location}:`, e.target.tagName);
+    });
+  </script>
+</body>
+</html>

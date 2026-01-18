@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HTML inert 属性学习示例</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      color: white;
+      margin-bottom: 50px;
+    }
+
+    h1 {
+      font-size: 3em;
+      margin-bottom: 10px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .subtitle {
+      font-size: 1.2em;
+      opacity: 0.9;
+    }
+
+    .intro-card {
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      margin-bottom: 40px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    }
+
+    .intro-card h2 {
+      color: #667eea;
+      margin-bottom: 15px;
+    }
+
+    .intro-card p {
+      color: #555;
+      margin-bottom: 10px;
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin: 20px 0;
+    }
+
+    .feature {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 8px;
+      border-left: 4px solid #667eea;
+    }
+
+    .feature strong {
+      color: #667eea;
+    }
+
+    .examples-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 25px;
+      margin-bottom: 40px;
+    }
+
+    .example-card {
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+      transition: transform 0.3s, box-shadow 0.3s;
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+
+    .example-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 50px rgba(0,0,0,0.3);
+    }
+
+    .example-icon {
+      font-size: 3em;
+      margin-bottom: 15px;
+    }
+
+    .example-card h3 {
+      color: #333;
+      margin-bottom: 10px;
+      font-size: 1.3em;
+    }
+
+    .example-card p {
+      color: #666;
+      font-size: 0.95em;
+      line-height: 1.5;
+    }
+
+    .example-tag {
+      display: inline-block;
+      background: #667eea;
+      color: white;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.85em;
+      margin-top: 10px;
+    }
+
+    .resources {
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    }
+
+    .resources h2 {
+      color: #667eea;
+      margin-bottom: 20px;
+    }
+
+    .resources ul {
+      list-style: none;
+    }
+
+    .resources li {
+      padding: 10px 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    .resources li:last-child {
+      border-bottom: none;
+    }
+
+    .resources a {
+      color: #667eea;
+      text-decoration: none;
+      transition: color 0.3s;
+    }
+
+    .resources a:hover {
+      color: #5568d3;
+      text-decoration: underline;
+    }
+
+    footer {
+      text-align: center;
+      color: white;
+      margin-top: 50px;
+      opacity: 0.8;
+    }
+
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 2em;
+      }
+
+      .examples-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🎯 HTML inert 属性</h1>
+      <p class="subtitle">完整学习示例与演示</p>
+    </header>
+
+    <div class="intro-card">
+      <h2>什么是 inert 属性？</h2>
+      <p>
+        <code>inert</code> 是一个 HTML 全局属性，用于使元素及其所有后代元素变为"惰性"状态。
+        当元素被标记为 inert 时，浏览器会忽略该元素上的所有用户交互。
+      </p>
+
+      <div class="features">
+        <div class="feature">
+          <strong>不可聚焦</strong><br>
+          无法通过 Tab 键或编程方式获得焦点
+        </div>
+        <div class="feature">
+          <strong>不可点击</strong><br>
+          鼠标点击事件不会触发
+        </div>
+        <div class="feature">
+          <strong>不可交互</strong><br>
+          所有用户交互事件都会被忽略
+        </div>
+        <div class="feature">
+          <strong>对辅助技术不可见</strong><br>
+          屏幕阅读器会跳过这些元素
+        </div>
+      </div>
+    </div>
+
+    <h2 style="color: white; margin-bottom: 20px; text-align: center;">📚 示例演示</h2>
+
+    <div class="examples-grid">
+      <a href="01-basic-inert.html" class="example-card">
+        <div class="example-icon">🎯</div>
+        <h3>基础用法</h3>
+        <p>了解 inert 属性的基本概念和使用方法，通过对比演示理解其核心特性。</p>
+        <span class="example-tag">入门必看</span>
+      </a>
+
+      <a href="02-modal-dialog.html" class="example-card">
+        <div class="example-icon">🎭</div>
+        <h3>模态对话框</h3>
+        <p>学习如何在模态对话框场景中使用 inert 属性，确保用户专注于对话框内容。</p>
+        <span class="example-tag">常用场景</span>
+      </a>
+
+      <a href="03-sidebar-drawer.html" class="example-card">
+        <div class="example-icon">📱</div>
+        <h3>侧边栏/抽屉</h3>
+        <p>探索侧边栏打开时如何使用 inert 属性禁用主内容区域的交互。</p>
+        <span class="example-tag">移动端常用</span>
+      </a>
+
+      <a href="04-loading-state.html" class="example-card">
+        <div class="example-icon">⏳</div>
+        <h3>加载状态</h3>
+        <p>演示在数据加载或处理过程中，如何使用 inert 属性防止用户交互。</p>
+        <span class="example-tag">实用技巧</span>
+      </a>
+
+      <a href="05-multi-step-form.html" class="example-card">
+        <div class="example-icon">📋</div>
+        <h3>多步骤表单</h3>
+        <p>学习在多步骤流程中使用 inert 属性，确保用户按顺序完成每个步骤。</p>
+        <span class="example-tag">高级应用</span>
+      </a>
+    </div>
+
+    <div class="resources">
+      <h2>📖 学习资源</h2>
+      <ul>
+        <li>
+          <strong>📄 README.md</strong> -
+          <a href="README.md" target="_blank">查看完整文档</a>
+          （包含详细说明、最佳实践和浏览器支持信息）
+        </li>
+        <li>
+          <strong>🌐 MDN Web Docs</strong> -
+          <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/inert" target="_blank">
+            官方文档
+          </a>
+        </li>
+        <li>
+          <strong>📜 WHATWG 规范</strong> -
+          <a href="https://html.spec.whatwg.org/multipage/interaction.html#inert" target="_blank">
+            HTML 标准规范
+          </a>
+        </li>
+        <li>
+          <strong>🔧 Polyfill</strong> -
+          <a href="https://github.com/WICG/inert" target="_blank">
+            WICG inert Polyfill
+          </a>
+          （用于不支持的浏览器）
+        </li>
+      </ul>
+    </div>
+
+    <footer>
+      <p>💡 提示：使用键盘 Tab 键导航可以更好地体验 inert 属性的效果</p>
+      <p style="margin-top: 10px;">HTML inert 属性学习示例 © 2026</p>
+    </footer>
+  </div>
+</body>
+</html>
