@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Import Maps - 多版本依赖管理</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+        }
+        .demo-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .code-block {
+            background: #282c34;
+            color: #abb2bf;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            white-space: pre;
+        }
+        .output {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            white-space: pre-wrap;
+        }
+        .version-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            margin: 5px;
+        }
+        .v1 { background: #e3f2fd; color: #1565c0; }
+        .v2 { background: #e8f5e9; color: #2e7d32; }
+        .v3 { background: #fff3e0; color: #ef6c00; }
+        .v4 { background: #fce4ec; color: #c2185b; }
+        .warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .info {
+            background: #d1ecf1;
+            border-left: 4px solid #17a2b8;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .diagram {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: monospace;
+            white-space: pre;
+            line-height: 1.6;
+            overflow-x: auto;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .btn-blue { background: #2196F3; }
+        .btn-blue:hover { background: #1976D2; }
+        .btn-orange { background: #FF9800; }
+        .btn-orange:hover { background: #F57C00; }
+    </style>
+</head>
+<body>
+    <h1>Import Maps - 多版本依赖管理</h1>
+
+    <div class="demo-section">
+        <h2>为什么需要多版本管理？</h2>
+        <p>在大型项目或微前端架构中，经常会遇到以下情况：</p>
+        <ul>
+            <li>不同团队开发的模块依赖同一个库的不同版本</li>
+            <li>渐进式升级过程中，新旧代码需要共存</li>
+            <li>第三方库依赖特定版本的其他库</li>
+            <li>需要同时测试多个版本的兼容性</li>
+        </ul>
+    </div>
+
+    <div class="demo-section">
+        <h2>版本管理策略</h2>
+
+        <h3>策略 1：使用版本后缀</h3>
+        <div class="code-block">{
+    "imports": {
+        "lodash@3": "https://cdn.jsdelivr.net/npm/lodash-es@3.10.1/lodash.js",
+        "lodash@4": "https://cdn.jsdelivr.net/npm/lodash-es@4.17.21/lodash.js",
+        "lodash": "https://cdn.jsdelivr.net/npm/lodash-es@4.17.21/lodash.js"
+    }
+}</div>
+        <div class="code-block">// 使用特定版本
+import lodash3 from 'lodash@3';
+import lodash4 from 'lodash@4';
+
+// 使用默认版本（最新）
+import _ from 'lodash';</div>
+
+        <h3>策略 2：使用 Scopes 隔离</h3>
+        <div class="code-block">{
+    "imports": {
+        "lodash": "https://cdn.jsdelivr.net/npm/lodash-es@4.17.21/lodash.js"
+    },
+    "scopes": {
+        "/legacy-app/": {
+            "lodash": "https://cdn.jsdelivr.net/npm/lodash-es@3.10.1/lodash.js"
+        },
+        "/new-app/": {
+            "lodash": "https://cdn.jsdelivr.net/npm/lodash-es@4.17.21/lodash.js"
+        }
+    }
+}</div>
+
+        <h3>策略 3：命名空间隔离</h3>
+        <div class="code-block">{
+    "imports": {
+        "vendor/lodash-legacy": "https://cdn.jsdelivr.net/npm/lodash-es@3.10.1/lodash.js",
+        "vendor/lodash-modern": "https://cdn.jsdelivr.net/npm/lodash-es@4.17.21/lodash.js"
+    }
+}</div>
+    </div>
+
+    <div class="demo-section">
+        <h2>实际演示：多版本 Day.js</h2>
+        <p>本页面同时加载了多个版本的日期处理库：</p>
+
+        <div style="margin: 15px 0;">
+            <span class="version-badge v1">Day.js 1.10.0</span>
+            <span class="version-badge v2">Day.js 1.11.10</span>
+        </div>
+
+        <div class="code-block">{
+    "imports": {
+        "dayjs-old": "https://esm.sh/dayjs@1.10.0",
+        "dayjs-new": "https://esm.sh/dayjs@1.11.10",
+        "dayjs": "https://esm.sh/dayjs@1.11.10"
+    }
+}</div>
+
+        <button onclick="compareDayjs()">比较两个版本</button>
+        <div id="dayjs-output" class="output">点击按钮查看比较结果...</div>
+    </div>
+
+    <div class="demo-section">
+        <h2>微前端场景示例</h2>
+
+        <div class="diagram">
+┌─────────────────────────────────────────────────────────────────┐
+│                        主应用 (Shell)                            │
+│  Import Map:                                                     │
+│  {                                                               │
+│    "imports": {                                                  │
+│      "react": "https://esm.sh/react@18",                        │
+│      "shared-ui": "/shared/ui.js"                               │
+│    },                                                            │
+│    "scopes": {                                                   │
+│      "/micro-app-a/": {                                         │
+│        "react": "https://esm.sh/react@18"                       │
+│      },                                                          │
+│      "/micro-app-b/": {                                         │
+│        "react": "https://esm.sh/react@17"  ← 旧版本             │
+│      }                                                           │
+│    }                                                             │
+│  }                                                               │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  ┌─────────────────┐    ┌─────────────────┐                     │
+│  │  Micro App A    │    │  Micro App B    │                     │
+│  │  (React 18)     │    │  (React 17)     │                     │
+│  │                 │    │                 │                     │
+│  │  import React   │    │  import React   │                     │
+│  │  from 'react';  │    │  from 'react';  │                     │
+│  │       ↓         │    │       ↓         │                     │
+│  │  React 18       │    │  React 17       │                     │
+│  └─────────────────┘    └─────────────────┘                     │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘</div>
+    </div>
+
+    <div class="demo-section">
+        <h2>版本冲突解决</h2>
+
+        <div class="warning">
+            <strong>注意：</strong>多版本共存可能导致以下问题：
+            <ul>
+                <li>增加页面加载时间和内存占用</li>
+                <li>某些库可能不支持多实例运行</li>
+                <li>全局状态可能产生冲突</li>
+            </ul>
+        </div>
+
+        <h3>最佳实践</h3>
+        <ol>
+            <li><strong>尽量统一版本</strong> - 多版本应该是临时方案，最终目标是统一</li>
+            <li><strong>使用 Scopes 隔离</strong> - 比版本后缀更清晰，更容易管理</li>
+            <li><strong>文档化版本依赖</strong> - 记录每个模块使用的版本及原因</li>
+            <li><strong>制定升级计划</strong> - 设定时间表逐步统一版本</li>
+        </ol>
+    </div>
+
+    <div class="demo-section">
+        <h2>渐进式迁移示例</h2>
+
+        <p>从 Moment.js 迁移到 Day.js 的过程：</p>
+
+        <h3>阶段 1：引入新库，保持兼容</h3>
+        <div class="code-block">{
+    "imports": {
+        "moment": "https://esm.sh/moment@2.29.4",
+        "dayjs": "https://esm.sh/dayjs@1.11.10"
+    }
+}</div>
+
+        <h3>阶段 2：新代码使用 Day.js，旧代码继续用 Moment</h3>
+        <div class="code-block">{
+    "imports": {
+        "date-lib": "https://esm.sh/dayjs@1.11.10"
+    },
+    "scopes": {
+        "/legacy/": {
+            "date-lib": "https://esm.sh/moment@2.29.4"
+        }
+    }
+}</div>
+
+        <h3>阶段 3：完全迁移到 Day.js</h3>
+        <div class="code-block">{
+    "imports": {
+        "date-lib": "https://esm.sh/dayjs@1.11.10"
+    }
+}</div>
+    </div>
+
+    <div class="demo-section">
+        <h2>版本锁定与完整性校验</h2>
+
+        <div class="info">
+            使用 <code>integrity</code> 字段确保加载的是预期版本，防止 CDN 被篡改。
+        </div>
+
+        <div class="code-block">{
+    "imports": {
+        "lodash": "https://cdn.jsdelivr.net/npm/lodash-es@4.17.21/lodash.js"
+    },
+    "integrity": {
+        "https://cdn.jsdelivr.net/npm/lodash-es@4.17.21/lodash.js":
+            "sha384-WjLRjwVfCzXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    }
+}</div>
+
+        <p>生成 integrity hash 的方法：</p>
+        <div class="code-block"># 使用 openssl
+curl -s https://cdn.jsdelivr.net/npm/lodash-es@4.17.21/lodash.js | \
+    openssl dgst -sha384 -binary | \
+    openssl base64 -A
+
+# 使用 shasum
+curl -s https://cdn.jsdelivr.net/npm/lodash-es@4.17.21/lodash.js | \
+    shasum -a 384 | \
+    xxd -r -p | \
+    base64</div>
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "dayjs-old": "https://esm.sh/dayjs@1.10.0",
+            "dayjs-new": "https://esm.sh/dayjs@1.11.10",
+            "dayjs": "https://esm.sh/dayjs@1.11.10"
+        }
+    }
+    </script>
+
+    <script type="module">
+        import dayjsOld from 'dayjs-old';
+        import dayjsNew from 'dayjs-new';
+
+        window.compareDayjs = function() {
+            const now = new Date();
+
+            let output = '=== Day.js 多版本比较 ===\n\n';
+
+            output += '【Day.js 1.10.0 (旧版本)】\n';
+            output += `  版本: ${dayjsOld.version || '1.10.0'}\n`;
+            output += `  格式化: ${dayjsOld(now).format('YYYY-MM-DD HH:mm:ss')}\n`;
+            output += `  相对时间: ${dayjsOld(now).fromNow ? dayjsOld(now).fromNow() : '需要插件'}\n`;
+            output += '\n';
+
+            output += '【Day.js 1.11.10 (新版本)】\n';
+            output += `  版本: ${dayjsNew.version || '1.11.10'}\n`;
+            output += `  格式化: ${dayjsNew(now).format('YYYY-MM-DD HH:mm:ss')}\n`;
+            output += `  相对时间: ${dayjsNew(now).fromNow ? dayjsNew(now).fromNow() : '需要插件'}\n`;
+            output += '\n';
+
+            output += '=== 结论 ===\n';
+            output += '两个版本可以同时存在于同一个页面中！\n';
+            output += '通过 Import Maps，我们可以：\n';
+            output += '  1. 使用版本后缀区分不同版本\n';
+            output += '  2. 使用 scopes 为不同模块指定不同版本\n';
+            output += '  3. 渐进式迁移，新旧代码共存';
+
+            document.getElementById('dayjs-output').textContent = output;
+        };
+
+        // 页面加载时显示初始信息
+        console.log('多版本 Day.js 已加载:');
+        console.log('  - dayjs-old:', dayjsOld);
+        console.log('  - dayjs-new:', dayjsNew);
+    </script>
+</body>
+</html>

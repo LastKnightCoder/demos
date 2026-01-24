@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>递归遍历目录树 - FileSystemDirectoryHandle</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0d1117;
+      color: #c9d1d9;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container { max-width: 1000px; margin: 0 auto; }
+    h1 { color: #58a6ff; margin-bottom: 10px; }
+    .subtitle { color: #8b949e; margin-bottom: 20px; }
+    .card {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    button {
+      background: #238636;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    button:hover { background: #2ea043; }
+    button:disabled { background: #21262d; color: #484f58; cursor: not-allowed; }
+    button.secondary { background: #21262d; border: 1px solid #30363d; }
+    button.secondary:hover { background: #30363d; }
+    .stats {
+      display: flex;
+      gap: 20px;
+      margin: 15px 0;
+      flex-wrap: wrap;
+    }
+    .stat-item {
+      background: #21262d;
+      padding: 10px 15px;
+      border-radius: 6px;
+      border-left: 3px solid #58a6ff;
+    }
+    .stat-value { font-size: 24px; font-weight: bold; color: #58a6ff; }
+    .stat-label { font-size: 12px; color: #8b949e; }
+    .tree { font-family: 'Consolas', 'Monaco', monospace; font-size: 14px; }
+    .tree-item {
+      padding: 4px 0;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 4px;
+      padding-left: 4px;
+    }
+    .tree-item:hover { background: #21262d; }
+    .tree-children { margin-left: 20px; border-left: 1px solid #30363d; padding-left: 10px; }
+    .tree-children.collapsed { display: none; }
+    .icon { width: 16px; text-align: center; }
+    .folder-icon { color: #54aeff; }
+    .file-icon { color: #8b949e; }
+    .toggle { width: 16px; color: #8b949e; font-size: 10px; }
+    .name { flex: 1; }
+    .folder-name { color: #58a6ff; font-weight: 500; }
+    .file-name { color: #c9d1d9; }
+    .meta { color: #8b949e; font-size: 12px; }
+    .loading { color: #8b949e; padding: 20px; text-align: center; }
+    .error { color: #f85149; padding: 10px; background: #3d1f1f; border-radius: 4px; }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>🌳 递归遍历目录树</h1>
+    <p class="subtitle">使用 FileSystemDirectoryHandle 遍历整个目录结构</p>
+
+    <div class="card">
+      <div class="toolbar">
+        <button id="selectBtn">📂 选择文件夹</button>
+        <button id="expandAllBtn" class="secondary" disabled>展开全部</button>
+        <button id="collapseAllBtn" class="secondary" disabled>折叠全部</button>
+        <button id="exportBtn" class="secondary" disabled>📋 导出 JSON</button>
+      </div>
+      <div id="stats" class="stats" style="display: none;"></div>
+    </div>
+
+    <div class="card" id="treeCard" style="display: none;">
+      <div id="treeContainer"></div>
+    </div>
+  </div>
+
+  <script>
+    const selectBtn = document.getElementById('selectBtn');
+    const expandAllBtn = document.getElementById('expandAllBtn');
+    const collapseAllBtn = document.getElementById('collapseAllBtn');
+    const exportBtn = document.getElementById('exportBtn');
+    const statsDiv = document.getElementById('stats');
+    const treeCard = document.getElementById('treeCard');
+    const treeContainer = document.getElementById('treeContainer');
+
+    let treeData = null;
+    let globalStats = { files: 0, folders: 0, totalSize: 0 };
+
+    // 检测 API 支持
+    if (!('showDirectoryPicker' in window)) {
+      selectBtn.disabled = true;
+      treeContainer.innerHTML = '<div class="error">❌ 当前浏览器不支持 File System Access API</div>';
+      treeCard.style.display = 'block';
+    }
+
+    selectBtn.addEventListener('click', async () => {
+      try {
+        const dirHandle = await window.showDirectoryPicker();
+        treeContainer.innerHTML = '<div class="loading">⏳ 正在扫描目录...</div>';
+        treeCard.style.display = 'block';
+        statsDiv.style.display = 'none';
+
+        globalStats = { files: 0, folders: 0, totalSize: 0 };
+        treeData = await walkDirectory(dirHandle);
+
+        renderStats(dirHandle.name);
+        renderTree(treeData, treeContainer);
+
+        expandAllBtn.disabled = false;
+        collapseAllBtn.disabled = false;
+        exportBtn.disabled = false;
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          treeContainer.innerHTML = `<div class="error">❌ 错误: ${err.message}</div>`;
+        }
+      }
+    });
+
+    // 递归遍历目录
+    async function walkDirectory(dirHandle, path = '', depth = 0, maxDepth = 10) {
+      const entries = [];
+
+      if (depth > maxDepth) {
+        return [{ type: 'info', name: '... (层级过深，已省略)' }];
+      }
+
+      for await (const entry of dirHandle.values()) {
+        const entryPath = path ? `${path}/${entry.name}` : entry.name;
+
+        if (entry.kind === 'file') {
+          globalStats.files++;
+          try {
+            const file = await entry.getFile();
+            globalStats.totalSize += file.size;
+            entries.push({
+              type: 'file',
+              name: entry.name,
+              path: entryPath,
+              size: file.size,
+              lastModified: file.lastModified,
+              mimeType: file.type
+            });
+          } catch {
+            entries.push({ type: 'file', name: entry.name, path: entryPath, size: 0 });
+          }
+        } else {
+          globalStats.folders++;
+          entries.push({
+            type: 'directory',
+            name: entry.name,
+            path: entryPath,
+            children: await walkDirectory(entry, entryPath, depth + 1, maxDepth)
+          });
+        }
+      }
+
+      // 排序：文件夹在前，文件在后，按名称排序
+      entries.sort((a, b) => {
+        if (a.type !== b.type) return a.type === 'directory' ? -1 : 1;
+        return a.name.localeCompare(b.name);
+      });
+
+      return entries;
+    }
+
+    function renderStats(rootName) {
+      statsDiv.style.display = 'flex';
+      statsDiv.innerHTML = `
+        <div class="stat-item">
+          <div class="stat-value">${rootName}</div>
+          <div class="stat-label">根目录</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">${globalStats.folders}</div>
+          <div class="stat-label">文件夹</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">${globalStats.files}</div>
+          <div class="stat-label">文件</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">${formatSize(globalStats.totalSize)}</div>
+          <div class="stat-label">总大小</div>
+        </div>
+      `;
+    }
+
+    function renderTree(entries, container) {
+      container.innerHTML = '';
+      const tree = document.createElement('div');
+      tree.className = 'tree';
+      renderEntries(entries, tree);
+      container.appendChild(tree);
+    }
+
+    function renderEntries(entries, parent) {
+      entries.forEach(entry => {
+        const item = document.createElement('div');
+
+        if (entry.type === 'directory') {
+          const header = document.createElement('div');
+          header.className = 'tree-item';
+          header.innerHTML = `
+            <span class="toggle">▼</span>
+            <span class="icon folder-icon">📁</span>
+            <span class="name folder-name">${entry.name}</span>
+            <span class="meta">${entry.children.length} 项</span>
+          `;
+
+          const children = document.createElement('div');
+          children.className = 'tree-children';
+          renderEntries(entry.children, children);
+
+          header.addEventListener('click', () => {
+            children.classList.toggle('collapsed');
+            header.querySelector('.toggle').textContent = children.classList.contains('collapsed') ? '▶' : '▼';
+          });
+
+          item.appendChild(header);
+          item.appendChild(children);
+        } else if (entry.type === 'file') {
+          item.className = 'tree-item';
+          item.innerHTML = `
+            <span class="toggle"></span>
+            <span class="icon file-icon">${getFileIcon(entry.name)}</span>
+            <span class="name file-name">${entry.name}</span>
+            <span class="meta">${formatSize(entry.size)}</span>
+          `;
+        } else {
+          item.className = 'tree-item';
+          item.innerHTML = `<span class="meta">${entry.name}</span>`;
+        }
+
+        parent.appendChild(item);
+      });
+    }
+
+    expandAllBtn.addEventListener('click', () => {
+      document.querySelectorAll('.tree-children').forEach(el => el.classList.remove('collapsed'));
+      document.querySelectorAll('.toggle').forEach(el => { if (el.textContent) el.textContent = '▼'; });
+    });
+
+    collapseAllBtn.addEventListener('click', () => {
+      document.querySelectorAll('.tree-children').forEach(el => el.classList.add('collapsed'));
+      document.querySelectorAll('.toggle').forEach(el => { if (el.textContent) el.textContent = '▶'; });
+    });
+
+    exportBtn.addEventListener('click', () => {
+      const json = JSON.stringify(treeData, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'directory-tree.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    function formatSize(bytes) {
+      if (bytes === 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+
+    function getFileIcon(name) {
+      const ext = name.split('.').pop().toLowerCase();
+      const icons = {
+        js: '📜', ts: '📘', jsx: '⚛️', tsx: '⚛️',
+        html: '🌐', css: '🎨', scss: '🎨', less: '🎨',
+        json: '📋', xml: '📋', yaml: '📋', yml: '📋',
+        md: '📝', txt: '📄', pdf: '📕',
+        png: '🖼️', jpg: '🖼️', jpeg: '🖼️', gif: '🖼️', svg: '🖼️', webp: '🖼️',
+        mp3: '🎵', wav: '🎵', mp4: '🎬', avi: '🎬', mov: '🎬',
+        zip: '📦', rar: '📦', tar: '📦', gz: '📦',
+        exe: '⚙️', dll: '⚙️', sh: '⚙️', bat: '⚙️'
+      };
+      return icons[ext] || '📄';
+    }
+  </script>
+</body>
+</html>

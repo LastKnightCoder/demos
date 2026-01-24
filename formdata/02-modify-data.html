@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FormData 事件 - 修改表单数据</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+
+    h1 {
+      color: #333;
+      border-bottom: 2px solid #28a745;
+      padding-bottom: 10px;
+    }
+
+    .description {
+      background: #d4edda;
+      border-left: 4px solid #28a745;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 0 8px 8px 0;
+    }
+
+    .demo-section {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+
+    .demo-section h2 {
+      margin-top: 0;
+      color: #444;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      font-weight: 500;
+    }
+
+    input {
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #28a745;
+      box-shadow: 0 0 0 3px rgba(40,167,69,0.1);
+    }
+
+    .checkbox-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+
+    .checkbox-group label {
+      flex-direction: row;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .checkbox-group input {
+      width: auto;
+    }
+
+    button {
+      padding: 12px 24px;
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    button:hover {
+      background: #218838;
+    }
+
+    .comparison {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 600px) {
+      .comparison {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .comparison-box {
+      background: #1e1e1e;
+      color: #d4d4d4;
+      padding: 15px;
+      border-radius: 4px;
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 13px;
+      white-space: pre-wrap;
+      min-height: 150px;
+    }
+
+    .comparison-box h3 {
+      margin: 0 0 10px 0;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #444;
+      font-size: 14px;
+    }
+
+    .comparison-box.before h3 {
+      color: #f8d7da;
+    }
+
+    .comparison-box.after h3 {
+      color: #d4edda;
+    }
+
+    .modification-list {
+      background: #fff3cd;
+      padding: 15px;
+      border-radius: 4px;
+      margin-bottom: 15px;
+    }
+
+    .modification-list h3 {
+      margin: 0 0 10px 0;
+      color: #856404;
+    }
+
+    .modification-list ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    .modification-list li {
+      margin: 5px 0;
+    }
+
+    .code-block {
+      background: #f8f8f8;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 15px;
+      margin: 10px 0;
+      overflow-x: auto;
+    }
+
+    .code-block code {
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 14px;
+      white-space: pre-wrap;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <h1>FormData 事件 - 修改表单数据</h1>
+
+  <div class="description">
+    <p><strong>formdata 事件</strong>的一个重要用途是在提交前修改表单数据。你可以：</p>
+    <ul>
+      <li>使用 <code>set()</code> 修改现有字段的值</li>
+      <li>使用 <code>delete()</code> 删除不需要的字段</li>
+      <li>对数据进行格式化和清理</li>
+    </ul>
+  </div>
+
+  <div class="demo-section">
+    <h2>用户注册表单</h2>
+    <form id="registrationForm">
+      <label>
+        用户名（会自动转为小写）
+        <input type="text" name="username" value="ZhangSan_123" required>
+      </label>
+      <label>
+        邮箱（会自动去除空格并转小写）
+        <input type="email" name="email" value="  ZhangSan@Example.COM  " required>
+      </label>
+      <label>
+        手机号（会自动去除空格和横线）
+        <input type="tel" name="phone" value="138-1234-5678">
+      </label>
+      <label>
+        密码（提交时会被删除，不发送到服务器）
+        <input type="password" name="password" value="secret123">
+      </label>
+      <label>
+        确认密码（提交时会被删除）
+        <input type="password" name="confirmPassword" value="secret123">
+      </label>
+      <div>
+        <span style="font-weight: 500;">兴趣爱好（会合并为逗号分隔的字符串）</span>
+        <div class="checkbox-group" style="margin-top: 8px;">
+          <label><input type="checkbox" name="hobbies" value="reading" checked> 阅读</label>
+          <label><input type="checkbox" name="hobbies" value="music" checked> 音乐</label>
+          <label><input type="checkbox" name="hobbies" value="sports"> 运动</label>
+          <label><input type="checkbox" name="hobbies" value="travel" checked> 旅行</label>
+        </div>
+      </div>
+      <button type="submit">提交注册</button>
+    </form>
+  </div>
+
+  <div class="modification-list">
+    <h3>数据修改规则</h3>
+    <ul>
+      <li><strong>username</strong>: 转换为小写</li>
+      <li><strong>email</strong>: 去除首尾空格，转换为小写</li>
+      <li><strong>phone</strong>: 去除所有空格和横线</li>
+      <li><strong>password / confirmPassword</strong>: 删除，不发送到服务器</li>
+      <li><strong>hobbies</strong>: 多个值合并为逗号分隔的字符串</li>
+    </ul>
+  </div>
+
+  <div class="demo-section">
+    <h2>数据对比</h2>
+    <div class="comparison">
+      <div class="comparison-box before">
+        <h3>修改前（原始表单数据）</h3>
+        <div id="beforeOutput">// 提交表单后显示</div>
+      </div>
+      <div class="comparison-box after">
+        <h3>修改后（实际发送数据）</h3>
+        <div id="afterOutput">// 提交表单后显示</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="demo-section">
+    <h2>关键代码</h2>
+    <div class="code-block">
+      <code>
+form.addEventListener('formdata', (event) => {
+  const formData = event.formData;
+
+  // 1. 修改字段值 - 用户名转小写
+  const username = formData.get('username');
+  formData.set('username', username.toLowerCase());
+
+  // 2. 格式化邮箱
+  const email = formData.get('email');
+  formData.set('email', email.trim().toLowerCase());
+
+  // 3. 清理手机号
+  const phone = formData.get('phone');
+  formData.set('phone', phone.replace(/[\s-]/g, ''));
+
+  // 4. 删除敏感字段
+  formData.delete('password');
+  formData.delete('confirmPassword');
+
+  // 5. 合并多选值
+  const hobbies = formData.getAll('hobbies');
+  formData.delete('hobbies');
+  formData.set('hobbies', hobbies.join(','));
+});
+      </code>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('registrationForm');
+    const beforeOutput = document.getElementById('beforeOutput');
+    const afterOutput = document.getElementById('afterOutput');
+
+    // 用于存储修改前的数据
+    let originalData = {};
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+
+      // 在 formdata 事件触发前，先保存原始数据
+      const tempFormData = new FormData(form);
+      originalData = {};
+      for (const [key, value] of tempFormData.entries()) {
+        if (originalData[key]) {
+          // 处理多个同名字段（如 checkbox）
+          if (Array.isArray(originalData[key])) {
+            originalData[key].push(value);
+          } else {
+            originalData[key] = [originalData[key], value];
+          }
+        } else {
+          originalData[key] = value;
+        }
+      }
+
+      // 显示原始数据
+      let beforeText = '';
+      for (const [key, value] of Object.entries(originalData)) {
+        if (Array.isArray(value)) {
+          beforeText += `"${key}": [\n`;
+          value.forEach(v => beforeText += `  "${v}",\n`);
+          beforeText += `]\n`;
+        } else {
+          beforeText += `"${key}": "${value}"\n`;
+        }
+      }
+      beforeOutput.textContent = beforeText;
+
+      // 触发 formdata 事件
+      new FormData(form);
+    });
+
+    form.addEventListener('formdata', (event) => {
+      const formData = event.formData;
+
+      // 1. 用户名转小写
+      const username = formData.get('username');
+      if (username) {
+        formData.set('username', username.toLowerCase());
+      }
+
+      // 2. 邮箱去空格并转小写
+      const email = formData.get('email');
+      if (email) {
+        formData.set('email', email.trim().toLowerCase());
+      }
+
+      // 3. 手机号去除空格和横线
+      const phone = formData.get('phone');
+      if (phone) {
+        formData.set('phone', phone.replace(/[\s-]/g, ''));
+      }
+
+      // 4. 删除密码字段（不应该发送到服务器日志等）
+      formData.delete('password');
+      formData.delete('confirmPassword');
+
+      // 5. 合并多选的 hobbies 为逗号分隔的字符串
+      const hobbies = formData.getAll('hobbies');
+      formData.delete('hobbies');
+      if (hobbies.length > 0) {
+        formData.set('hobbies', hobbies.join(','));
+      }
+
+      // 显示修改后的数据
+      let afterText = '';
+      for (const [key, value] of formData.entries()) {
+        afterText += `"${key}": "${value}"\n`;
+      }
+      afterOutput.textContent = afterText;
+    });
+  </script>
+</body>
+</html>

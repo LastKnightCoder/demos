@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>简易文本编辑器 - File System Access API</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #1e1e1e;
+      color: #d4d4d4;
+    }
+    h1 { color: #569cd6; }
+    .toolbar {
+      background: #333;
+      padding: 10px;
+      border-radius: 4px 4px 0 0;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    button {
+      background: #0e639c;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    button:hover { background: #1177bb; }
+    button:disabled { background: #555; cursor: not-allowed; }
+    .filename {
+      flex: 1;
+      color: #9cdcfe;
+      font-family: monospace;
+    }
+    .modified { color: #ce9178; }
+    .modified::after { content: ' •'; color: #f48771; }
+    textarea {
+      width: 100%;
+      height: 500px;
+      background: #1e1e1e;
+      color: #d4d4d4;
+      border: 1px solid #333;
+      border-top: none;
+      padding: 15px;
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 14px;
+      line-height: 1.5;
+      resize: vertical;
+      border-radius: 0 0 4px 4px;
+    }
+    textarea:focus { outline: 1px solid #007acc; }
+    .status {
+      background: #007acc;
+      color: white;
+      padding: 5px 10px;
+      font-size: 12px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .card {
+      background: #252526;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+    pre {
+      background: #1e1e1e;
+      padding: 15px;
+      border-radius: 4px;
+      overflow-x: auto;
+      color: #9cdcfe;
+    }
+  </style>
+</head>
+<body>
+  <h1>📝 简易文本编辑器</h1>
+  <p>演示如何使用 File System Access API 实现文件的打开、编辑和保存功能。</p>
+
+  <div class="toolbar">
+    <button id="newBtn">📄 新建</button>
+    <button id="openBtn">📂 打开</button>
+    <button id="saveBtn" disabled>💾 保存</button>
+    <button id="saveAsBtn">📥 另存为</button>
+    <span id="filename" class="filename">未命名文档</span>
+  </div>
+  <textarea id="editor" placeholder="在此输入文本内容..."></textarea>
+  <div class="status">
+    <span id="statusLeft">就绪</span>
+    <span id="statusRight">行: 1, 列: 1</span>
+  </div>
+
+  <div class="card">
+    <h2>核心功能代码</h2>
+    <pre><code>// 打开文件
+async function openFile() {
+  const [handle] = await window.showOpenFilePicker({
+    types: [{ description: '文本文件', accept: { 'text/*': ['.txt', '.md', '.js', '.html', '.css'] } }]
+  });
+  const file = await handle.getFile();
+  const content = await file.text();
+  editor.value = content;
+  currentHandle = handle;  // 保存句柄用于后续保存
+}
+
+// 保存文件
+async function saveFile() {
+  const writable = await currentHandle.createWritable();
+  await writable.write(editor.value);
+  await writable.close();
+}
+
+// 另存为
+async function saveAsFile() {
+  const handle = await window.showSaveFilePicker({
+    suggestedName: 'document.txt',
+    types: [{ description: '文本文件', accept: { 'text/plain': ['.txt'] } }]
+  });
+  const writable = await handle.createWritable();
+  await writable.write(editor.value);
+  await writable.close();
+  currentHandle = handle;
+}</code></pre>
+  </div>
+
+  <script>
+    const editor = document.getElementById('editor');
+    const filename = document.getElementById('filename');
+    const statusLeft = document.getElementById('statusLeft');
+    const statusRight = document.getElementById('statusRight');
+    const saveBtn = document.getElementById('saveBtn');
+
+    let currentHandle = null;
+    let originalContent = '';
+    let isModified = false;
+
+    // 检测支持
+    if (!('showOpenFilePicker' in window)) {
+      document.querySelectorAll('button').forEach(btn => btn.disabled = true);
+      statusLeft.textContent = '❌ 浏览器不支持 File System Access API';
+    }
+
+    // 新建文件
+    document.getElementById('newBtn').addEventListener('click', () => {
+      if (isModified && !confirm('当前文件未保存，确定要新建吗？')) return;
+      editor.value = '';
+      currentHandle = null;
+      filename.textContent = '未命名文档';
+      filename.classList.remove('modified');
+      saveBtn.disabled = true;
+      originalContent = '';
+      isModified = false;
+      statusLeft.textContent = '新建文档';
+    });
+
+    // 打开文件
+    document.getElementById('openBtn').addEventListener('click', async () => {
+      try {
+        const [handle] = await window.showOpenFilePicker({
+          types: [{
+            description: '文本文件',
+            accept: { 'text/*': ['.txt', '.md', '.js', '.ts', '.html', '.css', '.json', '.xml'] }
+          }]
+        });
+        const file = await handle.getFile();
+        const content = await file.text();
+
+        editor.value = content;
+        originalContent = content;
+        currentHandle = handle;
+        filename.textContent = file.name;
+        filename.classList.remove('modified');
+        saveBtn.disabled = false;
+        isModified = false;
+        statusLeft.textContent = `已打开: ${file.name}`;
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          statusLeft.textContent = `错误: ${err.message}`;
+        }
+      }
+    });
+
+    // 保存文件
+    document.getElementById('saveBtn').addEventListener('click', async () => {
+      if (!currentHandle) return;
+      try {
+        const writable = await currentHandle.createWritable();
+        await writable.write(editor.value);
+        await writable.close();
+        originalContent = editor.value;
+        isModified = false;
+        filename.classList.remove('modified');
+        statusLeft.textContent = '已保存';
+      } catch (err) {
+        statusLeft.textContent = `保存失败: ${err.message}`;
+      }
+    });
+
+    // 另存为
+    document.getElementById('saveAsBtn').addEventListener('click', async () => {
+      try {
+        const handle = await window.showSaveFilePicker({
+          suggestedName: currentHandle?.name || 'document.txt',
+          types: [{
+            description: '文本文件',
+            accept: { 'text/plain': ['.txt', '.md'] }
+          }]
+        });
+        const writable = await handle.createWritable();
+        await writable.write(editor.value);
+        await writable.close();
+
+        currentHandle = handle;
+        filename.textContent = handle.name;
+        filename.classList.remove('modified');
+        saveBtn.disabled = false;
+        originalContent = editor.value;
+        isModified = false;
+        statusLeft.textContent = `已保存为: ${handle.name}`;
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          statusLeft.textContent = `保存失败: ${err.message}`;
+        }
+      }
+    });
+
+    // 监听内容变化
+    editor.addEventListener('input', () => {
+      isModified = editor.value !== originalContent;
+      filename.classList.toggle('modified', isModified);
+    });
+
+    // 更新光标位置
+    editor.addEventListener('click', updateCursor);
+    editor.addEventListener('keyup', updateCursor);
+
+    function updateCursor() {
+      const text = editor.value.substring(0, editor.selectionStart);
+      const lines = text.split('\n');
+      const line = lines.length;
+      const col = lines[lines.length - 1].length + 1;
+      statusRight.textContent = `行: ${line}, 列: ${col}`;
+    }
+
+    // 快捷键
+    document.addEventListener('keydown', (e) => {
+      if (e.ctrlKey || e.metaKey) {
+        if (e.key === 's') {
+          e.preventDefault();
+          if (currentHandle) {
+            document.getElementById('saveBtn').click();
+          } else {
+            document.getElementById('saveAsBtn').click();
+          }
+        } else if (e.key === 'o') {
+          e.preventDefault();
+          document.getElementById('openBtn').click();
+        }
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+{
+    "imports": {
+        "lodash": "https://esm.sh/lodash-es@4.17.21",
+        "dayjs": "https://esm.sh/dayjs@1.11.10",
+        "uuid": "https://esm.sh/uuid@9",
+        "nanoid": "https://esm.sh/nanoid@5",
+        "@/": "./modules/",
+        "utils": "./modules/utils.js"
+    }
+}

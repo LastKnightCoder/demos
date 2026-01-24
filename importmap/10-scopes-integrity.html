@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Import Map: scopes 与 integrity 详解</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 950px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+            line-height: 1.6;
+        }
+        h1 { color: #1a1a2e; text-align: center; }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .card h2 {
+            margin-top: 0;
+            color: #333;
+            padding-bottom: 10px;
+        }
+        .card h2.scopes { border-bottom: 3px solid #3498db; }
+        .card h2.integrity { border-bottom: 3px solid #e74c3c; }
+        .code-block {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 16px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            white-space: pre;
+        }
+        .output {
+            background: #282c34;
+            color: #98c379;
+            padding: 16px;
+            border-radius: 8px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            white-space: pre-wrap;
+            min-height: 60px;
+        }
+        .info {
+            background: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .warning {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .success {
+            background: #e8f5e9;
+            border-left: 4px solid #4caf50;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .error {
+            background: #ffebee;
+            border-left: 4px solid #f44336;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+        th { background: #f8f9fa; }
+        .diagram {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+            text-align: center;
+        }
+        .diagram-box {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 6px;
+            font-family: monospace;
+        }
+        .diagram-global { background: #bbdefb; border: 2px solid #1976d2; }
+        .diagram-scope { background: #c8e6c9; border: 2px solid #388e3c; }
+        .diagram-arrow { font-size: 20px; color: #666; }
+        .hash-example {
+            background: #263238;
+            color: #80cbc4;
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 12px;
+            word-break: break-all;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            margin: 5px;
+            color: white;
+        }
+        .btn-blue { background: #3498db; }
+        .btn-blue:hover { background: #2980b9; }
+        .btn-red { background: #e74c3c; }
+        .btn-red:hover { background: #c0392b; }
+        .btn-green { background: #27ae60; }
+        .btn-green:hover { background: #219a52; }
+    </style>
+</head>
+<body>
+    <h1>Import Map: scopes 与 integrity 详解</h1>
+
+    <!-- ==================== SCOPES ==================== -->
+    <div class="card">
+        <h2 class="scopes">一、scopes（作用域映射）</h2>
+
+        <div class="info">
+            <strong>作用：</strong>为不同的 URL 路径定义不同的模块映射。
+            当从特定路径导入模块时，优先使用该作用域的映射，找不到再回退到全局 imports。
+        </div>
+
+        <h3>语法结构</h3>
+        <div class="code-block">{
+    "imports": {
+        "lodash": "/libs/lodash-v4.js"        // 全局默认映射
+    },
+    "scopes": {
+        "/app/legacy/": {                      // 作用域路径（必须以 / 结尾）
+            "lodash": "/libs/lodash-v3.js"    // 该路径下的特定映射
+        },
+        "/app/experimental/": {
+            "lodash": "/libs/lodash-v5.js"
+        }
+    }
+}</div>
+
+        <h3>解析规则图示</h3>
+        <div class="diagram">
+            <div>
+                <span class="diagram-box diagram-scope">/app/legacy/module.js</span>
+                <span class="diagram-arrow">→ import "lodash" →</span>
+                <span class="diagram-box diagram-scope">/libs/lodash-v3.js</span>
+            </div>
+            <br>
+            <div>
+                <span class="diagram-box diagram-scope">/app/experimental/module.js</span>
+                <span class="diagram-arrow">→ import "lodash" →</span>
+                <span class="diagram-box diagram-scope">/libs/lodash-v5.js</span>
+            </div>
+            <br>
+            <div>
+                <span class="diagram-box diagram-global">/app/other/module.js</span>
+                <span class="diagram-arrow">→ import "lodash" →</span>
+                <span class="diagram-box diagram-global">/libs/lodash-v4.js</span>
+            </div>
+        </div>
+
+        <h3>使用场景</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>场景</th>
+                    <th>说明</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>版本隔离</strong></td>
+                    <td>不同模块使用不同版本的依赖，避免版本冲突</td>
+                </tr>
+                <tr>
+                    <td><strong>微前端</strong></td>
+                    <td>每个子应用可以有独立的依赖映射</td>
+                </tr>
+                <tr>
+                    <td><strong>渐进升级</strong></td>
+                    <td>新代码用新版本，旧代码保持旧版本</td>
+                </tr>
+                <tr>
+                    <td><strong>A/B 测试</strong></td>
+                    <td>不同路径加载不同实现</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>完整示例</h3>
+        <div class="code-block">&lt;script type="importmap"&gt;
+{
+    "imports": {
+        "lodash": "https://cdn.jsdelivr.net/npm/lodash-es@4.17.21/lodash.js",
+        "utils": "/shared/utils.js"
+    },
+    "scopes": {
+        "/admin/": {
+            "lodash": "https://cdn.jsdelivr.net/npm/lodash-es@4.17.15/lodash.js",
+            "utils": "/admin/utils-admin.js"
+        },
+        "/legacy/": {
+            "lodash": "https://cdn.jsdelivr.net/npm/lodash-es@3.10.1/lodash.js"
+        }
+    }
+}
+&lt;/script&gt;
+
+&lt;!-- /admin/dashboard.js 中 --&gt;
+&lt;script type="module"&gt;
+    // 从 /admin/ 路径导入时：
+    import _ from 'lodash';  // → lodash@4.17.15（scopes 中的版本）
+    import utils from 'utils'; // → /admin/utils-admin.js
+&lt;/script&gt;
+
+&lt;!-- /public/home.js 中 --&gt;
+&lt;script type="module"&gt;
+    // 从其他路径导入时：
+    import _ from 'lodash';  // → lodash@4.17.21（全局 imports）
+    import utils from 'utils'; // → /shared/utils.js
+&lt;/script&gt;</div>
+    </div>
+
+    <!-- ==================== INTEGRITY ==================== -->
+    <div class="card">
+        <h2 class="integrity">二、integrity（完整性校验）</h2>
+
+        <div class="info">
+            <strong>作用：</strong>为模块指定 SRI（Subresource Integrity）哈希值，
+            浏览器加载模块时会验证内容是否匹配，防止代码被篡改。
+        </div>
+
+        <h3>语法结构</h3>
+        <div class="code-block">{
+    "imports": {
+        "lodash": "https://cdn.jsdelivr.net/npm/lodash-es@4.17.21/lodash.js"
+    },
+    "integrity": {
+        "https://cdn.jsdelivr.net/npm/lodash-es@4.17.21/lodash.js": "sha384-xxx..."
+    }
+}</div>
+
+        <div class="warning">
+            <strong>注意：</strong>integrity 的 key 必须是<strong>完整的 URL</strong>，不是模块标识符。
+            这是因为同一个 URL 可能被多个标识符引用。
+        </div>
+
+        <h3>哈希值格式</h3>
+        <div class="hash-example">
+sha384-TSskRdUpYvZ4v7ivC5O11GCphs0fpSTrY5SdAEDJtK3x6I/oGiyxiTfQox3ad/xQ
+└─┬─┘ └────────────────────────────────┬────────────────────────────────────┘
+算法                              Base64 编码的哈希值
+        </div>
+
+        <p>支持的算法：<code>sha256</code>、<code>sha384</code>（推荐）、<code>sha512</code></p>
+
+        <h3>如何生成哈希值</h3>
+        <div class="code-block"># 方法 1：命令行
+curl -s "https://cdn.jsdelivr.net/npm/lodash-es@4.17.21/lodash.js" | \
+    openssl dgst -sha384 -binary | openssl base64 -A
+
+# 方法 2：Node.js
+const crypto = require('crypto');
+const content = await fetch(url).then(r => r.text());
+const hash = crypto.createHash('sha384').update(content).digest('base64');
+console.log(`sha384-${hash}`);
+
+# 方法 3：在线工具
+# https://www.srihash.org/</div>
+
+        <h3>完整示例</h3>
+        <div class="code-block">&lt;script type="importmap"&gt;
+{
+    "imports": {
+        "lodash": "https://cdn.jsdelivr.net/npm/lodash-es@4.17.21/lodash.js",
+        "dayjs": "https://esm.sh/dayjs@1.11.10"
+    },
+    "integrity": {
+        "https://cdn.jsdelivr.net/npm/lodash-es@4.17.21/lodash.js":
+            "sha384-TSskRdUpYvZ4v7ivC5O11GCphs0fpSTrY5SdAEDJtK3x6I/oGiyxiTfQox3ad/xQ",
+        "https://esm.sh/dayjs@1.11.10":
+            "sha384-B1ywcSN6kXVFtoMWvs4OXd6uONqfz2dysENSrDD3+IE6EzNqHvigyf8xKkPQcB6w"
+    }
+}
+&lt;/script&gt;</div>
+
+        <h3>验证失败时的行为</h3>
+        <div class="error">
+            如果模块内容与哈希值不匹配，浏览器会：
+            <ul style="margin: 10px 0;">
+                <li>拒绝加载该模块</li>
+                <li>在控制台报错：<code>Failed to find a valid digest in the 'integrity' attribute</code></li>
+                <li>依赖该模块的代码也会失败</li>
+            </ul>
+        </div>
+
+        <h3>使用场景</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>场景</th>
+                    <th>说明</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>CDN 安全</strong></td>
+                    <td>确保从第三方 CDN 加载的代码未被篡改</td>
+                </tr>
+                <tr>
+                    <td><strong>防止 MITM</strong></td>
+                    <td>防止中间人攻击注入恶意代码</td>
+                </tr>
+                <tr>
+                    <td><strong>合规要求</strong></td>
+                    <td>某些安全标准要求验证外部资源完整性</td>
+                </tr>
+                <tr>
+                    <td><strong>缓存验证</strong></td>
+                    <td>确保缓存的内容与预期一致</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ==================== 综合示例 ==================== -->
+    <div class="card">
+        <h2 style="border-bottom: 3px solid #9c27b0;">三、综合示例：scopes + integrity</h2>
+
+        <div class="code-block">&lt;script type="importmap"&gt;
+{
+    "imports": {
+        "lodash": "https://cdn.jsdelivr.net/npm/lodash-es@4.17.21/lodash.js",
+        "react": "https://esm.sh/react@18.2.0"
+    },
+    "scopes": {
+        "/legacy/": {
+            "react": "https://esm.sh/react@17.0.2"
+        }
+    },
+    "integrity": {
+        "https://cdn.jsdelivr.net/npm/lodash-es@4.17.21/lodash.js":
+            "sha384-TSskRdUpYvZ4v7ivC5O11GCphs0fpSTrY5SdAEDJtK3x6I/oGiyxiTfQox3ad/xQ",
+        "https://esm.sh/react@18.2.0":
+            "sha384-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "https://esm.sh/react@17.0.2":
+            "sha384-yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
+    }
+}
+&lt;/script&gt;</div>
+
+        <div class="success">
+            <strong>最佳实践：</strong>
+            <ul style="margin: 10px 0;">
+                <li>为所有外部 CDN 资源添加 integrity</li>
+                <li>使用 scopes 隔离不同版本的依赖</li>
+                <li>定期更新哈希值（当依赖版本更新时）</li>
+                <li>在 CI/CD 中自动生成和验证哈希值</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- ==================== 实时演示 ==================== -->
+    <div class="card">
+        <h2 style="border-bottom: 3px solid #27ae60;">四、实时演示</h2>
+
+        <div class="info">
+            下面的 Import Map 使用了 scopes 和 integrity（integrity 仅作演示，实际哈希可能不匹配）
+        </div>
+
+        <button class="btn btn-blue" onclick="testGlobalImport()">测试全局导入</button>
+        <button class="btn btn-green" onclick="testScopeInfo()">查看作用域信息</button>
+
+        <div id="demo-output" class="output" style="margin-top: 15px;">点击按钮测试...</div>
+    </div>
+
+    <!-- 演示用的 Import Map -->
+    <script type="importmap">
+    {
+        "imports": {
+            "lodash": "https://cdn.jsdelivr.net/npm/lodash-es@4.17.21/lodash.js",
+            "demo-module": "data:text/javascript,export const source = 'global'; export const version = '1.0.0';"
+        },
+        "scopes": {
+            "/admin/": {
+                "demo-module": "data:text/javascript,export const source = 'admin-scope'; export const version = '2.0.0';"
+            },
+            "/legacy/": {
+                "demo-module": "data:text/javascript,export const source = 'legacy-scope'; export const version = '0.5.0';"
+            }
+        }
+    }
+    </script>
+
+    <script type="module">
+        import _ from 'lodash';
+        import { source, version } from 'demo-module';
+
+        window.testGlobalImport = async function() {
+            const output = document.getElementById('demo-output');
+            output.textContent = [
+                '=== 全局导入测试 ===',
+                '',
+                `Lodash 版本: ${_.VERSION}`,
+                `demo-module 来源: ${source}`,
+                `demo-module 版本: ${version}`,
+                '',
+                '当前页面路径: ' + window.location.pathname,
+                '使用的是全局 imports 映射（因为路径不匹配任何 scope）'
+            ].join('\n');
+        };
+
+        window.testScopeInfo = function() {
+            const output = document.getElementById('demo-output');
+            output.textContent = [
+                '=== 作用域配置说明 ===',
+                '',
+                '当前 Import Map 定义了以下作用域:',
+                '',
+                '1. /admin/ 作用域:',
+                '   demo-module → source: "admin-scope", version: "2.0.0"',
+                '',
+                '2. /legacy/ 作用域:',
+                '   demo-module → source: "legacy-scope", version: "0.5.0"',
+                '',
+                '3. 全局 (其他路径):',
+                '   demo-module → source: "global", version: "1.0.0"',
+                '',
+                '如果此页面位于 /admin/ 下，demo-module 会解析为 admin-scope 版本。',
+                '如果此页面位于 /legacy/ 下，demo-module 会解析为 legacy-scope 版本。'
+            ].join('\n');
+        };
+
+        console.log('Import Map scopes & integrity 演示页面已加载');
+    </script>
+</body>
+</html>

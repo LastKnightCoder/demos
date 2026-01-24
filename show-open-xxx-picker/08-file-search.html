@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>文件搜索 - FileSystemDirectoryHandle</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: #eee;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container { max-width: 900px; margin: 0 auto; }
+    h1 { color: #00d9ff; margin-bottom: 10px; }
+    .subtitle { color: #888; margin-bottom: 20px; }
+    .card {
+      background: rgba(255,255,255,0.05);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+    .search-box {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    input[type="text"] {
+      flex: 1;
+      min-width: 200px;
+      padding: 12px 16px;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      background: rgba(0,0,0,0.3);
+      color: #fff;
+      font-size: 16px;
+    }
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #00d9ff;
+      box-shadow: 0 0 0 3px rgba(0,217,255,0.2);
+    }
+    input::placeholder { color: #666; }
+    button {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #00d9ff, #00a8cc);
+      color: #000;
+      font-weight: bold;
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(0,217,255,0.3); }
+    .btn-secondary {
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,0.2); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .filters {
+      display: flex;
+      gap: 15px;
+      margin-top: 15px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .filter-group { display: flex; align-items: center; gap: 8px; }
+    .filter-group label { color: #888; font-size: 14px; }
+    select {
+      padding: 8px 12px;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 6px;
+      background: rgba(0,0,0,0.3);
+      color: #fff;
+      font-size: 14px;
+    }
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #888;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .results-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    .results-count { color: #00d9ff; font-weight: bold; }
+    .result-item {
+      background: rgba(0,0,0,0.2);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      padding: 12px 15px;
+      margin: 8px 0;
+      transition: all 0.2s;
+    }
+    .result-item:hover {
+      background: rgba(0,217,255,0.1);
+      border-color: rgba(0,217,255,0.3);
+    }
+    .result-name {
+      font-family: 'Consolas', monospace;
+      color: #fff;
+      font-weight: 500;
+    }
+    .result-name .highlight {
+      background: rgba(0,217,255,0.3);
+      color: #00d9ff;
+      padding: 0 2px;
+      border-radius: 2px;
+    }
+    .result-path { color: #666; font-size: 12px; margin-top: 4px; font-family: monospace; }
+    .result-meta { color: #888; font-size: 12px; margin-top: 4px; }
+    .loading { text-align: center; padding: 40px; color: #888; }
+    .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(0,217,255,0.3);
+      border-top-color: #00d9ff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-right: 10px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .no-results { text-align: center; padding: 40px; color: #666; }
+    .error { color: #ff6b6b; background: rgba(255,107,107,0.1); padding: 15px; border-radius: 8px; }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔍 文件搜索</h1>
+    <p class="subtitle">在选定目录中递归搜索文件</p>
+
+    <div class="card">
+      <div class="search-box">
+        <button id="selectDirBtn" class="btn-secondary">📂 选择目录</button>
+        <input type="text" id="searchInput" placeholder="输入搜索关键词或正则表达式，如: \.js$ 或 config">
+        <button id="searchBtn" class="btn-primary" disabled>搜索</button>
+      </div>
+      <div id="dirInfo" style="margin-top: 10px; color: #888;"></div>
+
+      <div class="filters">
+        <div class="filter-group">
+          <label>文件类型:</label>
+          <select id="fileType">
+            <option value="all">全部文件</option>
+            <option value="code">代码文件</option>
+            <option value="image">图片</option>
+            <option value="document">文档</option>
+            <option value="media">音视频</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>大小限制:</label>
+          <select id="sizeFilter">
+            <option value="all">不限</option>
+            <option value="small">< 100KB</option>
+            <option value="medium">100KB - 1MB</option>
+            <option value="large">> 1MB</option>
+          </select>
+        </div>
+        <label class="checkbox-label">
+          <input type="checkbox" id="caseSensitive">
+          区分大小写
+        </label>
+        <label class="checkbox-label">
+          <input type="checkbox" id="useRegex" checked>
+          使用正则表达式
+        </label>
+      </div>
+    </div>
+
+    <div class="card" id="resultsCard" style="display: none;">
+      <div class="results-header">
+        <span class="results-count" id="resultsCount"></span>
+        <button id="exportResultsBtn" class="btn-secondary" style="padding: 8px 16px;">📋 导出结果</button>
+      </div>
+      <div id="resultsContainer"></div>
+    </div>
+  </div>
+
+  <script>
+    const selectDirBtn = document.getElementById('selectDirBtn');
+    const searchInput = document.getElementById('searchInput');
+    const searchBtn = document.getElementById('searchBtn');
+    const dirInfo = document.getElementById('dirInfo');
+    const resultsCard = document.getElementById('resultsCard');
+    const resultsCount = document.getElementById('resultsCount');
+    const resultsContainer = document.getElementById('resultsContainer');
+    const exportResultsBtn = document.getElementById('exportResultsBtn');
+
+    let currentDirHandle = null;
+    let searchResults = [];
+
+    // 检测 API 支持
+    if (!('showDirectoryPicker' in window)) {
+      selectDirBtn.disabled = true;
+      dirInfo.innerHTML = '<span class="error">❌ 当前浏览器不支持 File System Access API</span>';
+    }
+
+    // 选择目录
+    selectDirBtn.addEventListener('click', async () => {
+      try {
+        currentDirHandle = await window.showDirectoryPicker();
+        dirInfo.textContent = `已选择: ${currentDirHandle.name}`;
+        searchBtn.disabled = false;
+        resultsCard.style.display = 'none';
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          dirInfo.innerHTML = `<span class="error">错误: ${err.message}</span>`;
+        }
+      }
+    });
+
+    // 搜索
+    searchBtn.addEventListener('click', performSearch);
+    searchInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter' && !searchBtn.disabled) performSearch();
+    });
+
+    async function performSearch() {
+      const query = searchInput.value.trim();
+      if (!query || !currentDirHandle) return;
+
+      resultsCard.style.display = 'block';
+      resultsContainer.innerHTML = '<div class="loading"><span class="spinner"></span>正在搜索...</div>';
+      searchResults = [];
+
+      try {
+        const useRegex = document.getElementById('useRegex').checked;
+        const caseSensitive = document.getElementById('caseSensitive').checked;
+        const flags = caseSensitive ? '' : 'i';
+        const pattern = useRegex ? new RegExp(query, flags) : new RegExp(escapeRegex(query), flags);
+
+        await findFiles(currentDirHandle, pattern, '');
+
+        // 应用过滤器
+        const filtered = applyFilters(searchResults);
+
+        displayResults(filtered, query);
+      } catch (err) {
+        resultsContainer.innerHTML = `<div class="error">搜索错误: ${err.message}</div>`;
+      }
+    }
+
+    async function findFiles(dirHandle, pattern, path) {
+      for await (const entry of dirHandle.values()) {
+        const entryPath = path ? `${path}/${entry.name}` : entry.name;
+
+        if (entry.kind === 'file') {
+          if (pattern.test(entry.name)) {
+            try {
+              const file = await entry.getFile();
+              searchResults.push({
+                handle: entry,
+                name: entry.name,
+                path: entryPath,
+                size: file.size,
+                type: file.type,
+                lastModified: file.lastModified
+              });
+            } catch {
+              searchResults.push({ handle: entry, name: entry.name, path: entryPath, size: 0 });
+            }
+          }
+        } else {
+          await findFiles(entry, pattern, entryPath);
+        }
+      }
+    }
+
+    function applyFilters(results) {
+      const fileType = document.getElementById('fileType').value;
+      const sizeFilter = document.getElementById('sizeFilter').value;
+
+      return results.filter(file => {
+        // 文件类型过滤
+        if (fileType !== 'all') {
+          const ext = file.name.split('.').pop().toLowerCase();
+          const typeMap = {
+            code: ['js', 'ts', 'jsx', 'tsx', 'py', 'java', 'c', 'cpp', 'h', 'css', 'html', 'json', 'xml', 'yaml', 'yml', 'md', 'sh'],
+            image: ['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp', 'bmp', 'ico'],
+            document: ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt'],
+            media: ['mp3', 'wav', 'mp4', 'avi', 'mov', 'mkv', 'flac', 'ogg']
+          };
+          if (!typeMap[fileType]?.includes(ext)) return false;
+        }
+
+        // 大小过滤
+        if (sizeFilter !== 'all') {
+          const size = file.size;
+          if (sizeFilter === 'small' && size >= 100 * 1024) return false;
+          if (sizeFilter === 'medium' && (size < 100 * 1024 || size > 1024 * 1024)) return false;
+          if (sizeFilter === 'large' && size <= 1024 * 1024) return false;
+        }
+
+        return true;
+      });
+    }
+
+    function displayResults(results, query) {
+      resultsCount.textContent = `找到 ${results.length} 个文件`;
+
+      if (results.length === 0) {
+        resultsContainer.innerHTML = '<div class="no-results">😕 没有找到匹配的文件</div>';
+        return;
+      }
+
+      const useRegex = document.getElementById('useRegex').checked;
+      const caseSensitive = document.getElementById('caseSensitive').checked;
+      const flags = caseSensitive ? 'g' : 'gi';
+      const highlightPattern = useRegex ? new RegExp(`(${query})`, flags) : new RegExp(`(${escapeRegex(query)})`, flags);
+
+      resultsContainer.innerHTML = results.map(file => {
+        const highlightedName = file.name.replace(highlightPattern, '<span class="highlight">$1</span>');
+        return `
+          <div class="result-item">
+            <div class="result-name">${getFileIcon(file.name)} ${highlightedName}</div>
+            <div class="result-path">📁 ${file.path}</div>
+            <div class="result-meta">
+              ${formatSize(file.size)} · ${file.type || '未知类型'} · ${new Date(file.lastModified).toLocaleString()}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    exportResultsBtn.addEventListener('click', () => {
+      const data = searchResults.map(f => ({ name: f.name, path: f.path, size: f.size, type: f.type }));
+      const json = JSON.stringify(data, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'search-results.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    function escapeRegex(str) {
+      return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    function formatSize(bytes) {
+      if (bytes === 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+
+    function getFileIcon(name) {
+      const ext = name.split('.').pop().toLowerCase();
+      const icons = {
+        js: '📜', ts: '📘', jsx: '⚛️', tsx: '⚛️', py: '🐍', java: '☕',
+        html: '🌐', css: '🎨', json: '📋', md: '📝', txt: '📄', pdf: '📕',
+        png: '🖼️', jpg: '🖼️', gif: '🖼️', svg: '🖼️',
+        mp3: '🎵', mp4: '🎬', zip: '📦'
+      };
+      return icons[ext] || '📄';
+    }
+  </script>
+</body>
+</html>

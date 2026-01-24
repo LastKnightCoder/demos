@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Import Maps - 作用域（Scopes）</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+        }
+        .demo-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .code-block {
+            background: #282c34;
+            color: #abb2bf;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            white-space: pre;
+        }
+        .output {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            white-space: pre-wrap;
+        }
+        .diagram {
+            background: #fff;
+            border: 2px solid #ddd;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: monospace;
+            white-space: pre;
+            line-height: 1.8;
+        }
+        .highlight-green {
+            color: #98c379;
+        }
+        .highlight-blue {
+            color: #61afef;
+        }
+        .highlight-yellow {
+            color: #e5c07b;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background: #f8f9fa;
+        }
+        .note {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Import Maps - 作用域（Scopes）</h1>
+
+    <div class="demo-section">
+        <h2>什么是 Scopes？</h2>
+        <p>Scopes 允许你为不同的 URL 路径指定不同的模块映射规则。这在以下场景非常有用：</p>
+        <ul>
+            <li>不同部分的应用需要使用不同版本的同一个库</li>
+            <li>微前端架构中，不同子应用有不同的依赖版本</li>
+            <li>渐进式迁移，新旧代码使用不同版本的依赖</li>
+        </ul>
+    </div>
+
+    <div class="demo-section">
+        <h2>Scopes 工作原理</h2>
+        <div class="diagram">
+┌─────────────────────────────────────────────────────────────┐
+│                      Import Map                              │
+├─────────────────────────────────────────────────────────────┤
+│  "imports": {                                                │
+│      "lodash": "/libs/lodash-v4.js"  ← 默认映射              │
+│  }                                                           │
+│                                                              │
+│  "scopes": {                                                 │
+│      "/app-v1/": {                                           │
+│          "lodash": "/libs/lodash-v3.js"  ← /app-v1/ 下的映射 │
+│      },                                                      │
+│      "/app-v2/": {                                           │
+│          "lodash": "/libs/lodash-v4.js"  ← /app-v2/ 下的映射 │
+│      }                                                       │
+│  }                                                           │
+└─────────────────────────────────────────────────────────────┘
+
+当模块从不同路径导入 "lodash" 时：
+  • /index.js        → 使用 /libs/lodash-v4.js（默认）
+  • /app-v1/main.js  → 使用 /libs/lodash-v3.js（scopes 覆盖）
+  • /app-v2/main.js  → 使用 /libs/lodash-v4.js（scopes 覆盖）
+        </div>
+    </div>
+
+    <div class="demo-section">
+        <h2>本页面的 Import Map 配置</h2>
+        <div class="code-block">&lt;script type="importmap"&gt;
+{
+    "imports": {
+        "helper": "./modules/helper-v2.js",
+        "lodash": "https://cdn.jsdelivr.net/npm/lodash-es@4.17.21/lodash.js"
+    },
+    "scopes": {
+        "./legacy/": {
+            "helper": "./modules/helper-v1.js",
+            "lodash": "https://cdn.jsdelivr.net/npm/lodash-es@3.10.1/lodash.js"
+        },
+        "./modern/": {
+            "helper": "./modules/helper-v2.js"
+        }
+    }
+}
+&lt;/script&gt;</div>
+    </div>
+
+    <div class="demo-section">
+        <h2>模块解析规则</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>导入模块的脚本位置</th>
+                    <th>import "helper" 解析为</th>
+                    <th>说明</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>/index.js</code></td>
+                    <td><code>./modules/helper-v2.js</code></td>
+                    <td>使用默认 imports 映射</td>
+                </tr>
+                <tr>
+                    <td><code>./legacy/app.js</code></td>
+                    <td><code>./modules/helper-v1.js</code></td>
+                    <td>匹配 ./legacy/ scope</td>
+                </tr>
+                <tr>
+                    <td><code>./modern/app.js</code></td>
+                    <td><code>./modules/helper-v2.js</code></td>
+                    <td>匹配 ./modern/ scope</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="demo-section">
+        <h2>实际演示</h2>
+        <p>下面演示从不同"虚拟路径"导入模块的效果：</p>
+        <div id="demo-output" class="output">加载中...</div>
+    </div>
+
+    <div class="demo-section">
+        <h2>Scopes 匹配规则</h2>
+        <div class="note">
+            <strong>重要：</strong>Scopes 的匹配是基于<strong>导入模块的脚本 URL</strong>，而不是当前页面的 URL。
+        </div>
+
+        <h3>匹配优先级</h3>
+        <ol>
+            <li>首先检查是否有匹配的 scope</li>
+            <li>如果有多个 scope 匹配，使用最具体（最长）的匹配</li>
+            <li>如果 scope 中没有定义该模块，回退到顶层 imports</li>
+            <li>如果顶层 imports 也没有，则按普通 URL 解析</li>
+        </ol>
+
+        <h3>示例：多层 Scope 匹配</h3>
+        <div class="code-block">{
+    "imports": {
+        "lib": "/default/lib.js"
+    },
+    "scopes": {
+        "/app/": {
+            "lib": "/app/lib.js"
+        },
+        "/app/admin/": {
+            "lib": "/app/admin/lib.js"
+        }
+    }
+}</div>
+        <p>对于 <code>/app/admin/dashboard.js</code> 中的 <code>import "lib"</code>：</p>
+        <ul>
+            <li>匹配 <code>/app/</code> ✓</li>
+            <li>匹配 <code>/app/admin/</code> ✓ （更具体）</li>
+            <li>最终解析为 <code>/app/admin/lib.js</code></li>
+        </ul>
+    </div>
+
+    <div class="demo-section">
+        <h2>使用场景示例</h2>
+
+        <h3>1. 微前端依赖隔离</h3>
+        <div class="code-block">{
+    "imports": {
+        "react": "https://esm.sh/react@18",
+        "react-dom": "https://esm.sh/react-dom@18"
+    },
+    "scopes": {
+        "/micro-app-legacy/": {
+            "react": "https://esm.sh/react@17",
+            "react-dom": "https://esm.sh/react-dom@17"
+        }
+    }
+}</div>
+
+        <h3>2. 渐进式迁移</h3>
+        <div class="code-block">{
+    "imports": {
+        "moment": "https://esm.sh/dayjs"
+    },
+    "scopes": {
+        "/legacy-modules/": {
+            "moment": "https://esm.sh/moment"
+        }
+    }
+}</div>
+        <p>新代码使用 dayjs（moment 的轻量替代），旧代码继续使用 moment。</p>
+
+        <h3>3. 测试环境 Mock</h3>
+        <div class="code-block">{
+    "imports": {
+        "api-client": "/src/api/client.js"
+    },
+    "scopes": {
+        "/tests/": {
+            "api-client": "/tests/mocks/api-client.js"
+        }
+    }
+}</div>
+    </div>
+
+    <!-- 创建模拟的模块文件内容 -->
+    <script type="importmap">
+    {
+        "imports": {
+            "dayjs": "https://esm.sh/dayjs@1.11.10"
+        }
+    }
+    </script>
+
+    <script type="module">
+        import dayjs from 'dayjs';
+
+        // 模拟不同版本的 helper 模块行为
+        const helperV1 = {
+            version: '1.0.0',
+            greet: (name) => `Hello, ${name}! (Legacy v1)`,
+            format: (date) => date.toLocaleDateString()
+        };
+
+        const helperV2 = {
+            version: '2.0.0',
+            greet: (name) => `Hi ${name}! Welcome to v2!`,
+            format: (date) => dayjs(date).format('YYYY-MM-DD HH:mm:ss'),
+            newFeature: () => 'This feature only exists in v2!'
+        };
+
+        // 模拟从不同路径导入的结果
+        const scenarios = [
+            {
+                path: '/index.js (根目录)',
+                helper: helperV2,
+                description: '使用默认 imports → helper-v2.js'
+            },
+            {
+                path: './legacy/app.js',
+                helper: helperV1,
+                description: '匹配 ./legacy/ scope → helper-v1.js'
+            },
+            {
+                path: './modern/app.js',
+                helper: helperV2,
+                description: '匹配 ./modern/ scope → helper-v2.js'
+            }
+        ];
+
+        let output = '=== Scopes 演示结果 ===\n\n';
+
+        scenarios.forEach((scenario, index) => {
+            output += `【场景 ${index + 1}】从 ${scenario.path} 导入\n`;
+            output += `  说明: ${scenario.description}\n`;
+            output += `  helper.version: ${scenario.helper.version}\n`;
+            output += `  helper.greet("World"): ${scenario.helper.greet("World")}\n`;
+            output += `  helper.format(new Date()): ${scenario.helper.format(new Date())}\n`;
+            if (scenario.helper.newFeature) {
+                output += `  helper.newFeature(): ${scenario.helper.newFeature()}\n`;
+            } else {
+                output += `  helper.newFeature: undefined (v1 没有此功能)\n`;
+            }
+            output += '\n';
+        });
+
+        output += '=== 结论 ===\n';
+        output += '通过 scopes，同一个 import "helper" 语句\n';
+        output += '在不同路径下可以解析到不同版本的模块！';
+
+        document.getElementById('demo-output').textContent = output;
+    </script>
+</body>
+</html>

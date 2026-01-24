@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>外部 Import Map 演示</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f0f2f5;
+        }
+        h1 {
+            color: #1a1a2e;
+            text-align: center;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .card h2 {
+            margin-top: 0;
+            color: #333;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        .code-block {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 16px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            white-space: pre;
+        }
+        .output {
+            background: #282c34;
+            color: #98c379;
+            padding: 16px;
+            border-radius: 8px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            white-space: pre-wrap;
+            min-height: 100px;
+        }
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #45a049;
+            transform: translateY(-1px);
+        }
+        .btn-secondary {
+            background: #2196F3;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background: #1976D2;
+        }
+        .btn-warning {
+            background: #FF9800;
+            color: white;
+        }
+        .btn-warning:hover {
+            background: #F57C00;
+        }
+        .success {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .info {
+            background: #d1ecf1;
+            border-left: 4px solid #17a2b8;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .network-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+        .network-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .network-item .label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .network-item .value {
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+            word-break: break-all;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <h1>外部 Import Map 演示</h1>
+
+    <div class="card">
+        <h2>关键点：外部 Import Map</h2>
+        <div class="success">
+            <strong>本页面使用外部 importmap.json 文件！</strong><br>
+            这是通过 Express 服务器提供的，服务器设置了正确的 MIME 类型：<code>application/importmap+json</code>
+        </div>
+
+        <p>HTML 中的引用方式：</p>
+        <div class="code-block">&lt;!-- 方式 1：外部 Import Map（需要 Chrome 89+, Firefox 108+, Safari 16.4+）--&gt;
+&lt;script type="importmap" src="/importmap.json"&gt;&lt;/script&gt;
+
+&lt;!-- 方式 2：内联 Import Map（内容与 importmap.json 相同）--&gt;
+&lt;script type="importmap"&gt;
+{
+    "imports": {
+        "lodash": "https://cdn.jsdelivr.net/npm/lodash-es@4.17.21/lodash.js",
+        "dayjs": "https://esm.sh/dayjs@1.11.10",
+        "uuid": "https://esm.sh/uuid@9"
+    }
+}
+&lt;/script&gt;</div>
+
+        <div class="info">
+            <strong>注意：</strong>外部 importmap（src 属性）需要较新的浏览器版本支持。
+            本页面使用内联方式，但内容与 <code>/importmap.json</code> 文件完全一致。
+            你可以访问 <a href="/importmap.json" target="_blank">/importmap.json</a> 查看文件内容。
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Import Map 内容</h2>
+        <div id="importmap-content" class="code-block">加载中...</div>
+
+        <div class="network-info">
+            <div class="network-item">
+                <div class="label">请求 URL</div>
+                <div class="value">/importmap.json</div>
+            </div>
+            <div class="network-item">
+                <div class="label">Content-Type</div>
+                <div class="value" id="content-type">检测中...</div>
+            </div>
+            <div class="network-item">
+                <div class="label">状态</div>
+                <div class="value"><span id="status-badge" class="status-badge status-pending">检测中</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>测试 CDN 模块</h2>
+        <div class="info">
+            以下模块通过 Import Map 从 CDN 加载：lodash、dayjs、uuid、nanoid
+        </div>
+
+        <div class="btn-group">
+            <button class="btn btn-primary" onclick="testLodash()">测试 Lodash</button>
+            <button class="btn btn-secondary" onclick="testDayjs()">测试 Day.js</button>
+            <button class="btn btn-warning" onclick="testUuid()">生成 UUID</button>
+            <button class="btn btn-primary" onclick="testNanoid()">生成 Nanoid</button>
+        </div>
+
+        <div id="cdn-output" class="output">点击按钮测试 CDN 模块...</div>
+    </div>
+
+    <div class="card">
+        <h2>测试本地模块</h2>
+        <div class="info">
+            以下模块是本地文件，通过 Import Map 的路径映射加载：
+            <ul>
+                <li><code>"utils"</code> → <code>./modules/utils.js</code></li>
+                <li><code>"@/"</code> → <code>./modules/</code> (路径前缀)</li>
+            </ul>
+        </div>
+
+        <div class="btn-group">
+            <button class="btn btn-primary" onclick="testLocalUtils()">测试 utils 模块</button>
+            <button class="btn btn-secondary" onclick="testLocalMath()">测试 @/math.js</button>
+            <button class="btn btn-warning" onclick="testFormatCurrency()">格式化货币</button>
+            <button class="btn btn-primary" onclick="testRandomColor()">随机颜色</button>
+        </div>
+
+        <div id="local-output" class="output">点击按钮测试本地模块...</div>
+    </div>
+
+    <div class="card">
+        <h2>服务器端代码</h2>
+        <p>Express 服务器需要为 importmap.json 设置正确的 MIME 类型：</p>
+        <div class="code-block">import express from 'express';
+
+const app = express();
+
+// 方式 1：为特定文件设置 MIME 类型
+app.get('/importmap.json', (req, res) => {
+    res.type('application/importmap+json');
+    res.sendFile('importmap.json');
+});
+
+// 方式 2：动态生成 Import Map
+app.get('/dynamic-importmap.json', (req, res) => {
+    const env = req.query.env || 'production';
+
+    const importMap = {
+        imports: {
+            "lodash": env === 'development'
+                ? "https://cdn.jsdelivr.net/npm/lodash-es@4.17.21/lodash.js"
+                : "https://cdn.jsdelivr.net/npm/lodash-es@4.17.21/lodash.min.js",
+            "dayjs": "https://esm.sh/dayjs@1.11.10"
+        }
+    };
+
+    res.type('application/importmap+json');
+    res.json(importMap);
+});</div>
+    </div>
+
+    <script type="importmap" src="./importmap.json"></script>
+
+    <!-- 错误检测脚本（必须在 importmap 之前） -->
+    <!-- <script>
+        // 设置超时检测
+        window.moduleLoadTimeout = setTimeout(function() {
+            if (!window.moduleLoaded) {
+                document.getElementById('importmap-content').textContent =
+                    '模块加载失败！\n\n可能的原因：\n' +
+                    '1. 服务器未启动 - 请运行 npm start\n' +
+                    '2. 网络问题 - 无法访问 CDN\n' +
+                    '3. importmap.json 加载失败\n\n' +
+                    '请打开浏览器控制台 (F12) 查看详细错误信息。';
+
+                document.getElementById('content-type').textContent = '加载失败';
+                document.getElementById('status-badge').textContent = '错误';
+                document.getElementById('status-badge').className = 'status-badge status-error';
+
+                document.getElementById('cdn-output').textContent = '模块未加载，请检查服务器是否启动';
+                document.getElementById('local-output').textContent = '模块未加载，请检查服务器是否启动';
+            }
+        }, 5000);
+
+        // 尝试获取 importmap.json 的状态
+        // fetch('/importmap.json')
+        //     .then(function(response) {
+        //         document.getElementById('content-type').textContent =
+        //             response.headers.get('content-type') || 'unknown';
+        //         return response.json();
+        //     })
+        //     .then(function(data) {
+        //         document.getElementById('importmap-content').textContent =
+        //             JSON.stringify(data, null, 4);
+
+        //         var badge = document.getElementById('status-badge');
+        //         var contentType = document.getElementById('content-type').textContent;
+        //         if (contentType.includes('importmap+json')) {
+        //             badge.textContent = '正确';
+        //             badge.className = 'status-badge status-success';
+        //         } else if (contentType.includes('json')) {
+        //             badge.textContent = 'JSON (可用)';
+        //             badge.className = 'status-badge status-success';
+        //         } else {
+        //             badge.textContent = 'MIME 类型不正确';
+        //             badge.className = 'status-badge status-pending';
+        //         }
+        //     })
+        //     .catch(function(error) {
+        //         document.getElementById('importmap-content').textContent =
+        //             '无法加载 importmap.json: ' + error.message + '\n\n' +
+        //             '请确保服务器已启动：npm start';
+        //         document.getElementById('content-type').textContent = '加载失败';
+        //         document.getElementById('status-badge').textContent = '错误';
+        //         document.getElementById('status-badge').className = 'status-badge status-error';
+        //     });
+    </script> -->
+
+    <!--
+        外部 Import Map 使用方式（需要较新浏览器支持）：
+        <script type="importmap" src="/importmap.json"></script>
+
+        如果浏览器不支持外部 src，则使用内联方式，
+        内容与 importmap.json 文件完全一致：
+    -->
+    <!-- <script type="importmap">
+    {
+        "imports": {
+            "lodash": "https://cdn.jsdelivr.net/npm/lodash-es@4.17.21/lodash.js",
+            "lodash/": "https://cdn.jsdelivr.net/npm/lodash-es@4.17.21/",
+            "dayjs": "https://esm.sh/dayjs@1.11.10",
+            "uuid": "https://esm.sh/uuid@9",
+            "nanoid": "https://esm.sh/nanoid@5",
+            "@/": "./modules/",
+            "utils": "./modules/utils.js"
+        }
+    }
+    </script> -->
+
+    <script type="module">
+        // 导入 CDN 模块
+        import _ from 'lodash';
+        import dayjs from 'dayjs';
+        import { v4 as uuidv4 } from 'uuid';
+        import { nanoid } from 'nanoid';
+
+        // 导入本地模块
+        import utils, { formatCurrency, randomColor, VERSION } from 'utils';
+        import * as math from '@/math.js';
+
+        // CDN 模块测试
+        window.testLodash = function() {
+            const arr = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+            const output = [
+                '=== Lodash 测试 ===',
+                '',
+                `_.VERSION: ${_.VERSION}`,
+                `_.chunk([1-10], 3): ${JSON.stringify(_.chunk(arr, 3))}`,
+                `_.shuffle([1-5]): ${JSON.stringify(_.shuffle([1,2,3,4,5]))}`,
+                `_.random(1, 100): ${_.random(1, 100)}`,
+                `_.capitalize('hello world'): ${_.capitalize('hello world')}`
+            ].join('\n');
+            document.getElementById('cdn-output').textContent = output;
+        };
+
+        window.testDayjs = function() {
+            const now = dayjs();
+            const output = [
+                '=== Day.js 测试 ===',
+                '',
+                `当前时间: ${now.format('YYYY-MM-DD HH:mm:ss')}`,
+                `ISO 格式: ${now.toISOString()}`,
+                `Unix 时间戳: ${now.unix()}`,
+                `本月天数: ${now.daysInMonth()}`,
+                `是否闰年: ${now.isLeapYear ? now.isLeapYear() : '需要插件'}`
+            ].join('\n');
+            document.getElementById('cdn-output').textContent = output;
+        };
+
+        window.testUuid = function() {
+            const uuids = Array.from({ length: 5 }, () => uuidv4());
+            const output = [
+                '=== UUID v4 生成 ===',
+                '',
+                ...uuids.map((id, i) => `${i + 1}. ${id}`)
+            ].join('\n');
+            document.getElementById('cdn-output').textContent = output;
+        };
+
+        window.testNanoid = function() {
+            const ids = [
+                { label: '默认 (21字符)', id: nanoid() },
+                { label: '10 字符', id: nanoid(10) },
+                { label: '8 字符', id: nanoid(8) },
+                { label: '6 字符', id: nanoid(6) }
+            ];
+            const output = [
+                '=== Nanoid 生成 ===',
+                '',
+                ...ids.map(item => `${item.label}: ${item.id}`)
+            ].join('\n');
+            document.getElementById('cdn-output').textContent = output;
+        };
+
+        // 本地模块测试
+        window.testLocalUtils = function() {
+            const output = [
+                '=== 本地 utils 模块测试 ===',
+                '',
+                `模块版本: ${VERSION}`,
+                `导入方式: import utils from 'utils'`,
+                `实际路径: ./modules/utils.js`,
+                '',
+                '可用函数:',
+                `  • formatCurrency(1234.56) = ${formatCurrency(1234.56)}`,
+                `  • randomColor() = ${randomColor()}`,
+                `  • debounce, throttle, deepClone, sleep...`
+            ].join('\n');
+            document.getElementById('local-output').textContent = output;
+        };
+
+        window.testLocalMath = function() {
+            const output = [
+                '=== 本地 math 模块测试 ===',
+                '',
+                `导入方式: import * as math from '@/math.js'`,
+                `实际路径: ./modules/math.js`,
+                '',
+                '计算结果:',
+                `  • math.add(10, 5) = ${math.add(10, 5)}`,
+                `  • math.subtract(10, 5) = ${math.subtract(10, 5)}`,
+                `  • math.multiply(10, 5) = ${math.multiply(10, 5)}`,
+                `  • math.divide(10, 5) = ${math.divide(10, 5)}`,
+                `  • math.sum(1,2,3,4,5) = ${math.sum(1,2,3,4,5)}`,
+                `  • math.average(1,2,3,4,5) = ${math.average(1,2,3,4,5)}`,
+                `  • math.clamp(15, 0, 10) = ${math.clamp(15, 0, 10)}`,
+                `  • math.lerp(0, 100, 0.5) = ${math.lerp(0, 100, 0.5)}`
+            ].join('\n');
+            document.getElementById('local-output').textContent = output;
+        };
+
+        window.testFormatCurrency = function() {
+            const amounts = [1234.56, 9999.99, 100, 0.5, 1000000];
+            const output = [
+                '=== 货币格式化测试 ===',
+                '',
+                ...amounts.map(amount =>
+                    `${amount} → ${formatCurrency(amount)}`
+                )
+            ].join('\n');
+            document.getElementById('local-output').textContent = output;
+        };
+
+        window.testRandomColor = function() {
+            const colors = Array.from({ length: 10 }, () => randomColor());
+            const output = [
+                '=== 随机颜色生成 ===',
+                '',
+                ...colors.map((color, i) => `${i + 1}. ${color}`)
+            ].join('\n');
+            document.getElementById('local-output').textContent = output;
+
+            // 同时在控制台显示颜色
+            colors.forEach(color => {
+                console.log(`%c ${color} `, `background: ${color}; color: white; padding: 2px 10px;`);
+            });
+        };
+
+        // 标记模块已加载成功
+        window.moduleLoaded = true;
+        clearTimeout(window.moduleLoadTimeout);
+
+        // 更新状态显示
+        document.getElementById('cdn-output').textContent = '模块加载成功！点击按钮测试...';
+        document.getElementById('local-output').textContent = '模块加载成功！点击按钮测试...';
+
+        console.log('外部 Import Map 演示页面已加载！');
+        console.log('已导入的模块:', { _, dayjs, uuidv4, nanoid, utils, math });
+    </script>
+</body>
+</html>

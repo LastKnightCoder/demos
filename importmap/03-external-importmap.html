@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Import Maps - 外部 Import Map</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+        }
+        .demo-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .code-block {
+            background: #282c34;
+            color: #abb2bf;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            white-space: pre;
+        }
+        .output {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            white-space: pre-wrap;
+        }
+        .warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .info {
+            background: #d1ecf1;
+            border-left: 4px solid #17a2b8;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .error {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .success {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background: #f8f9fa;
+        }
+        .file-tree {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre;
+        }
+    </style>
+</head>
+<body>
+    <h1>Import Maps - 外部 Import Map</h1>
+
+    <div class="demo-section">
+        <h2>什么是外部 Import Map？</h2>
+        <p>外部 Import Map 允许你将 Import Map 配置放在单独的 JSON 文件中，然后通过 <code>src</code> 属性引用。这样可以：</p>
+        <ul>
+            <li>在多个 HTML 页面间共享同一份配置</li>
+            <li>更容易进行版本控制和管理</li>
+            <li>支持动态生成 Import Map</li>
+            <li>保持 HTML 文件简洁</li>
+        </ul>
+    </div>
+
+    <div class="demo-section">
+        <h2>基本用法</h2>
+
+        <h3>1. 创建外部 Import Map 文件</h3>
+        <p>创建 <code>importmap.json</code> 文件：</p>
+        <div class="code-block">{
+    "imports": {
+        "lodash": "https://cdn.jsdelivr.net/npm/lodash-es@4.17.21/lodash.js",
+        "dayjs": "https://esm.sh/dayjs@1.11.10",
+        "uuid": "https://esm.sh/uuid@9"
+    }
+}</div>
+
+        <h3>2. 在 HTML 中引用</h3>
+        <div class="code-block">&lt;script type="importmap" src="importmap.json"&gt;&lt;/script&gt;
+
+&lt;script type="module"&gt;
+    import _ from 'lodash';
+    import dayjs from 'dayjs';
+    // 使用模块...
+&lt;/script&gt;</div>
+    </div>
+
+    <div class="demo-section">
+        <h2>服务器配置要求</h2>
+
+        <div class="warning">
+            <strong>重要：</strong>外部 Import Map 需要正确的服务器配置才能工作！
+        </div>
+
+        <h3>MIME 类型</h3>
+        <p>服务器必须返回正确的 MIME 类型：</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>MIME 类型</th>
+                    <th>说明</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>application/importmap+json</code></td>
+                    <td>推荐的标准 MIME 类型</td>
+                </tr>
+                <tr>
+                    <td><code>application/json</code></td>
+                    <td>大多数浏览器也接受</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>常见服务器配置</h3>
+
+        <h4>Nginx</h4>
+        <div class="code-block">location ~ \.importmap$ {
+    types { }
+    default_type application/importmap+json;
+}
+
+# 或者对 .json 文件
+location ~ importmap\.json$ {
+    types { }
+    default_type application/importmap+json;
+}</div>
+
+        <h4>Apache (.htaccess)</h4>
+        <div class="code-block">AddType application/importmap+json .importmap
+# 或者
+&lt;Files "importmap.json"&gt;
+    ForceType application/importmap+json
+&lt;/Files&gt;</div>
+
+        <h4>Node.js (Express)</h4>
+        <div class="code-block">app.get('/importmap.json', (req, res) =&gt; {
+    res.type('application/importmap+json');
+    res.sendFile('importmap.json');
+});</div>
+    </div>
+
+    <div class="demo-section">
+        <h2>CORS 配置</h2>
+
+        <div class="info">
+            如果外部 Import Map 托管在不同的域名上，需要配置 CORS 头。
+        </div>
+
+        <div class="code-block"># Nginx
+add_header Access-Control-Allow-Origin *;
+
+# Apache
+Header set Access-Control-Allow-Origin "*"
+
+# Node.js
+res.setHeader('Access-Control-Allow-Origin', '*');</div>
+    </div>
+
+    <div class="demo-section">
+        <h2>动态生成 Import Map</h2>
+
+        <p>可以在服务器端动态生成 Import Map，实现环境切换、A/B 测试等功能：</p>
+
+        <h3>Node.js 示例</h3>
+        <div class="code-block">// server.js
+app.get('/importmap.json', (req, res) =&gt; {
+    const isDev = process.env.NODE_ENV === 'development';
+
+    const importMap = {
+        imports: {
+            "my-lib": isDev
+                ? "/src/my-lib.js"
+                : "/dist/my-lib.min.js",
+            "lodash": isDev
+                ? "https://cdn.jsdelivr.net/npm/lodash-es@4.17.21/lodash.js"
+                : "https://cdn.jsdelivr.net/npm/lodash-es@4.17.21/lodash.min.js"
+        }
+    };
+
+    res.type('application/importmap+json');
+    res.json(importMap);
+});</div>
+    </div>
+
+    <div class="demo-section">
+        <h2>项目结构示例</h2>
+
+        <div class="file-tree">
+project/
+├── index.html
+├── about.html
+├── contact.html
+├── importmap.json          ← 共享的 Import Map
+├── importmap.dev.json      ← 开发环境配置
+├── importmap.prod.json     ← 生产环境配置
+└── src/
+    ├── main.js
+    └── utils.js</div>
+
+        <h3>importmap.json</h3>
+        <div class="code-block">{
+    "imports": {
+        "lodash": "https://cdn.jsdelivr.net/npm/lodash-es@4.17.21/lodash.js",
+        "dayjs": "https://esm.sh/dayjs@1.11.10",
+        "@/": "./src/"
+    }
+}</div>
+
+        <h3>所有 HTML 页面共享配置</h3>
+        <div class="code-block">&lt;!-- index.html, about.html, contact.html 都使用相同的配置 --&gt;
+&lt;script type="importmap" src="importmap.json"&gt;&lt;/script&gt;</div>
+    </div>
+
+    <div class="demo-section">
+        <h2>注意事项</h2>
+
+        <div class="error">
+            <strong>限制：</strong>外部 Import Map 不能与内联 Import Map 同时使用！
+        </div>
+
+        <div class="code-block">&lt;!-- ❌ 错误：不能同时使用 --&gt;
+&lt;script type="importmap" src="importmap.json"&gt;&lt;/script&gt;
+&lt;script type="importmap"&gt;
+{
+    "imports": { "extra": "/extra.js" }
+}
+&lt;/script&gt;</div>
+
+        <h3>其他注意事项</h3>
+        <ul>
+            <li>外部 Import Map 文件必须是有效的 JSON</li>
+            <li>加载外部 Import Map 会阻塞模块脚本的执行</li>
+            <li>如果外部文件加载失败，所有依赖该 Import Map 的模块都会失败</li>
+            <li>浏览器会缓存外部 Import Map，注意版本更新时的缓存问题</li>
+        </ul>
+    </div>
+
+    <div class="demo-section">
+        <h2>浏览器支持</h2>
+
+        <div class="warning">
+            <strong>注意：</strong>外部 Import Map（通过 src 属性）的浏览器支持比内联 Import Map 更晚。
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>浏览器</th>
+                    <th>内联 Import Map</th>
+                    <th>外部 Import Map (src)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Chrome</td>
+                    <td>89+</td>
+                    <td>89+</td>
+                </tr>
+                <tr>
+                    <td>Edge</td>
+                    <td>89+</td>
+                    <td>89+</td>
+                </tr>
+                <tr>
+                    <td>Firefox</td>
+                    <td>108+</td>
+                    <td>108+</td>
+                </tr>
+                <tr>
+                    <td>Safari</td>
+                    <td>16.4+</td>
+                    <td>16.4+</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="demo-section">
+        <h2>本页演示</h2>
+        <p>由于本地文件系统的限制，这个演示使用内联 Import Map。在实际服务器环境中，你可以使用外部文件。</p>
+        <div id="demo-output" class="output">加载中...</div>
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "dayjs": "https://esm.sh/dayjs@1.11.10"
+        }
+    }
+    </script>
+
+    <script type="module">
+        import dayjs from 'dayjs';
+
+        const output = `=== 外部 Import Map 演示 ===
+
+当前时间: ${dayjs().format('YYYY-MM-DD HH:mm:ss')}
+
+在实际项目中，你可以创建 importmap.json 文件：
+
+{
+    "imports": {
+        "dayjs": "https://esm.sh/dayjs@1.11.10",
+        "lodash": "https://cdn.jsdelivr.net/npm/lodash-es@4.17.21/lodash.js"
+    }
+}
+
+然后在 HTML 中引用：
+
+<script type="importmap" src="importmap.json"><\/script>
+
+这样多个页面就可以共享同一份配置了！`;
+
+        document.getElementById('demo-output').textContent = output;
+    </script>
+</body>
+</html>

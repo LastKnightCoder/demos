@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>目录选择器 - showDirectoryPicker</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    h1 { color: #333; }
+    .card {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    button {
+      background: #ff5722;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 4px;
+      font-size: 16px;
+      cursor: pointer;
+      margin: 5px;
+    }
+    button:hover { background: #e64a19; }
+    button:disabled { background: #ccc; cursor: not-allowed; }
+    .tree {
+      font-family: 'Consolas', 'Monaco', monospace;
+      background: #263238;
+      color: #eceff1;
+      padding: 20px;
+      border-radius: 4px;
+      margin-top: 15px;
+      max-height: 400px;
+      overflow: auto;
+    }
+    .folder { color: #ffca28; }
+    .file { color: #81d4fa; }
+    .tree-item { padding: 3px 0; cursor: default; }
+    .tree-item:hover { background: rgba(255,255,255,0.1); }
+    pre {
+      background: #263238;
+      color: #ffab91;
+      padding: 15px;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+    .stats {
+      background: #fff3e0;
+      padding: 15px;
+      border-radius: 4px;
+      margin: 15px 0;
+      border-left: 4px solid #ff5722;
+    }
+  </style>
+</head>
+<body>
+  <h1>📂 目录选择器</h1>
+
+  <div class="card">
+    <h2>showDirectoryPicker() 用法</h2>
+    <p>选择一个文件夹，浏览其中的文件和子目录。</p>
+    <button id="pickDirBtn">选择文件夹</button>
+    <button id="pickDirRWBtn">选择文件夹 (读写权限)</button>
+    <div id="stats" class="stats" style="display: none;"></div>
+    <div id="tree" class="tree" style="display: none;"></div>
+  </div>
+
+  <div class="card">
+    <h2>代码示例</h2>
+    <pre><code>// 基本用法 - 只读模式
+const dirHandle = await window.showDirectoryPicker();
+
+// 读写模式
+const dirHandleRW = await window.showDirectoryPicker({
+  mode: 'readwrite'
+});
+
+// 遍历目录内容
+for await (const entry of dirHandle.values()) {
+  if (entry.kind === 'file') {
+    console.log('文件:', entry.name);
+  } else if (entry.kind === 'directory') {
+    console.log('目录:', entry.name);
+  }
+}
+
+// 获取特定文件
+const fileHandle = await dirHandle.getFileHandle('readme.txt');
+
+// 获取子目录
+const subDir = await dirHandle.getDirectoryHandle('src');
+
+// 创建新文件 (需要 readwrite 权限)
+const newFile = await dirHandle.getFileHandle('new.txt', { create: true });</code></pre>
+  </div>
+
+  <script>
+    const pickDirBtn = document.getElementById('pickDirBtn');
+    const pickDirRWBtn = document.getElementById('pickDirRWBtn');
+    const statsDiv = document.getElementById('stats');
+    const treeDiv = document.getElementById('tree');
+
+    // 检测支持
+    if (!('showDirectoryPicker' in window)) {
+      pickDirBtn.disabled = true;
+      pickDirRWBtn.disabled = true;
+      treeDiv.style.display = 'block';
+      treeDiv.innerHTML = '❌ 当前浏览器不支持此 API';
+    }
+
+    pickDirBtn.addEventListener('click', () => pickDirectory('read'));
+    pickDirRWBtn.addEventListener('click', () => pickDirectory('readwrite'));
+
+    async function pickDirectory(mode) {
+      try {
+        const dirHandle = await window.showDirectoryPicker({
+          mode: mode,
+          id: 'demo-directory'  // 记住用户选择
+        });
+
+        statsDiv.style.display = 'block';
+        treeDiv.style.display = 'block';
+        statsDiv.innerHTML = '⏳ 正在扫描目录...';
+        treeDiv.innerHTML = '';
+
+        const stats = { files: 0, folders: 0, totalSize: 0 };
+        const tree = await buildTree(dirHandle, '', stats, 0, 3);
+
+        statsDiv.innerHTML = `
+          <strong>📊 目录统计 - ${dirHandle.name}</strong><br>
+          权限模式：${mode}<br>
+          文件数：${stats.files} 个<br>
+          文件夹数：${stats.folders} 个<br>
+          总大小：${formatSize(stats.totalSize)}
+        `;
+        treeDiv.innerHTML = tree || '(空目录)';
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          statsDiv.style.display = 'block';
+          statsDiv.innerHTML = `❌ 错误：${err.message}`;
+        }
+      }
+    }
+
+    async function buildTree(dirHandle, indent, stats, depth, maxDepth) {
+      if (depth > maxDepth) return indent + '<span class="folder">... (更深层级已省略)</span>\n';
+
+      let html = '';
+      const entries = [];
+
+      for await (const entry of dirHandle.values()) {
+        entries.push(entry);
+      }
+
+      // 排序：文件夹在前，文件在后
+      entries.sort((a, b) => {
+        if (a.kind !== b.kind) return a.kind === 'directory' ? -1 : 1;
+        return a.name.localeCompare(b.name);
+      });
+
+      for (const entry of entries) {
+        if (entry.kind === 'directory') {
+          stats.folders++;
+          html += `<div class="tree-item">${indent}<span class="folder">📁 ${entry.name}/</span></div>`;
+          const subDir = await dirHandle.getDirectoryHandle(entry.name);
+          html += await buildTree(subDir, indent + '  ', stats, depth + 1, maxDepth);
+        } else {
+          stats.files++;
+          try {
+            const file = await entry.getFile();
+            stats.totalSize += file.size;
+            html += `<div class="tree-item">${indent}<span class="file">📄 ${entry.name}</span> <small>(${formatSize(file.size)})</small></div>`;
+          } catch {
+            html += `<div class="tree-item">${indent}<span class="file">📄 ${entry.name}</span></div>`;
+          }
+        }
+      }
+      return html;
+    }
+
+    function formatSize(bytes) {
+      if (bytes === 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Import Maps - 基本用法</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+        }
+        .demo-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .output {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            white-space: pre-wrap;
+        }
+        .code-block {
+            background: #282c34;
+            color: #abb2bf;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .highlight {
+            color: #e06c75;
+        }
+        .string {
+            color: #98c379;
+        }
+        .keyword {
+            color: #c678dd;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1>Import Maps - 基本用法</h1>
+
+    <div class="demo-section">
+        <h2>1. 什么是 Import Maps？</h2>
+        <p>Import Maps 允许你在浏览器中使用裸模块说明符（如 <code>import _ from 'lodash'</code>），而不需要构建工具。</p>
+
+        <h3>本页面使用的 Import Map：</h3>
+        <div class="code-block">&lt;script type="importmap"&gt;
+{
+    "imports": {
+        "lodash": "https://cdn.jsdelivr.net/npm/lodash-es@4.17.21/lodash.js",
+        "lodash/": "https://cdn.jsdelivr.net/npm/lodash-es@4.17.21/",
+        "dayjs": "https://esm.sh/dayjs@1.11.10",
+        "uuid": "https://esm.sh/uuid@9"
+    }
+}
+&lt;/script&gt;</div>
+    </div>
+
+    <div class="demo-section">
+        <h2>2. 使用 Lodash</h2>
+        <p>点击按钮测试 lodash 的各种方法：</p>
+        <button onclick="testLodashChunk()">测试 _.chunk()</button>
+        <button onclick="testLodashShuffle()">测试 _.shuffle()</button>
+        <button onclick="testLodashDebounce()">测试 debounce</button>
+        <div id="lodash-output" class="output">等待测试...</div>
+    </div>
+
+    <div class="demo-section">
+        <h2>3. 使用 Day.js</h2>
+        <p>点击按钮测试日期处理：</p>
+        <button onclick="testDayjs()">获取当前时间</button>
+        <button onclick="testDayjsFormat()">格式化日期</button>
+        <div id="dayjs-output" class="output">等待测试...</div>
+    </div>
+
+    <div class="demo-section">
+        <h2>4. 使用 UUID</h2>
+        <p>点击按钮生成 UUID：</p>
+        <button onclick="testUuid()">生成 UUID v4</button>
+        <div id="uuid-output" class="output">等待测试...</div>
+    </div>
+
+    <div class="demo-section">
+        <h2>5. 路径前缀映射</h2>
+        <p>使用 <code>lodash/</code> 前缀可以导入 lodash 的子模块：</p>
+        <div class="code-block">// 导入整个 lodash
+import _ from 'lodash';
+
+// 导入特定函数（使用路径前缀映射）
+import debounce from 'lodash/debounce.js';
+import throttle from 'lodash/throttle.js';</div>
+        <button onclick="testSubmodule()">测试子模块导入</button>
+        <div id="submodule-output" class="output">等待测试...</div>
+    </div>
+
+    <!-- Import Map 必须在 module 脚本之前 -->
+    <script type="importmap">
+    {
+        "imports": {
+            "lodash": "https://cdn.jsdelivr.net/npm/lodash-es@4.17.21/lodash.js",
+            "lodash/": "https://cdn.jsdelivr.net/npm/lodash-es@4.17.21/",
+            "dayjs": "https://esm.sh/dayjs@1.11.10",
+            "uuid": "https://esm.sh/uuid@9"
+        }
+    }
+    </script>
+
+    <script type="module">
+        // 使用裸模块说明符导入
+        import _ from 'lodash';
+        import dayjs from 'dayjs';
+        import { v4 as uuidv4 } from 'uuid';
+
+        // 使用路径前缀映射导入子模块
+        import debounce from 'lodash/debounce.js';
+        import throttle from 'lodash/throttle.js';
+
+        // 将函数暴露到全局作用域供按钮调用
+        window.testLodashChunk = function() {
+            const arr = [1, 2, 3, 4, 5, 6, 7, 8];
+            const result = _.chunk(arr, 3);
+            document.getElementById('lodash-output').textContent =
+                `_.chunk([1,2,3,4,5,6,7,8], 3)\n结果: ${JSON.stringify(result)}`;
+        };
+
+        window.testLodashShuffle = function() {
+            const arr = [1, 2, 3, 4, 5];
+            const result = _.shuffle(arr);
+            document.getElementById('lodash-output').textContent =
+                `_.shuffle([1,2,3,4,5])\n结果: ${JSON.stringify(result)}`;
+        };
+
+        let clickCount = 0;
+        const debouncedLog = debounce(() => {
+            document.getElementById('lodash-output').textContent =
+                `debounce 触发！总共点击了 ${clickCount} 次，但只执行一次`;
+        }, 1000);
+
+        window.testLodashDebounce = function() {
+            clickCount++;
+            document.getElementById('lodash-output').textContent =
+                `点击次数: ${clickCount}，等待 1 秒后触发 debounce...`;
+            debouncedLog();
+        };
+
+        window.testDayjs = function() {
+            const now = dayjs();
+            document.getElementById('dayjs-output').textContent =
+                `当前时间: ${now.format('YYYY-MM-DD HH:mm:ss')}\n` +
+                `时间戳: ${now.valueOf()}\n` +
+                `ISO 格式: ${now.toISOString()}`;
+        };
+
+        window.testDayjsFormat = function() {
+            const now = dayjs();
+            document.getElementById('dayjs-output').textContent =
+                `各种格式化示例:\n` +
+                `YYYY-MM-DD: ${now.format('YYYY-MM-DD')}\n` +
+                `YYYY年MM月DD日: ${now.format('YYYY年MM月DD日')}\n` +
+                `dddd: ${now.format('dddd')}\n` +
+                `HH:mm:ss: ${now.format('HH:mm:ss')}`;
+        };
+
+        window.testUuid = function() {
+            const ids = [];
+            for (let i = 0; i < 5; i++) {
+                ids.push(uuidv4());
+            }
+            document.getElementById('uuid-output').textContent =
+                `生成的 UUID v4:\n${ids.join('\n')}`;
+        };
+
+        window.testSubmodule = function() {
+            const throttledFn = throttle(() => {
+                return '节流函数执行';
+            }, 1000);
+
+            document.getElementById('submodule-output').textContent =
+                `成功导入子模块！\n` +
+                `debounce 类型: ${typeof debounce}\n` +
+                `throttle 类型: ${typeof throttle}\n` +
+                `throttle 执行结果: ${throttledFn()}`;
+        };
+
+        // 页面加载完成提示
+        console.log('Import Maps 示例加载成功！');
+        console.log('已导入的模块:', { _, dayjs, uuidv4, debounce, throttle });
+    </script>
+</body>
+</html>

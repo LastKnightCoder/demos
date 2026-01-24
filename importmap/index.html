@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Import Maps 学习指南</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+        }
+        h1 {
+            color: white;
+            text-align: center;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #a0a0a0;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.3s ease;
+            display: block;
+            position: relative;
+            overflow: hidden;
+        }
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+        .card-number {
+            display: inline-block;
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 36px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        .card h2 {
+            margin: 0 0 10px 0;
+            color: #1a1a2e;
+            font-size: 1.3em;
+        }
+        .card p {
+            color: #666;
+            margin: 0;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .card-tags {
+            margin-top: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .tag {
+            background: #f0f2f5;
+            color: #666;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+        .highlight-card {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .highlight-card::before {
+            display: none;
+        }
+        .highlight-card h2 {
+            color: white;
+        }
+        .highlight-card p {
+            color: rgba(255,255,255,0.9);
+        }
+        .highlight-card .tag {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+        .section-title {
+            color: white;
+            margin: 40px 0 20px;
+            padding-left: 15px;
+            border-left: 4px solid #667eea;
+        }
+        .info-box {
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 40px;
+            color: white;
+        }
+        .info-box h3 {
+            margin-top: 0;
+            color: #667eea;
+        }
+        .info-box code {
+            background: rgba(0,0,0,0.3);
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+        .info-box pre {
+            background: rgba(0,0,0,0.3);
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Import Maps 学习指南</h1>
+    <p class="subtitle">浏览器原生模块映射功能 - 无需构建工具</p>
+
+    <div class="card-grid">
+        <a href="01-basic-usage.html" class="card">
+            <span class="card-number">1</span>
+            <h2>基本用法</h2>
+            <p>学习 Import Maps 的基础语法，了解如何映射模块名到 URL，使用裸模块说明符导入 npm 包。</p>
+            <div class="card-tags">
+                <span class="tag">imports</span>
+                <span class="tag">路径映射</span>
+                <span class="tag">CDN</span>
+            </div>
+        </a>
+
+        <a href="02-scopes.html" class="card">
+            <span class="card-number">2</span>
+            <h2>作用域 (Scopes)</h2>
+            <p>掌握 scopes 功能，为不同路径下的模块指定不同的映射规则，实现依赖隔离。</p>
+            <div class="card-tags">
+                <span class="tag">scopes</span>
+                <span class="tag">依赖隔离</span>
+                <span class="tag">微前端</span>
+            </div>
+        </a>
+
+        <a href="03-external-importmap.html" class="card">
+            <span class="card-number">3</span>
+            <h2>外部 Import Map</h2>
+            <p>了解如何使用外部 JSON 文件定义 Import Map，以及服务器配置要求。</p>
+            <div class="card-tags">
+                <span class="tag">外部文件</span>
+                <span class="tag">MIME 类型</span>
+                <span class="tag">CORS</span>
+            </div>
+        </a>
+
+        <a href="04-multiple-versions.html" class="card">
+            <span class="card-number">4</span>
+            <h2>多版本管理</h2>
+            <p>学习如何在同一页面中使用同一个库的多个版本，实现渐进式迁移。</p>
+            <div class="card-tags">
+                <span class="tag">版本管理</span>
+                <span class="tag">迁移策略</span>
+                <span class="tag">兼容性</span>
+            </div>
+        </a>
+
+        <a href="05-practical-example.html" class="card">
+            <span class="card-number">5</span>
+            <h2>实际应用示例</h2>
+            <p>一个完整的 Todo 应用，展示如何在实际项目中使用 Import Maps。</p>
+            <div class="card-tags">
+                <span class="tag">Todo App</span>
+                <span class="tag">localStorage</span>
+                <span class="tag">实战</span>
+            </div>
+        </a>
+
+        <a href="06-external-demo.html" class="card highlight-card">
+            <span class="card-number">6</span>
+            <h2>外部 Import Map 实战演示</h2>
+            <p>通过 Express 服务器演示外部 importmap.json 的完整使用流程，包括正确的 MIME 类型设置、本地模块映射等。</p>
+            <div class="card-tags">
+                <span class="tag">Express</span>
+                <span class="tag">服务器配置</span>
+                <span class="tag">本地模块</span>
+                <span class="tag">动态生成</span>
+            </div>
+        </a>
+    </div>
+
+    <h2 class="section-title">快速开始</h2>
+
+    <div class="info-box">
+        <h3>启动服务器</h3>
+        <p>要体验完整功能（特别是外部 Import Map），请启动 Express 服务器：</p>
+        <pre>
+# 安装依赖
+npm install
+
+# 启动服务器
+npm start
+
+# 或使用开发模式（自动重启）
+npm run dev</pre>
+        <p>然后访问 <code>http://localhost:3000</code></p>
+    </div>
+
+    <div class="info-box">
+        <h3>项目结构</h3>
+        <pre>
+importmap/
+├── package.json           # 项目配置
+├── server.js              # Express 服务器
+├── importmap.json         # 外部 Import Map 文件
+├── README.md              # 完整文档
+├── index.html             # 首页（本页面）
+├── 01-basic-usage.html    # 基本用法
+├── 02-scopes.html         # 作用域
+├── 03-external-importmap.html  # 外部 Import Map 说明
+├── 04-multiple-versions.html   # 多版本管理
+├── 05-practical-example.html   # 实际应用
+├── 06-external-demo.html       # 外部 Import Map 演示
+└── modules/               # 本地模块
+    ├── utils.js
+    └── math.js</pre>
+    </div>
+</body>
+</html>

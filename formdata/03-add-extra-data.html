@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FormData 事件 - 添加额外数据</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+
+    h1 {
+      color: #333;
+      border-bottom: 2px solid #6f42c1;
+      padding-bottom: 10px;
+    }
+
+    .description {
+      background: #e2d9f3;
+      border-left: 4px solid #6f42c1;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 0 8px 8px 0;
+    }
+
+    .demo-section {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+
+    .demo-section h2 {
+      margin-top: 0;
+      color: #444;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      font-weight: 500;
+    }
+
+    input, textarea {
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 16px;
+      font-family: inherit;
+    }
+
+    textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: #6f42c1;
+      box-shadow: 0 0 0 3px rgba(111,66,193,0.1);
+    }
+
+    button {
+      padding: 12px 24px;
+      background: #6f42c1;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    button:hover {
+      background: #5a32a3;
+    }
+
+    .output {
+      background: #1e1e1e;
+      color: #d4d4d4;
+      padding: 15px;
+      border-radius: 4px;
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 13px;
+      white-space: pre-wrap;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .output:empty::before {
+      content: '// 提交表单后显示';
+      color: #6a9955;
+    }
+
+    .extra-data-info {
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 4px;
+      padding: 15px;
+      margin-bottom: 15px;
+    }
+
+    .extra-data-info h3 {
+      margin: 0 0 10px 0;
+      color: #495057;
+    }
+
+    .extra-data-info table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .extra-data-info th,
+    .extra-data-info td {
+      text-align: left;
+      padding: 8px;
+      border-bottom: 1px solid #dee2e6;
+    }
+
+    .extra-data-info th {
+      background: #e9ecef;
+      font-weight: 600;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .badge-auto {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .badge-computed {
+      background: #cce5ff;
+      color: #004085;
+    }
+
+    .badge-meta {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .code-block {
+      background: #f8f8f8;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 15px;
+      margin: 10px 0;
+      overflow-x: auto;
+    }
+
+    .code-block code {
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 14px;
+      white-space: pre-wrap;
+      display: block;
+    }
+
+    .form-fields {
+      background: #f0f0f0;
+      padding: 10px;
+      border-radius: 4px;
+      margin-bottom: 10px;
+      font-size: 14px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <h1>FormData 事件 - 添加额外数据</h1>
+
+  <div class="description">
+    <p><strong>formdata 事件</strong>的另一个重要用途是添加表单中不存在的额外数据。这些数据可以是：</p>
+    <ul>
+      <li>自动生成的数据（时间戳、UUID）</li>
+      <li>计算得出的数据（字数统计、校验和）</li>
+      <li>环境信息（浏览器、屏幕尺寸）</li>
+      <li>业务相关的元数据</li>
+    </ul>
+  </div>
+
+  <div class="extra-data-info">
+    <h3>将自动添加的额外数据</h3>
+    <table>
+      <tr>
+        <th>字段名</th>
+        <th>说明</th>
+        <th>类型</th>
+      </tr>
+      <tr>
+        <td>timestamp</td>
+        <td>提交时的时间戳</td>
+        <td><span class="badge badge-auto">自动</span></td>
+      </tr>
+      <tr>
+        <td>submitTime</td>
+        <td>格式化的提交时间</td>
+        <td><span class="badge badge-auto">自动</span></td>
+      </tr>
+      <tr>
+        <td>contentLength</td>
+        <td>内容字符数</td>
+        <td><span class="badge badge-computed">计算</span></td>
+      </tr>
+      <tr>
+        <td>wordCount</td>
+        <td>内容字数（中文按字，英文按词）</td>
+        <td><span class="badge badge-computed">计算</span></td>
+      </tr>
+      <tr>
+        <td>userAgent</td>
+        <td>浏览器信息</td>
+        <td><span class="badge badge-meta">元数据</span></td>
+      </tr>
+      <tr>
+        <td>screenSize</td>
+        <td>屏幕尺寸</td>
+        <td><span class="badge badge-meta">元数据</span></td>
+      </tr>
+      <tr>
+        <td>language</td>
+        <td>浏览器语言</td>
+        <td><span class="badge badge-meta">元数据</span></td>
+      </tr>
+      <tr>
+        <td>timezone</td>
+        <td>时区</td>
+        <td><span class="badge badge-meta">元数据</span></td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="demo-section">
+    <h2>反馈表单</h2>
+    <div class="form-fields">表单只有 3 个字段：title, content, category</div>
+    <form id="feedbackForm">
+      <label>
+        标题
+        <input type="text" name="title" value="功能建议" required>
+      </label>
+      <label>
+        内容
+        <textarea name="content" required>希望能够添加深色模式功能，这样在夜间使用时眼睛会更舒适。另外，如果能支持自定义主题色就更好了。</textarea>
+      </label>
+      <label>
+        分类
+        <input type="text" name="category" value="功能请求">
+      </label>
+      <button type="submit">提交反馈</button>
+    </form>
+  </div>
+
+  <div class="demo-section">
+    <h2>实际提交的数据（包含额外字段）</h2>
+    <div class="output" id="output"></div>
+  </div>
+
+  <div class="demo-section">
+    <h2>关键代码</h2>
+    <div class="code-block">
+      <code>
+form.addEventListener('formdata', (event) => {
+  const formData = event.formData;
+
+  // 添加时间戳
+  formData.append('timestamp', Date.now());
+  formData.append('submitTime', new Date().toISOString());
+
+  // 添加计算数据
+  const content = formData.get('content');
+  formData.append('contentLength', content.length);
+  formData.append('wordCount', countWords(content));
+
+  // 添加环境信息
+  formData.append('userAgent', navigator.userAgent);
+  formData.append('screenSize', `${screen.width}x${screen.height}`);
+  formData.append('language', navigator.language);
+  formData.append('timezone', Intl.DateTimeFormat().resolvedOptions().timeZone);
+});
+      </code>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('feedbackForm');
+    const output = document.getElementById('output');
+
+    // 计算字数（中文按字，英文按词）
+    function countWords(text) {
+      // 中文字符
+      const chineseChars = (text.match(/[\u4e00-\u9fa5]/g) || []).length;
+      // 英文单词
+      const englishWords = (text.match(/[a-zA-Z]+/g) || []).length;
+      return chineseChars + englishWords;
+    }
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      new FormData(form);
+    });
+
+    form.addEventListener('formdata', (event) => {
+      const formData = event.formData;
+
+      // 1. 添加时间相关数据
+      formData.append('timestamp', Date.now());
+      formData.append('submitTime', new Date().toISOString());
+
+      // 2. 添加计算数据
+      const content = formData.get('content') || '';
+      formData.append('contentLength', content.length);
+      formData.append('wordCount', countWords(content));
+
+      // 3. 添加环境/元数据
+      formData.append('userAgent', navigator.userAgent);
+      formData.append('screenSize', `${screen.width}x${screen.height}`);
+      formData.append('language', navigator.language);
+      formData.append('timezone', Intl.DateTimeFormat().resolvedOptions().timeZone);
+
+      // 4. 添加页面信息
+      formData.append('pageUrl', window.location.href);
+      formData.append('referrer', document.referrer || '(direct)');
+
+      // 显示结果
+      let result = '// 表单原始字段\n';
+      result += '// ──────────────────────────��──────\n';
+
+      const originalFields = ['title', 'content', 'category'];
+      for (const field of originalFields) {
+        const value = formData.get(field);
+        if (value.length > 50) {
+          result += `"${field}": "${value.substring(0, 50)}..."\n`;
+        } else {
+          result += `"${field}": "${value}"\n`;
+        }
+      }
+
+      result += '\n// 自动添加的额外数据\n';
+      result += '// ─────────────────────────────────\n';
+
+      for (const [key, value] of formData.entries()) {
+        if (!originalFields.includes(key)) {
+          if (key === 'userAgent' && value.length > 60) {
+            result += `"${key}": "${value.substring(0, 60)}..."\n`;
+          } else {
+            result += `"${key}": "${value}"\n`;
+          }
+        }
+      }
+
+      result += '\n// 总字段数: ' + Array.from(formData.keys()).length;
+
+      output.textContent = result;
+    });
+  </script>
+</body>
+</html>

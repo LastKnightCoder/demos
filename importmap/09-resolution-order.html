@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Import Map 与模块加载顺序验证</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 { color: #1a1a2e; text-align: center; }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .card h2 {
+            margin-top: 0;
+            color: #333;
+            border-bottom: 2px solid #9c27b0;
+            padding-bottom: 10px;
+        }
+        .code-block {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 16px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            white-space: pre;
+        }
+        .output {
+            background: #282c34;
+            color: #98c379;
+            padding: 16px;
+            border-radius: 8px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            white-space: pre-wrap;
+            min-height: 60px;
+        }
+        .info {
+            background: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .warning {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .error {
+            background: #ffebee;
+            border-left: 4px solid #f44336;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .success {
+            background: #e8f5e9;
+            border-left: 4px solid #4caf50;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+            margin: 20px 0;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 10px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #dee2e6;
+        }
+        .timeline-item {
+            position: relative;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -24px;
+            top: 20px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #667eea;
+        }
+        .timeline-item.map { border-left: 3px solid #4caf50; }
+        .timeline-item.module { border-left: 3px solid #2196f3; }
+        .timeline-item.error-item { border-left: 3px solid #f44336; }
+        .log-entry {
+            padding: 8px 12px;
+            margin: 5px 0;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 13px;
+        }
+        .log-map { background: #e8f5e9; color: #2e7d32; }
+        .log-module { background: #e3f2fd; color: #1565c0; }
+        .log-import { background: #fff3e0; color: #e65100; }
+        .log-error { background: #ffebee; color: #c62828; }
+    </style>
+</head>
+<body>
+    <h1>Import Map 与模块加载顺序验证</h1>
+
+    <div class="card">
+        <h2>问题：Import Map 不是必须在模块之前吗？</h2>
+        <div class="info">
+            <strong>规则：</strong>Import Map 必须在<strong>使用该映射的模块</strong>之前声明。<br><br>
+            但这并不意味着所有 Import Map 都必须在所有模块之前！
+        </div>
+
+        <div class="warning">
+            <strong>关键理解：</strong>
+            <ul style="margin: 10px 0;">
+                <li>Import Map 1 可以在 Module A 之前</li>
+                <li>Module A 可以在 Import Map 2 之前</li>
+                <li>Import Map 2 可以在 Module B 之前</li>
+                <li>只要每个模块使用的标识符在它之前已被定义即可</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>执行时间线</h2>
+        <div class="timeline">
+            <div class="timeline-item map">
+                <strong>1. Import Map 1 注册</strong><br>
+                定义: <code>"lib-a"</code>, <code>"shared"</code>
+            </div>
+            <div class="timeline-item module">
+                <strong>2. Module Script 1 执行</strong><br>
+                导入: <code>import "lib-a"</code>, <code>import "shared"</code><br>
+                此时 "shared" 被解析为 Map 1 的定义
+            </div>
+            <div class="timeline-item map">
+                <strong>3. Import Map 2 注册</strong><br>
+                定义: <code>"lib-b"</code>, <code>"shared"</code> (尝试覆盖)<br>
+                ⚠️ "shared" 已被解析，新定义被忽略
+            </div>
+            <div class="timeline-item module">
+                <strong>4. Module Script 2 执行</strong><br>
+                导入: <code>import "lib-b"</code>, <code>import "shared"</code><br>
+                "shared" 仍然使用 Map 1 的定义！
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>实际代码结构</h2>
+        <div class="code-block">&lt;!-- 1. Import Map 1 --&gt;
+&lt;script type="importmap"&gt;
+{
+    "imports": {
+        "lib-a": "data:...'Library A'",
+        "shared": "data:...'Shared from Map 1'"
+    }
+}
+&lt;/script&gt;
+
+&lt;!-- 2. Module Script 1 - 使用 Map 1 的定义 --&gt;
+&lt;script type="module"&gt;
+    import libA from 'lib-a';      // ✅ 正常工作
+    import shared from 'shared';   // ✅ 解析为 Map 1 的定义
+    // 此时 "shared" 已被解析
+&lt;/script&gt;
+
+&lt;!-- 3. Import Map 2 --&gt;
+&lt;script type="importmap"&gt;
+{
+    "imports": {
+        "lib-b": "data:...'Library B'",
+        "shared": "data:...'Shared from Map 2'"  // ⚠️ 被忽略！
+    }
+}
+&lt;/script&gt;
+
+&lt;!-- 4. Module Script 2 --&gt;
+&lt;script type="module"&gt;
+    import libB from 'lib-b';      // ✅ 正常工作
+    import shared from 'shared';   // ⚠️ 仍然是 Map 1 的定义！
+&lt;/script&gt;</div>
+    </div>
+
+    <div class="card">
+        <h2>执行日志</h2>
+        <div id="log-output"></div>
+    </div>
+
+    <script>
+        // 日志收集
+        window.executionLog = [];
+        window.logEvent = function(type, message) {
+            window.executionLog.push({ type, message, time: performance.now() });
+            updateLogDisplay();
+        };
+        function updateLogDisplay() {
+            const container = document.getElementById('log-output');
+            if (!container) return;
+            container.innerHTML = window.executionLog.map(entry => {
+                const className = {
+                    'map': 'log-map',
+                    'module': 'log-module',
+                    'import': 'log-import',
+                    'error': 'log-error'
+                }[entry.type] || '';
+                return `<div class="log-entry ${className}">[${entry.time.toFixed(2)}ms] ${entry.message}</div>`;
+            }).join('');
+        }
+    </script>
+
+    <!-- ========== 1. Import Map 1 ========== -->
+    <script>window.logEvent('map', '📦 Import Map 1 开始注册...');</script>
+    <script type="importmap">
+    {
+        "imports": {
+            "lib-a": "data:text/javascript,export default 'Library A (from Map 1)'",
+            "shared": "data:text/javascript,export default 'Shared Module (from Map 1)'"
+        }
+    }
+    </script>
+    <script>window.logEvent('map', '✅ Import Map 1 注册完成: lib-a, shared');</script>
+
+    <!-- ========== 2. Module Script 1 ========== -->
+    <script type="module">
+        window.logEvent('module', '🔵 Module Script 1 开始执行...');
+
+        try {
+            const libA = await import('lib-a');
+            window.logEvent('import', `   导入 lib-a: "${libA.default}"`);
+        } catch (e) {
+            window.logEvent('error', `   导入 lib-a 失败: ${e.message}`);
+        }
+
+        try {
+            const shared = await import('shared');
+            window.logEvent('import', `   导入 shared: "${shared.default}"`);
+            window.sharedFromModule1 = shared.default;
+        } catch (e) {
+            window.logEvent('error', `   导入 shared 失败: ${e.message}`);
+        }
+
+        window.logEvent('module', '✅ Module Script 1 执行完成');
+        window.module1Done = true;
+    </script>
+
+    <!-- ========== 3. Import Map 2 ========== -->
+    <script>
+        // 等待 Module 1 完成后再注册 Map 2
+        // 注意：这里用普通 script 来确保顺序
+        window.logEvent('map', '📦 Import Map 2 开始注册...');
+        window.logEvent('map', '   尝试定义: lib-b, shared (覆盖)');
+    </script>
+    <script type="importmap">
+    {
+        "imports": {
+            "lib-b": "data:text/javascript,export default 'Library B (from Map 2)'",
+            "shared": "data:text/javascript,export default 'Shared Module (from Map 2 - SHOULD NOT SEE THIS!)'"
+        }
+    }
+    </script>
+    <script>window.logEvent('map', '✅ Import Map 2 注册完成');</script>
+
+    <!-- ========== 4. Module Script 2 ========== -->
+    <script type="module">
+        window.logEvent('module', '🔵 Module Script 2 开始执行...');
+
+        try {
+            const libB = await import('lib-b');
+            window.logEvent('import', `   导入 lib-b: "${libB.default}"`);
+        } catch (e) {
+            window.logEvent('error', `   导入 lib-b 失败: ${e.message}`);
+        }
+
+        try {
+            const shared = await import('shared');
+            window.logEvent('import', `   导入 shared: "${shared.default}"`);
+            window.sharedFromModule2 = shared.default;
+        } catch (e) {
+            window.logEvent('error', `   导入 shared 失败: ${e.message}`);
+        }
+
+        window.logEvent('module', '✅ Module Script 2 执行完成');
+
+        // 最终验证
+        setTimeout(() => {
+            window.logEvent('module', '');
+            window.logEvent('module', '========== 验证结果 ==========');
+            window.logEvent('module', `Module 1 的 shared: "${window.sharedFromModule1}"`);
+            window.logEvent('module', `Module 2 的 shared: "${window.sharedFromModule2}"`);
+
+            if (window.sharedFromModule1 === window.sharedFromModule2 &&
+                window.sharedFromModule1.includes('Map 1')) {
+                window.logEvent('map', '✅ 验证成功: 两个模块都使用了 Map 1 的 shared 定义');
+                window.logEvent('map', '   Map 2 对 shared 的重新定义被忽略了！');
+            } else {
+                window.logEvent('error', '❌ 验证失败: 结果与预期不符');
+            }
+        }, 100);
+    </script>
+
+    <div class="card">
+        <h2>结论</h2>
+        <div class="success">
+            <strong>MDN 描述���场景确实存在：</strong>
+            <ol style="margin: 10px 0;">
+                <li>Import Map 1 定义了 <code>"shared"</code></li>
+                <li>Module Script 1 导入了 <code>"shared"</code>，此时该标识符被<strong>解析</strong></li>
+                <li>Import Map 2 尝试重新定义 <code>"shared"</code>，但被<strong>忽略</strong></li>
+                <li>Module Script 2 导入 <code>"shared"</code>，得到的仍是 Map 1 的定义</li>
+            </ol>
+        </div>
+
+        <div class="info">
+            <strong>总结：</strong><br>
+            "已解析的标识符" 指的是该标识符对应的模块已经被某个 <code>import</code> 语句触发加载。
+            一旦解析发生，后续 Import Map 对该标识符的定义都会被忽略，
+            以确保同一个标识符在整个应用中始终指向同一个模块实例。
+        </div>
+    </div>
+</body>
+</html>

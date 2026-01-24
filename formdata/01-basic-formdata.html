@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FormData 事件 - 基础用法</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+
+    h1 {
+      color: #333;
+      border-bottom: 2px solid #007bff;
+      padding-bottom: 10px;
+    }
+
+    .description {
+      background: #e7f3ff;
+      border-left: 4px solid #007bff;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 0 8px 8px 0;
+    }
+
+    .demo-section {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+
+    .demo-section h2 {
+      margin-top: 0;
+      color: #444;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      font-weight: 500;
+    }
+
+    input, select {
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: #007bff;
+      box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+    }
+
+    button {
+      padding: 12px 24px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    .output {
+      background: #1e1e1e;
+      color: #d4d4d4;
+      padding: 15px;
+      border-radius: 4px;
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 14px;
+      white-space: pre-wrap;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .output:empty::before {
+      content: '// 提交表单后，这里会显示 FormData 内容';
+      color: #6a9955;
+    }
+
+    .code-block {
+      background: #f8f8f8;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 15px;
+      margin: 10px 0;
+      overflow-x: auto;
+    }
+
+    .code-block code {
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 14px;
+      white-space: pre-wrap;
+      display: block;
+    }
+
+    .highlight {
+      background: #fff3cd;
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body>
+  <h1>FormData 事件 - 基础用法</h1>
+
+  <div class="description">
+    <p><strong>formdata 事件</strong>在表单构造 FormData 对象时触发。通过监听此事件，可以在数据发送前查看或修改表单数据。</p>
+    <p>本示例演示如何监听 formdata 事件并查看 FormData 的内容。</p>
+  </div>
+
+  <div class="demo-section">
+    <h2>演示表单</h2>
+    <form id="demoForm">
+      <label>
+        用户名
+        <input type="text" name="username" value="张三" required>
+      </label>
+      <label>
+        邮箱
+        <input type="email" name="email" value="zhangsan@example.com" required>
+      </label>
+      <label>
+        年龄
+        <input type="number" name="age" value="25">
+      </label>
+      <label>
+        城市
+        <select name="city">
+          <option value="beijing">北京</option>
+          <option value="shanghai" selected>上海</option>
+          <option value="guangzhou">广州</option>
+        </select>
+      </label>
+      <button type="submit">提交表单</button>
+    </form>
+  </div>
+
+  <div class="demo-section">
+    <h2>FormData 内容</h2>
+    <div class="output" id="output"></div>
+  </div>
+
+  <div class="demo-section">
+    <h2>关键代码</h2>
+    <div class="code-block">
+      <code>
+// 监听 formdata 事件
+form.addEventListener('formdata', (event) => {
+  // event.formData 包含表单的所有数据
+  const formData = event.formData;
+
+  // 遍历 FormData 内容
+  for (const [key, value] of formData.entries()) {
+    console.log(`${key}: ${value}`);
+  }
+});
+      </code>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('demoForm');
+    const output = document.getElementById('output');
+
+    // 阻止表单实际提交
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      console.log('submit 事件触发');
+
+      // 手动创建 FormData 来触发 formdata 事件
+      // 注意：当使用 preventDefault() 阻止提交时，
+      // 需要手动创建 FormData 来触发 formdata 事件
+      new FormData(form);
+    });
+
+    // 监听 formdata 事件
+    form.addEventListener('formdata', (event) => {
+      console.log('formdata 事件触发');
+
+      const formData = event.formData;
+      let result = '// FormData 内容：\n\n';
+
+      // 遍历 FormData 的所有条目
+      for (const [key, value] of formData.entries()) {
+        result += `"${key}": "${value}"\n`;
+      }
+
+      result += '\n// FormData 方法示例：\n';
+      result += `formData.get('username') = "${formData.get('username')}"\n`;
+      result += `formData.has('email') = ${formData.has('email')}\n`;
+      result += `formData.has('notExist') = ${formData.has('notExist')}\n`;
+
+      output.textContent = result;
+    });
+  </script>
+</body>
+</html>
