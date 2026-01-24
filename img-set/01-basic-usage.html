@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>image-set() 基本用法</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    h1 { color: #333; }
+    .demo-box {
+      width: 300px;
+      height: 200px;
+      border: 2px solid #333;
+      margin: 20px 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #fff;
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: contain;
+    }
+    /* 基本用法：使用 image-set() */
+    .basic-image-set {
+      background-image: url("https://via.placeholder.com/300x200/3498db/fff?text=1x+Fallback");
+      background-image: -webkit-image-set(
+        url("https://via.placeholder.com/300x200/3498db/fff?text=1x") 1x,
+        url("https://via.placeholder.com/600x400/e74c3c/fff?text=2x") 2x
+      );
+      background-image: image-set(
+        url("https://via.placeholder.com/300x200/3498db/fff?text=1x") 1x,
+        url("https://via.placeholder.com/600x400/e74c3c/fff?text=2x") 2x
+      );
+    }
+    .code-block {
+      background: #2d2d2d;
+      color: #f8f8f2;
+      padding: 15px;
+      border-radius: 5px;
+      overflow-x: auto;
+      font-family: 'Consolas', monospace;
+      font-size: 14px;
+    }
+    .info { background: #e3f2fd; padding: 15px; border-radius: 5px; margin: 15px 0; }
+  </style>
+</head>
+<body>
+  <h1>image-set() 基本用法</h1>
+
+  <div class="info">
+    <strong>说明：</strong>image-set() 函数允许浏览器根据设备像素比自动选择合适的图像。
+    在普通屏幕(1x)上显示蓝色图像，在高清屏幕(2x)上显示红色图像。
+  </div>
+
+  <h2>演示效果</h2>
+  <div class="demo-box basic-image-set"></div>
+
+  <h2>代码示例</h2>
+  <pre class="code-block">.basic-image-set {
+  /* 回退方案 - 不支持 image-set() 的浏览器 */
+  background-image: url("image-1x.png");
+
+  /* -webkit- 前缀版本 */
+  background-image: -webkit-image-set(
+    url("image-1x.png") 1x,
+    url("image-2x.png") 2x
+  );
+
+  /* 标准语法 */
+  background-image: image-set(
+    url("image-1x.png") 1x,
+    url("image-2x.png") 2x
+  );
+}</pre>
+
+  <h2>当前设备信息</h2>
+  <p id="device-info"></p>
+
+  <script>
+    const dpr = window.devicePixelRatio || 1;
+    document.getElementById('device-info').innerHTML =
+      `设备像素比 (DPR): <strong>${dpr}</strong><br>
+       预期显示: <strong>${dpr >= 2 ? '2x 红色图像' : '1x 蓝色图像'}</strong>`;
+  </script>
+</body>
+</html>

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>image-set() 实际应用案例</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f5f5f5;
+    }
+    .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
+    h1 { color: #333; }
+
+    /* 案例1: Hero Banner */
+    .hero {
+      height: 300px;
+      background-color: #333;
+      background-image: url("https://via.placeholder.com/1000x300/1a1a2e/fff?text=Hero+1x");
+      background-image: image-set(
+        url("https://via.placeholder.com/1000x300/1a1a2e/fff?text=Hero+1x") 1x,
+        url("https://via.placeholder.com/2000x600/16213e/fff?text=Hero+2x") 2x
+      );
+      background-size: cover;
+      background-position: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    }
+    .hero h2 { font-size: 2.5rem; margin: 0; }
+
+    /* 案例2: 产品卡片 */
+    .products { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin: 30px 0; }
+    .product-card {
+      background: #fff;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .product-image {
+      height: 150px;
+      background-size: cover;
+      background-position: center;
+    }
+    .product-1 {
+      background-image: url("https://via.placeholder.com/200x150/e74c3c/fff?text=Product+1");
+      background-image: image-set(
+        url("https://via.placeholder.com/200x150/e74c3c/fff?text=P1+1x") 1x,
+        url("https://via.placeholder.com/400x300/c0392b/fff?text=P1+2x") 2x
+      );
+    }
+    .product-2 {
+      background-image: url("https://via.placeholder.com/200x150/3498db/fff?text=Product+2");
+      background-image: image-set(
+        url("https://via.placeholder.com/200x150/3498db/fff?text=P2+1x") 1x,
+        url("https://via.placeholder.com/400x300/2980b9/fff?text=P2+2x") 2x
+      );
+    }
+    .product-3 {
+      background-image: url("https://via.placeholder.com/200x150/2ecc71/fff?text=Product+3");
+      background-image: image-set(
+        url("https://via.placeholder.com/200x150/2ecc71/fff?text=P3+1x") 1x,
+        url("https://via.placeholder.com/400x300/27ae60/fff?text=P3+2x") 2x
+      );
+    }
+    .product-info { padding: 15px; }
+    .product-info h3 { margin: 0 0 10px; }
+    .product-info p { margin: 0; color: #666; }
+
+    /* 案例3: 用户头像 */
+    .avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background-size: cover;
+      background-image: url("https://via.placeholder.com/80/9b59b6/fff?text=A");
+      background-image: image-set(
+        url("https://via.placeholder.com/80/9b59b6/fff?text=1x") 1x,
+        url("https://via.placeholder.com/160/8e44ad/fff?text=2x") 2x
+      );
+      display: inline-block;
+      margin: 10px;
+    }
+    .section { margin: 30px 0; padding: 20px; background: #fff; border-radius: 10px; }
+  </style>
+</head>
+<body>
+  <div class="hero"><h2>Hero Banner 示例</h2></div>
+  <div class="container">
+    <h1>image-set() 实际应用案例</h1>
+
+    <div class="section">
+      <h2>案例 1: Hero Banner</h2>
+      <p>大型横幅图像在高分辨率屏幕上需要更清晰的版本。</p>
+    </div>
+
+    <div class="section">
+      <h2>案例 2: 产品卡片</h2>
+      <div class="products">
+        <div class="product-card">
+          <div class="product-image product-1"></div>
+          <div class="product-info"><h3>产品 1</h3><p>高清产品图</p></div>
+        </div>
+        <div class="product-card">
+          <div class="product-image product-2"></div>
+          <div class="product-info"><h3>产品 2</h3><p>高清产品图</p></div>
+        </div>
+        <div class="product-card">
+          <div class="product-image product-3"></div>
+          <div class="product-info"><h3>产品 3</h3><p>高清产品图</p></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>案例 3: 用户头像</h2>
+      <p>头像在高清屏幕上需要更清晰：</p>
+      <div class="avatar"></div>
+      <div class="avatar"></div>
+      <div class="avatar"></div>
+    </div>
+
+    <div class="section">
+      <h2>设备信息</h2>
+      <p id="info"></p>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('info').innerHTML =
+      `设备像素比: <strong>${window.devicePixelRatio}</strong> |
+       屏幕宽度: <strong>${screen.width}px</strong> |
+       视口宽度: <strong>${window.innerWidth}px</strong>`;
+  </script>
+</body>
+</html>

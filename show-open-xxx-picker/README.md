@@ -66,6 +66,266 @@ const options = {
 
 ---
 
+## showSaveFilePicker()
+
+`showSaveFilePicker()` 方法用于显示一个文件保存对话框，允许用户选择保存文件的位置和文件名。
+
+### 语法
+
+```JAVASCRIPT
+const fileHandle = await window.showSaveFilePicker();
+const fileHandle = await window.showSaveFilePicker(options);
+```
+
+### 参数 (options)
+
+| 参数 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `excludeAcceptAllOption` | boolean | 否 | 是否排除"所有文件"选项，默认 `false` |
+| `suggestedName` | string | 否 | 建议的文件名，会预填充到保存对话框中 |
+| `types` | array | 否 | 允许保存的文件类型数组 |
+| `startIn` | string | FileSystemHandle | 否 | 起始目录 |
+| `id` | string | 否 | 用于记住用户上次选择的目录 |
+
+### types 配置
+
+`types` 数组中的每个对象包含：
+
+| 属性 | 类型 | 说明 |
+| --- | --- | --- |
+| `description` | string | 文件类型描述，显示在文件类型下拉菜单中 |
+| `accept` | object | MIME 类型到文件扩展名数组的映射 |
+
+### 返回值
+
+返回一个 `Promise<FileSystemFileHandle>`，解析为用户选择的保存位置的文件句柄。
+
+### 可能抛出的异常
+
+| 异常类型 | 触发条件 |
+| --- | --- |
+| `AbortError` | 用户取消了保存对话框 |
+| `SecurityError` | 不在安全上下文中调用，或不是由用户手势触发 |
+| `TypeError` | `types` 配置无效 |
+
+### 基本示例
+
+```JAVASCRIPT
+// 最简单的用法
+async function saveFile(content) {
+  const handle = await window.showSaveFilePicker();
+  const writable = await handle.createWritable();
+  await writable.write(content);
+  await writable.close();
+}
+```
+
+### 带选项的示例
+
+```JAVASCRIPT
+// 保存文本文件
+async function saveTextFile(content) {
+  const handle = await window.showSaveFilePicker({
+    suggestedName: 'document.txt',
+    types: [{
+      description: '文本文件',
+      accept: {
+        'text/plain': ['.txt']
+      }
+    }]
+  });
+
+  const writable = await handle.createWritable();
+  await writable.write(content);
+  await writable.close();
+
+  return handle.name;  // 返回用户选择的文件名
+}
+
+// 保存 JSON 文件
+async function saveJsonFile(data) {
+  const handle = await window.showSaveFilePicker({
+    suggestedName: 'data.json',
+    types: [{
+      description: 'JSON 文件',
+      accept: {
+        'application/json': ['.json']
+      }
+    }]
+  });
+
+  const writable = await handle.createWritable();
+  await writable.write(JSON.stringify(data, null, 2));
+  await writable.close();
+}
+
+// 保存图片（Blob）
+async function saveImage(blob, suggestedName = 'image.png') {
+  const handle = await window.showSaveFilePicker({
+    suggestedName,
+    types: [{
+      description: '图片文件',
+      accept: {
+        'image/png': ['.png'],
+        'image/jpeg': ['.jpg', '.jpeg'],
+        'image/webp': ['.webp']
+      }
+    }]
+  });
+
+  const writable = await handle.createWritable();
+  await writable.write(blob);
+  await writable.close();
+}
+```
+
+### 多种文件类型选择
+
+```JAVASCRIPT
+// 允许用户选择保存为多种格式
+async function exportDocument(content) {
+  const handle = await window.showSaveFilePicker({
+    suggestedName: 'document',
+    types: [
+      {
+        description: 'Markdown 文件',
+        accept: { 'text/markdown': ['.md'] }
+      },
+      {
+        description: '纯文本文件',
+        accept: { 'text/plain': ['.txt'] }
+      },
+      {
+        description: 'HTML 文件',
+        accept: { 'text/html': ['.html'] }
+      }
+    ]
+  });
+
+  // 根据用户选择的扩展名决定保存格式
+  const ext = handle.name.split('.').pop().toLowerCase();
+  let outputContent = content;
+
+  if (ext === 'html') {
+    outputContent = `<!DOCTYPE html><html><body>${content}</body></html>`;
+  }
+
+  const writable = await handle.createWritable();
+  await writable.write(outputContent);
+  await writable.close();
+
+  return { name: handle.name, format: ext };
+}
+```
+
+### 与 showOpenFilePicker 配合使用
+
+```JAVASCRIPT
+// 打开文件 -> 编辑 -> 另存为
+async function openEditSave() {
+  // 1. 打开文件
+  const [openHandle] = await window.showOpenFilePicker({
+    types: [{
+      description: '文本文件',
+      accept: { 'text/plain': ['.txt', '.md'] }
+    }]
+  });
+
+  const file = await openHandle.getFile();
+  let content = await file.text();
+
+  // 2. 编辑内容
+  content = content.toUpperCase();
+
+  // 3. 另存为新文件
+  const saveHandle = await window.showSaveFilePicker({
+    suggestedName: `${file.name.replace(/\.[^.]+$/, '')}_modified.txt`,
+    types: [{
+      description: '文本文件',
+      accept: { 'text/plain': ['.txt'] }
+    }]
+  });
+
+  const writable = await saveHandle.createWritable();
+  await writable.write(content);
+  await writable.close();
+
+  console.log(`文件已保存为: ${saveHandle.name}`);
+}
+```
+
+### 保存 Canvas 内容
+
+```JAVASCRIPT
+// 将 Canvas 保存为图片
+async function saveCanvas(canvas) {
+  const blob = await new Promise(resolve => {
+    canvas.toBlob(resolve, 'image/png');
+  });
+
+  const handle = await window.showSaveFilePicker({
+    suggestedName: 'canvas-image.png',
+    types: [{
+      description: 'PNG 图片',
+      accept: { 'image/png': ['.png'] }
+    }]
+  });
+
+  const writable = await handle.createWritable();
+  await writable.write(blob);
+  await writable.close();
+}
+```
+
+### 错误处理最佳实践
+
+```JAVASCRIPT
+async function safeSaveFile(content, options = {}) {
+  try {
+    const handle = await window.showSaveFilePicker({
+      suggestedName: options.suggestedName || 'untitled.txt',
+      types: options.types || [{
+        description: '文本文件',
+        accept: { 'text/plain': ['.txt'] }
+      }]
+    });
+
+    const writable = await handle.createWritable();
+
+    try {
+      await writable.write(content);
+      await writable.close();
+      return { success: true, fileName: handle.name };
+    } catch (writeError) {
+      // 写入失败时尝试中止
+      await writable.abort();
+      throw writeError;
+    }
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      // 用户取消，不是错误
+      return { success: false, cancelled: true };
+    }
+    return { success: false, error: err.message };
+  }
+}
+
+// 使用示例
+const result = await safeSaveFile('Hello, World!', {
+  suggestedName: 'greeting.txt'
+});
+
+if (result.success) {
+  console.log(`文件已保存: ${result.fileName}`);
+} else if (result.cancelled) {
+  console.log('用户取消了保存');
+} else {
+  console.error(`保存失败: ${result.error}`);
+}
+```
+
+---
+
 ## FileSystemFileHandle 详解
 
 `FileSystemFileHandle` 是文件句柄对象，代表文件系统中的一个文件。通过它可以读取文件内容、写入数据、查询和请求权限。
@@ -752,6 +1012,7 @@ for (const fileHandle of jsFiles) {
 | [06-image-viewer.html](./06-image-viewer.html) | 图片查看器 |
 | [07-directory-tree.html](./07-directory-tree.html) | 递归遍历目录树 |
 | [08-file-search.html](./08-file-search.html) | 文件搜索工具 |
+| [09-save-file.html](./09-save-file.html) | 文件保存演示 |
 
 ---
 

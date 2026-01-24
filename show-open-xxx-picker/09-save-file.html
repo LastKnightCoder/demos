@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>文件保存 - showSaveFilePicker</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+      min-height: 100vh;
+      padding: 20px;
+      color: #fff;
+    }
+    .container { max-width: 900px; margin: 0 auto; }
+    h1 { margin-bottom: 10px; }
+    .subtitle { color: rgba(255,255,255,0.7); margin-bottom: 20px; }
+    .card {
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 12px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+    .card h2 { margin-bottom: 15px; font-size: 18px; }
+    .card p { color: rgba(255,255,255,0.8); margin-bottom: 15px; font-size: 14px; }
+    .btn-group { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px; }
+    button {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #00c6ff, #0072ff);
+      color: #fff;
+      font-weight: bold;
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(0,114,255,0.4); }
+    .btn-secondary {
+      background: rgba(255,255,255,0.15);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,0.25); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    textarea {
+      width: 100%;
+      height: 120px;
+      padding: 12px;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      background: rgba(0,0,0,0.2);
+      color: #fff;
+      font-family: 'Consolas', monospace;
+      font-size: 14px;
+      resize: vertical;
+      margin-bottom: 15px;
+    }
+    textarea:focus { outline: none; border-color: #00c6ff; }
+    textarea::placeholder { color: rgba(255,255,255,0.4); }
+    .canvas-container {
+      background: #fff;
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 15px;
+    }
+    canvas {
+      display: block;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      cursor: crosshair;
+    }
+    .color-picker {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .color-picker label { font-size: 14px; }
+    .color-picker input[type="color"] {
+      width: 40px;
+      height: 30px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .color-picker input[type="range"] { flex: 1; max-width: 150px; }
+    .status {
+      padding: 10px 15px;
+      border-radius: 6px;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+    .status.success { background: rgba(0,200,100,0.2); border: 1px solid rgba(0,200,100,0.4); }
+    .status.error { background: rgba(255,100,100,0.2); border: 1px solid rgba(255,100,100,0.4); }
+    .status.info { background: rgba(100,150,255,0.2); border: 1px solid rgba(100,150,255,0.4); }
+    pre {
+      background: rgba(0,0,0,0.3);
+      padding: 15px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-size: 13px;
+      margin-top: 15px;
+    }
+    code { color: #7dd3fc; }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>💾 文件保存演示</h1>
+    <p class="subtitle">使用 showSaveFilePicker() 保存文件到本地</p>
+
+    <div class="card">
+      <h2>1. 保存文本内容</h2>
+      <p>输入文本内容，然后保存为本地文件。</p>
+      <textarea id="textContent" placeholder="在此输入要保存的文本内容..."></textarea>
+      <div class="btn-group">
+        <button id="saveTextBtn" class="btn-primary">💾 保存为 TXT</button>
+        <button id="saveMarkdownBtn" class="btn-secondary">📝 保存为 Markdown</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>2. 保存 JSON 数据</h2>
+      <p>编辑 JSON 数据并保存。</p>
+      <textarea id="jsonContent" placeholder='{"name": "示例", "value": 123}'></textarea>
+      <div class="btn-group">
+        <button id="saveJsonBtn" class="btn-primary">📋 保存为 JSON</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>3. 保存 Canvas 绘图</h2>
+      <p>在画布上绘制内容，然后保存为图片。</p>
+      <div class="color-picker">
+        <label>画笔颜色:</label>
+        <input type="color" id="brushColor" value="#000000">
+        <label>画笔大小:</label>
+        <input type="range" id="brushSize" min="1" max="20" value="3">
+        <button id="clearCanvasBtn" class="btn-secondary" style="padding: 6px 12px;">清空</button>
+      </div>
+      <div class="canvas-container">
+        <canvas id="drawCanvas" width="400" height="200"></canvas>
+      </div>
+      <div class="btn-group">
+        <button id="savePngBtn" class="btn-primary">🖼️ 保存为 PNG</button>
+        <button id="saveJpgBtn" class="btn-secondary">🖼️ 保存为 JPG</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>4. 多格式导出</h2>
+      <p>选择不同的格式导出相同的数据。</p>
+      <div class="btn-group">
+        <button id="exportCsvBtn" class="btn-secondary">📊 导出 CSV</button>
+        <button id="exportHtmlBtn" class="btn-secondary">🌐 导出 HTML</button>
+        <button id="exportXmlBtn" class="btn-secondary">📄 导出 XML</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>代码示例</h2>
+      <pre><code>// 基本保存文件
+async function saveFile(content, suggestedName, types) {
+  const handle = await window.showSaveFilePicker({
+    suggestedName,
+    types
+  });
+  const writable = await handle.createWritable();
+  await writable.write(content);
+  await writable.close();
+  return handle.name;
+}
+
+// 保存 Canvas 为图片
+async function saveCanvasAsImage(canvas, format = 'png') {
+  const mimeType = format === 'jpg' ? 'image/jpeg' : 'image/png';
+  const blob = await new Promise(r => canvas.toBlob(r, mimeType, 0.9));
+
+  const handle = await window.showSaveFilePicker({
+    suggestedName: `drawing.${format}`,
+    types: [{
+      description: '图片文件',
+      accept: { [mimeType]: [`.${format}`] }
+    }]
+  });
+
+  const writable = await handle.createWritable();
+  await writable.write(blob);
+  await writable.close();
+}</code></pre>
+    </div>
+
+    <div id="statusContainer"></div>
+  </div>
+
+  <script>
+    const statusContainer = document.getElementById('statusContainer');
+
+    // 检测 API 支持
+    if (!('showSaveFilePicker' in window)) {
+      document.querySelectorAll('button').forEach(btn => btn.disabled = true);
+      showStatus('error', '❌ 当前浏览器不支持 File System Access API，请使用 Chrome 86+ 或 Edge 86+');
+    }
+
+    // 显示状态
+    function showStatus(type, message) {
+      const status = document.createElement('div');
+      status.className = `status ${type}`;
+      status.textContent = message;
+      statusContainer.innerHTML = '';
+      statusContainer.appendChild(status);
+      setTimeout(() => status.remove(), 5000);
+    }
+
+    // 通用保存函数
+    async function saveFile(content, suggestedName, types) {
+      try {
+        const handle = await window.showSaveFilePicker({ suggestedName, types });
+        const writable = await handle.createWritable();
+        await writable.write(content);
+        await writable.close();
+        showStatus('success', `✅ 文件已保存: ${handle.name}`);
+        return handle.name;
+      } catch (err) {
+        if (err.name === 'AbortError') {
+          showStatus('info', '⚠️ 已取消保存');
+        } else {
+          showStatus('error', `❌ 保存失败: ${err.message}`);
+        }
+        return null;
+      }
+    }
+
+    // 1. 保存文本
+    document.getElementById('textContent').value = '这是一段示例文本。\n\n你可以编辑这段内容，然后保存到本地文件。';
+
+    document.getElementById('saveTextBtn').addEventListener('click', () => {
+      const content = document.getElementById('textContent').value;
+      saveFile(content, 'document.txt', [{
+        description: '文本文件',
+        accept: { 'text/plain': ['.txt'] }
+      }]);
+    });
+
+    document.getElementById('saveMarkdownBtn').addEventListener('click', () => {
+      const content = document.getElementById('textContent').value;
+      saveFile(content, 'document.md', [{
+        description: 'Markdown 文件',
+        accept: { 'text/markdown': ['.md'] }
+      }]);
+    });
+
+    // 2. 保存 JSON
+    document.getElementById('jsonContent').value = JSON.stringify({
+      name: "示例数据",
+      items: [
+        { id: 1, value: "项目一" },
+        { id: 2, value: "项目二" },
+        { id: 3, value: "项目三" }
+      ],
+      timestamp: new Date().toISOString()
+    }, null, 2);
+
+    document.getElementById('saveJsonBtn').addEventListener('click', () => {
+      const content = document.getElementById('jsonContent').value;
+      try {
+        JSON.parse(content); // 验证 JSON 格式
+        saveFile(content, 'data.json', [{
+          description: 'JSON 文件',
+          accept: { 'application/json': ['.json'] }
+        }]);
+      } catch {
+        showStatus('error', '❌ JSON 格式无效，请检查');
+      }
+    });
+
+    // 3. Canvas 绘图
+    const canvas = document.getElementById('drawCanvas');
+    const ctx = canvas.getContext('2d');
+    let isDrawing = false;
+
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+
+    canvas.addEventListener('mousedown', (e) => {
+      isDrawing = true;
+      ctx.beginPath();
+      ctx.moveTo(e.offsetX, e.offsetY);
+    });
+
+    canvas.addEventListener('mousemove', (e) => {
+      if (!isDrawing) return;
+      ctx.lineTo(e.offsetX, e.offsetY);
+      ctx.stroke();
+    });
+
+    canvas.addEventListener('mouseup', () => isDrawing = false);
+    canvas.addEventListener('mouseout', () => isDrawing = false);
+
+    document.getElementById('brushColor').addEventListener('input', (e) => {
+      ctx.strokeStyle = e.target.value;
+    });
+
+    document.getElementById('brushSize').addEventListener('input', (e) => {
+      ctx.lineWidth = e.target.value;
+    });
+
+    document.getElementById('clearCanvasBtn').addEventListener('click', () => {
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    });
+
+    // 保存 Canvas
+    async function saveCanvas(format) {
+      const mimeType = format === 'jpg' ? 'image/jpeg' : 'image/png';
+      const blob = await new Promise(r => canvas.toBlob(r, mimeType, 0.9));
+
+      try {
+        const handle = await window.showSaveFilePicker({
+          suggestedName: `drawing.${format}`,
+          types: [{
+            description: format.toUpperCase() + ' 图片',
+            accept: { [mimeType]: [`.${format}`] }
+          }]
+        });
+        const writable = await handle.createWritable();
+        await writable.write(blob);
+        await writable.close();
+        showStatus('success', `✅ 图片已保存: ${handle.name}`);
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          showStatus('error', `❌ 保存失败: ${err.message}`);
+        }
+      }
+    }
+
+    document.getElementById('savePngBtn').addEventListener('click', () => saveCanvas('png'));
+    document.getElementById('saveJpgBtn').addEventListener('click', () => saveCanvas('jpg'));
+
+    // 4. 多格式导出
+    const sampleData = [
+      { name: '张三', age: 28, city: '北京' },
+      { name: '李四', age: 32, city: '上海' },
+      { name: '王五', age: 25, city: '广州' }
+    ];
+
+    document.getElementById('exportCsvBtn').addEventListener('click', () => {
+      const headers = Object.keys(sampleData[0]).join(',');
+      const rows = sampleData.map(row => Object.values(row).join(','));
+      const csv = [headers, ...rows].join('\n');
+      saveFile(csv, 'data.csv', [{
+        description: 'CSV 文件',
+        accept: { 'text/csv': ['.csv'] }
+      }]);
+    });
+
+    document.getElementById('exportHtmlBtn').addEventListener('click', () => {
+      const rows = sampleData.map(r => `<tr><td>${r.name}</td><td>${r.age}</td><td>${r.city}</td></tr>`).join('');
+      const html = `<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>数据表格</title>
+<style>table{border-collapse:collapse;width:100%}th,td{border:1px solid #ddd;padding:8px;text-align:left}th{background:#f4f4f4}</style>
+</head><body><h1>数据表格</h1><table><tr><th>姓名</th><th>年龄</th><th>城市</th></tr>${rows}</table></body></html>`;
+      saveFile(html, 'data.html', [{
+        description: 'HTML 文件',
+        accept: { 'text/html': ['.html'] }
+      }]);
+    });
+
+    document.getElementById('exportXmlBtn').addEventListener('click', () => {
+      const items = sampleData.map(r => `  <person><name>${r.name}</name><age>${r.age}</age><city>${r.city}</city></person>`).join('\n');
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<data>\n${items}\n</data>`;
+      saveFile(xml, 'data.xml', [{
+        description: 'XML 文件',
+        accept: { 'application/xml': ['.xml'] }
+      }]);
+    });
+  </script>
+</body>
+</html>

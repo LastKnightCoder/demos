@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>image-set() 回退策略</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    h1 { color: #333; }
+    .demo-box {
+      width: 300px;
+      height: 200px;
+      border: 2px solid #333;
+      margin: 20px 0;
+      background-color: #fff;
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: contain;
+      border-radius: 8px;
+    }
+    /* 完整的回退策略 */
+    .full-fallback {
+      /* 1. 最基础的回退 - 所有浏览器都支持 */
+      background-image: url("https://via.placeholder.com/300x200/95a5a6/fff?text=Fallback");
+      /* 2. -webkit- 前缀版本 - 旧版 Chrome/Safari */
+      background-image: -webkit-image-set(
+        url("https://via.placeholder.com/300x200/3498db/fff?text=webkit+1x") 1x,
+        url("https://via.placeholder.com/600x400/e74c3c/fff?text=webkit+2x") 2x
+      );
+      /* 3. 标准语法 - 现代浏览器 */
+      background-image: image-set(
+        url("https://via.placeholder.com/300x200/2ecc71/fff?text=Standard+1x") 1x,
+        url("https://via.placeholder.com/600x400/27ae60/fff?text=Standard+2x") 2x
+      );
+    }
+    .code-block {
+      background: #2d2d2d;
+      color: #f8f8f2;
+      padding: 15px;
+      border-radius: 5px;
+      overflow-x: auto;
+      font-family: 'Consolas', monospace;
+      font-size: 14px;
+      white-space: pre;
+    }
+    .step { background: #e8f5e9; padding: 15px; border-radius: 5px; margin: 10px 0; }
+    .step-num { display: inline-block; width: 30px; height: 30px; background: #4caf50;
+      color: #fff; border-radius: 50%; text-align: center; line-height: 30px; margin-right: 10px; }
+  </style>
+</head>
+<body>
+  <h1>image-set() 回退策略</h1>
+
+  <p>为确保所有浏览器都能正确显示图像，需要提供完整的回退方案。</p>
+
+  <h2>演示效果</h2>
+  <div class="demo-box full-fallback"></div>
+
+  <h2>回退层级</h2>
+
+  <div class="step">
+    <span class="step-num">1</span>
+    <strong>基础回退</strong> - 使用普通 url()，所有浏览器都支持
+  </div>
+
+  <div class="step">
+    <span class="step-num">2</span>
+    <strong>-webkit- 前缀</strong> - 支持旧版 Chrome (21-112) 和 Safari (6-16)
+  </div>
+
+  <div class="step">
+    <span class="step-num">3</span>
+    <strong>标准语法</strong> - 现代浏览器使用标准 image-set()
+  </div>
+
+  <h2>完整代码示例</h2>
+  <pre class="code-block">.element {
+  /* 第一层：基础回退 */
+  background-image: url("image-1x.png");
+
+  /* 第二层：-webkit- 前缀 */
+  background-image: -webkit-image-set(
+    url("image-1x.png") 1x,
+    url("image-2x.png") 2x
+  );
+
+  /* 第三层：标准语法 */
+  background-image: image-set(
+    url("image-1x.png") 1x,
+    url("image-2x.png") 2x
+  );
+}</pre>
+
+  <h2>CSS 层叠原理</h2>
+  <p>浏览器会按顺序解析 CSS 属性，遇到不支持的语法会忽略该声明，使用上一个有效值。
+  因此，将回退方案放在前面，标准语法放在最后。</p>
+</body>
+</html>

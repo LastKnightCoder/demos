@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>image-set() 格式协商</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    h1 { color: #333; }
+    .demo-box {
+      width: 300px;
+      height: 200px;
+      border: 2px solid #333;
+      margin: 20px 0;
+      background-color: #fff;
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: contain;
+      border-radius: 8px;
+    }
+    /* 使用 type() 进行格式协商 */
+    .format-negotiation {
+      background-image: image-set(
+        url("https://via.placeholder.com/300x200.webp") type("image/webp"),
+        url("https://via.placeholder.com/300x200.png") type("image/png")
+      );
+    }
+    /* 结合分辨率和格式 */
+    .combined {
+      background-image: image-set(
+        url("https://via.placeholder.com/300x200/2ecc71/fff?text=WebP+1x") type("image/webp") 1x,
+        url("https://via.placeholder.com/600x400/27ae60/fff?text=WebP+2x") type("image/webp") 2x,
+        url("https://via.placeholder.com/300x200/3498db/fff?text=PNG+1x") type("image/png") 1x,
+        url("https://via.placeholder.com/600x400/2980b9/fff?text=PNG+2x") type("image/png") 2x
+      );
+    }
+    .code-block {
+      background: #2d2d2d;
+      color: #f8f8f2;
+      padding: 15px;
+      border-radius: 5px;
+      overflow-x: auto;
+      font-family: 'Consolas', monospace;
+      font-size: 14px;
+      white-space: pre;
+    }
+    .info { background: #fff3e0; padding: 15px; border-radius: 5px; margin: 15px 0; }
+    .warning { background: #ffebee; padding: 15px; border-radius: 5px; margin: 15px 0; }
+  </style>
+</head>
+<body>
+  <h1>image-set() 格式协商</h1>
+
+  <div class="info">
+    <strong>格式协商：</strong>使用 <code>type()</code> 函数可以让浏览器根据支持的图像格式选择最佳版本。
+    浏览器会优先选择它支持的现代格式（如 WebP、AVIF）。
+  </div>
+
+  <h2>基本格式协商</h2>
+  <div class="demo-box format-negotiation"></div>
+
+  <pre class="code-block">/* 浏览器会选择它支持的第一个格式 */
+.element {
+  background-image: image-set(
+    url("image.avif") type("image/avif"),
+    url("image.webp") type("image/webp"),
+    url("image.png") type("image/png")
+  );
+}</pre>
+
+  <h2>结合分辨率和格式</h2>
+  <div class="demo-box combined"></div>
+
+  <pre class="code-block">/* 同时指定格式和分辨率 */
+.element {
+  background-image: image-set(
+    url("image-1x.webp") type("image/webp") 1x,
+    url("image-2x.webp") type("image/webp") 2x,
+    url("image-1x.png") type("image/png") 1x,
+    url("image-2x.png") type("image/png") 2x
+  );
+}</pre>
+
+  <div class="warning">
+    <strong>注意：</strong><code>type()</code> 函数的浏览器支持相对较新，
+    请确保提供适当的回退方案。
+  </div>
+
+  <h2>常用图像格式 MIME 类型</h2>
+  <ul>
+    <li><code>type("image/avif")</code> - AVIF 格式（最佳压缩）</li>
+    <li><code>type("image/webp")</code> - WebP 格式（广泛支持）</li>
+    <li><code>type("image/png")</code> - PNG 格式（无损）</li>
+    <li><code>type("image/jpeg")</code> - JPEG 格式（有损）</li>
+  </ul>
+</body>
+</html>
