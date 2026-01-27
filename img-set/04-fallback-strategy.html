@@ -27,17 +27,18 @@
     /* 完整的回退策略 */
     .full-fallback {
       /* 1. 最基础的回退 - 所有浏览器都支持 */
-      background-image: url("https://via.placeholder.com/300x200/95a5a6/fff?text=Fallback");
+      background-image: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
       /* 2. -webkit- 前缀版本 - 旧版 Chrome/Safari */
       background-image: -webkit-image-set(
-        url("https://via.placeholder.com/300x200/3498db/fff?text=webkit+1x") 1x,
-        url("https://via.placeholder.com/600x400/e74c3c/fff?text=webkit+2x") 2x
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='200'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%233498db'/%3E%3Cstop offset='100%25' stop-color='%232980b9'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect fill='url(%23g)' width='300' height='200'/%3E%3Ctext x='150' y='90' text-anchor='middle' fill='white' font-size='18' font-family='system-ui'%3E-webkit- 1x%3C/text%3E%3Ctext x='150' y='115' text-anchor='middle' fill='white' font-size='14' font-family='system-ui'%3E蓝色%3C/text%3E%3C/svg%3E") 1x,
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23e74c3c'/%3E%3Cstop offset='100%25' stop-color='%23c0392b'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect fill='url(%23g)' width='600' height='400'/%3E%3Ctext x='300' y='180' text-anchor='middle' fill='white' font-size='36' font-family='system-ui'%3E-webkit- 2x%3C/text%3E%3Ctext x='300' y='230' text-anchor='middle' fill='white' font-size='28' font-family='system-ui'%3E红色%3C/text%3E%3C/svg%3E") 2x
       );
       /* 3. 标准语法 - 现代浏览器 */
       background-image: image-set(
-        url("https://via.placeholder.com/300x200/2ecc71/fff?text=Standard+1x") 1x,
-        url("https://via.placeholder.com/600x400/27ae60/fff?text=Standard+2x") 2x
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='200'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%232ecc71'/%3E%3Cstop offset='100%25' stop-color='%2327ae60'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect fill='url(%23g)' width='300' height='200'/%3E%3Ctext x='150' y='90' text-anchor='middle' fill='white' font-size='18' font-family='system-ui'%3E标准 1x%3C/text%3E%3Ctext x='150' y='115' text-anchor='middle' fill='white' font-size='14' font-family='system-ui'%3E绿色%3C/text%3E%3C/svg%3E") 1x,
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%239b59b6'/%3E%3Cstop offset='100%25' stop-color='%238e44ad'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect fill='url(%23g)' width='600' height='400'/%3E%3Ctext x='300' y='180' text-anchor='middle' fill='white' font-size='36' font-family='system-ui'%3E标准 2x%3C/text%3E%3Ctext x='300' y='230' text-anchor='middle' fill='white' font-size='28' font-family='system-ui'%3E紫色%3C/text%3E%3C/svg%3E") 2x
       );
+      background-size: cover;
     }
     .code-block {
       background: #2d2d2d;

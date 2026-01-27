@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>URLPattern 模式语法详解</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    h1 { color: #333; border-bottom: 2px solid #007bff; padding-bottom: 10px; }
+    h2 { color: #555; margin-top: 30px; }
+    .demo-box {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 15px 0;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    pre {
+      background: #2d2d2d;
+      color: #f8f8f2;
+      padding: 15px;
+      border-radius: 5px;
+      overflow-x: auto;
+    }
+    code { font-family: 'Fira Code', Consolas, monospace; }
+    .result {
+      background: #e8f5e9;
+      border-left: 4px solid #4caf50;
+      padding: 10px 15px;
+      margin: 10px 0;
+    }
+    .result.false {
+      background: #ffebee;
+      border-left-color: #f44336;
+    }
+    .test-case {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 5px 0;
+      padding: 8px;
+      background: #f9f9f9;
+      border-radius: 4px;
+    }
+    .test-case code { background: #eee; padding: 2px 6px; border-radius: 3px; }
+    .match { color: #4caf50; font-weight: bold; }
+    .no-match { color: #f44336; font-weight: bold; }
+    table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+    th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+    th { background: #f0f0f0; }
+  </style>
+</head>
+<body>
+  <h1>URLPattern 模式语法详解</h1>
+
+  <div class="demo-box">
+    <h2>语法速查表</h2>
+    <table>
+      <tr><th>语法</th><th>说明</th><th>示例</th></tr>
+      <tr><td><code>:name</code></td><td>命名参数，匹配一个路径段</td><td><code>/users/:id</code></td></tr>
+      <tr><td><code>*</code></td><td>通配符，匹配任意字符</td><td><code>/files/*</code></td></tr>
+      <tr><td><code>:name?</code></td><td>可选参数</td><td><code>/users/:id?</code></td></tr>
+      <tr><td><code>:name+</code></td><td>一个或多个段</td><td><code>/files/:path+</code></td></tr>
+      <tr><td><code>:name*</code></td><td>零个或多个段</td><td><code>/files/:path*</code></td></tr>
+      <tr><td><code>:name(regex)</code></td><td>带正则约束的参数</td><td><code>/users/:id(\\d+)</code></td></tr>
+      <tr><td><code>(regex)</code></td><td>匿名正则组</td><td><code>/files/(.*).jpg</code></td></tr>
+      <tr><td><code>{text}</code></td><td>分组（不捕获）</td><td><code>/files{/path}?</code></td></tr>
+    </table>
+  </div>
+
+  <div class="demo-box">
+    <h2>1. 命名参数 <code>:name</code></h2>
+    <p>捕获单个路径段（不包含 <code>/</code>）</p>
+    <pre><code>const pattern = new URLPattern('/users/:userId/posts/:postId', baseURL);</code></pre>
+    <div id="demo1"></div>
+  </div>
+
+  <div class="demo-box">
+    <h2>2. 通配符 <code>*</code></h2>
+    <p>匹配任意字符（包括 <code>/</code>），结果存储在 <code>groups[0]</code></p>
+    <pre><code>const pattern = new URLPattern('/api/*', baseURL);</code></pre>
+    <div id="demo2"></div>
+  </div>
+
+  <div class="demo-box">
+    <h2>3. 可���参数 <code>:name?</code></h2>
+    <p>参数可以存在也可以不存在</p>
+    <pre><code>const pattern = new URLPattern('/users/:id?', baseURL);</code></pre>
+    <div id="demo3"></div>
+  </div>
+
+  <div class="demo-box">
+    <h2>4. 重复参数 <code>:name+</code> 和 <code>:name*</code></h2>
+    <p><code>+</code> 匹配一个或多个段，<code>*</code> 匹配零个或多个段</p>
+    <pre><code>const patternPlus = new URLPattern('/files/:path+', baseURL);  // 至少一个
+const patternStar = new URLPattern('/docs/:path*', baseURL);   // 零个或多个</code></pre>
+    <div id="demo4"></div>
+  </div>
+
+  <div class="demo-box">
+    <h2>5. 正则约束 <code>:name(regex)</code></h2>
+    <p>使用正则表达式限制匹配内容</p>
+    <pre><code>const pattern = new URLPattern('/users/:id(\\d+)', baseURL);  // 只匹配数字</code></pre>
+    <div id="demo5"></div>
+  </div>
+
+  <div class="demo-box">
+    <h2>6. 分组 <code>{...}</code></h2>
+    <p>将多个部分组合在一起，常与 <code>?</code> 配合使用</p>
+    <pre><code>const pattern = new URLPattern('/api{/v:version}?/users', baseURL);</code></pre>
+    <div id="demo6"></div>
+  </div>
+
+  <script>
+    if (!('URLPattern' in window)) {
+      document.body.innerHTML = '<h1>您的浏览器不支持 URLPattern</h1>';
+    }
+
+    const baseURL = 'https://example.com';
+
+    function testAndShow(pattern, urls, containerId) {
+      const container = document.getElementById(containerId);
+      let html = '';
+      urls.forEach(url => {
+        const result = pattern.exec(url);
+        const matched = result !== null;
+        const groups = result ? JSON.stringify(result.pathname.groups) : '';
+        html += `<div class="test-case">
+          <code>${url}</code>
+          <span class="${matched ? 'match' : 'no-match'}">${matched ? '✓ 匹配' : '✗ 不匹配'}</span>
+          ${groups ? `<span>groups: ${groups}</span>` : ''}
+        </div>`;
+      });
+      container.innerHTML = html;
+    }
+
+    // Demo 1: 命名参数
+    testAndShow(
+      new URLPattern('/users/:userId/posts/:postId', baseURL),
+      [
+        'https://example.com/users/123/posts/456',
+        'https://example.com/users/abc/posts/def',
+        'https://example.com/users/123',
+        'https://example.com/users/123/posts'
+      ],
+      'demo1'
+    );
+
+    // Demo 2: 通配符
+    testAndShow(
+      new URLPattern('/api/*', baseURL),
+      [
+        'https://example.com/api/users',
+        'https://example.com/api/users/123/posts',
+        'https://example.com/api/',
+        'https://example.com/other'
+      ],
+      'demo2'
+    );
+
+    // Demo 3: 可选参数
+    testAndShow(
+      new URLPattern('/users/:id?', baseURL),
+      [
+        'https://example.com/users',
+        'https://example.com/users/',
+        'https://example.com/users/123',
+        'https://example.com/users/123/extra'
+      ],
+      'demo3'
+    );
+
+    // Demo 4: 重复参数
+    const demo4Container = document.getElementById('demo4');
+    demo4Container.innerHTML = '<h4>:path+ (一个或多个)</h4>';
+    const demo4a = document.createElement('div');
+    demo4a.id = 'demo4a';
+    demo4Container.appendChild(demo4a);
+    testAndShow(
+      new URLPattern('/files/:path+', baseURL),
+      [
+        'https://example.com/files/a',
+        'https://example.com/files/a/b/c',
+        'https://example.com/files/',
+        'https://example.com/files'
+      ],
+      'demo4a'
+    );
+
+    demo4Container.innerHTML += '<h4>:path* (零个或多个)</h4>';
+    const demo4b = document.createElement('div');
+    demo4b.id = 'demo4b';
+    demo4Container.appendChild(demo4b);
+    testAndShow(
+      new URLPattern('/docs/:path*', baseURL),
+      [
+        'https://example.com/docs',
+        'https://example.com/docs/',
+        'https://example.com/docs/a/b/c'
+      ],
+      'demo4b'
+    );
+
+    // Demo 5: 正则约束
+    testAndShow(
+      new URLPattern('/users/:id(\\d+)', baseURL),
+      [
+        'https://example.com/users/123',
+        'https://example.com/users/456789',
+        'https://example.com/users/abc',
+        'https://example.com/users/12ab'
+      ],
+      'demo5'
+    );
+
+    // Demo 6: 分组
+    testAndShow(
+      new URLPattern('/api{/v:version}?/users', baseURL),
+      [
+        'https://example.com/api/users',
+        'https://example.com/api/v1/users',
+        'https://example.com/api/v2/users',
+        'https://example.com/api/v/users'
+      ],
+      'demo6'
+    );
+  </script>
+</body>
+</html>

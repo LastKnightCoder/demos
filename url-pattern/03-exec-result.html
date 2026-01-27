@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>URLPattern exec() 返回值详解</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    h1 { color: #333; border-bottom: 2px solid #007bff; padding-bottom: 10px; }
+    h2 { color: #555; margin-top: 30px; }
+    h3 { color: #666; }
+    .demo-box {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 15px 0;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    pre {
+      background: #2d2d2d;
+      color: #f8f8f2;
+      padding: 15px;
+      border-radius: 5px;
+      overflow-x: auto;
+      font-size: 13px;
+    }
+    code { font-family: 'Fira Code', Consolas, monospace; }
+    .highlight { color: #f9a825; }
+    .component {
+      background: #e3f2fd;
+      border: 1px solid #90caf9;
+      border-radius: 4px;
+      padding: 10px;
+      margin: 10px 0;
+    }
+    .component h4 { margin: 0 0 10px 0; color: #1565c0; }
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 5px;
+    }
+    button:hover { background: #0056b3; }
+    input, select {
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      margin: 5px;
+    }
+    input { width: 400px; }
+  </style>
+</head>
+<body>
+  <h1>URLPattern exec() 返回值详解</h1>
+
+  <div class="demo-box">
+    <h2>exec() 返回值结构</h2>
+    <p><code>exec()</code> 方法返回一个 <code>URLPatternResult</code> 对象，包含 URL 各组件的匹配信息：</p>
+    <pre><code>{
+  <span class="highlight">inputs</span>: [string | URLPatternInit],  // 原始输入
+  <span class="highlight">protocol</span>: URLPatternComponentResult,
+  <span class="highlight">username</span>: URLPatternComponentResult,
+  <span class="highlight">password</span>: URLPatternComponentResult,
+  <span class="highlight">hostname</span>: URLPatternComponentResult,
+  <span class="highlight">port</span>: URLPatternComponentResult,
+  <span class="highlight">pathname</span>: URLPatternComponentResult,
+  <span class="highlight">search</span>: URLPatternComponentResult,
+  <span class="highlight">hash</span>: URLPatternComponentResult
+}</code></pre>
+  </div>
+
+  <div class="demo-box">
+    <h2>URLPatternComponentResult 结构</h2>
+    <p>每个组件的结果包含：</p>
+    <pre><code>{
+  <span class="highlight">input</span>: string,           // 该组件的原始输入值
+  <span class="highlight">groups</span>: {                // 捕获的命名组
+    [name: string]: string | undefined
+  }
+}</code></pre>
+  </div>
+
+  <div class="demo-box">
+    <h2>交互演示</h2>
+    <p>
+      <label>模式：</label>
+      <select id="patternSelect">
+        <option value="/users/:id">/users/:id</option>
+        <option value="/users/:userId/posts/:postId">/users/:userId/posts/:postId</option>
+        <option value="/api/*">/api/*</option>
+        <option value="/files/:path+">/files/:path+</option>
+        <option value="/:category/:id(\\d+)">/:category/:id(\\d+)</option>
+      </select>
+    </p>
+    <p>
+      <label>测试 URL：</label>
+      <input type="text" id="testUrl" value="https://example.com/users/123">
+    </p>
+    <button onclick="runExec()">执行 exec()</button>
+
+    <h3>完整返回结果：</h3>
+    <pre id="fullResult"></pre>
+
+    <h3>各组件详情：</h3>
+    <div id="components"></div>
+  </div>
+
+  <div class="demo-box">
+    <h2>实际应用：提取参数</h2>
+    <pre><code>const pattern = new URLPattern('/users/:userId/posts/:postId', baseURL);
+const result = pattern.exec('https://example.com/users/123/posts/456');
+
+if (result) {
+  // 提取路径参数
+  const { userId, postId } = result.pathname.groups;
+  console.log(userId); // '123'
+  console.log(postId); // '456'
+
+  // 提取查询参数（如果模式中定义了）
+  const searchParams = result.search.groups;
+
+  // 提取 hash（如果模式中定义了）
+  const hashParams = result.hash.groups;
+}</code></pre>
+  </div>
+
+  <script>
+    if (!('URLPattern' in window)) {
+      document.body.innerHTML = '<h1>您的浏览器不支持 URLPattern</h1>';
+    }
+
+    const baseURL = 'https://example.com';
+
+    function runExec() {
+      const patternStr = document.getElementById('patternSelect').value;
+      const url = document.getElementById('testUrl').value;
+
+      try {
+        const pattern = new URLPattern(patternStr, baseURL);
+        const result = pattern.exec(url);
+
+        if (result) {
+          // 显示完整结果
+          document.getElementById('fullResult').textContent =
+            JSON.stringify(result, null, 2);
+
+          // 显示各组件详情
+          const components = ['protocol', 'username', 'password', 'hostname',
+                            'port', 'pathname', 'search', 'hash'];
+          let html = '';
+          components.forEach(comp => {
+            const data = result[comp];
+            const hasGroups = Object.keys(data.groups).length > 0;
+            html += `<div class="component">
+              <h4>${comp}</h4>
+              <p><strong>input:</strong> <code>${data.input || '(空)'}</code></p>
+              <p><strong>groups:</strong> <code>${JSON.stringify(data.groups)}</code>
+                ${hasGroups ? ' ← 捕获到参数!' : ''}</p>
+            </div>`;
+          });
+          document.getElementById('components').innerHTML = html;
+        } else {
+          document.getElementById('fullResult').textContent = 'null (不匹配)';
+          document.getElementById('components').innerHTML =
+            '<p style="color: #f44336;">URL 不匹配该模式</p>';
+        }
+      } catch (e) {
+        document.getElementById('fullResult').textContent = 'Error: ' + e.message;
+        document.getElementById('components').innerHTML = '';
+      }
+    }
+
+    // 根据选择的模式更新示例 URL
+    document.getElementById('patternSelect').addEventListener('change', function() {
+      const examples = {
+        '/users/:id': 'https://example.com/users/123',
+        '/users/:userId/posts/:postId': 'https://example.com/users/123/posts/456',
+        '/api/*': 'https://example.com/api/v1/users/list',
+        '/files/:path+': 'https://example.com/files/docs/2024/report.pdf',
+        '/:category/:id(\\d+)': 'https://example.com/products/42'
+      };
+      document.getElementById('testUrl').value = examples[this.value] || '';
+      runExec();
+    });
+
+    // 初始化
+    runExec();
+  </script>
+</body>
+</html>

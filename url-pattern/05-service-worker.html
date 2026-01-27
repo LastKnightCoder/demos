@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>URLPattern 在 Service Worker 中使用</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    h1 { color: #333; border-bottom: 2px solid #007bff; padding-bottom: 10px; }
+    h2 { color: #555; margin-top: 30px; }
+    .demo-box {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 15px 0;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    pre {
+      background: #2d2d2d;
+      color: #f8f8f2;
+      padding: 15px;
+      border-radius: 5px;
+      overflow-x: auto;
+      font-size: 13px;
+    }
+    code { font-family: 'Fira Code', Consolas, monospace; }
+    .note {
+      background: #e3f2fd;
+      border-left: 4px solid #2196f3;
+      padding: 15px;
+      margin: 15px 0;
+    }
+    .warning {
+      background: #fff3cd;
+      border-left: 4px solid #ffc107;
+      padding: 15px;
+      margin: 15px 0;
+    }
+    .highlight { color: #f9a825; }
+  </style>
+</head>
+<body>
+  <h1>URLPattern 在 Service Worker 中使用</h1>
+
+  <div class="note">
+    <strong>说明：</strong> URLPattern 最初就是为 Service Worker 设计的，用于高效地匹配和路由请求。
+  </div>
+
+  <div class="demo-box">
+    <h2>1. 基本请求拦截</h2>
+    <pre><code>// sw.js - Service Worker 文件
+const apiPattern = new URLPattern({ pathname: '/api/*' });
+const staticPattern = new URLPattern({ pathname: '/static/*' });
+const imagePattern = new URLPattern({ pathname: '*.{png,jpg,gif,webp}' });
+
+self.addEventListener('fetch', (event) => {
+  const url = event.request.url;
+
+  if (apiPattern.test(url)) {
+    // 处理 API 请求
+    event.respondWith(handleApiRequest(event.request));
+  } else if (staticPattern.test(url)) {
+    // 缓存优先策略
+    event.respondWith(cacheFirst(event.request));
+  } else if (imagePattern.test(url)) {
+    // 图片缓存策略
+    event.respondWith(cacheWithFallback(event.request));
+  }
+});</code></pre>
+  </div>
+
+  <div class="demo-box">
+    <h2>2. API 版本路由</h2>
+    <pre><code>// 匹配不同版本的 API
+const apiV1Pattern = new URLPattern({ pathname: '/api/v1/*' });
+const apiV2Pattern = new URLPattern({ pathname: '/api/v2/*' });
+
+self.addEventListener('fetch', (event) => {
+  const url = event.request.url;
+
+  if (apiV1Pattern.test(url)) {
+    // V1 API - 可能需要转换响应格式
+    event.respondWith(handleV1Api(event.request));
+  } else if (apiV2Pattern.test(url)) {
+    // V2 API - 直接转发
+    event.respondWith(fetch(event.request));
+  }
+});</code></pre>
+  </div>
+
+  <div class="demo-box">
+    <h2>3. 动态路由参数提取</h2>
+    <pre><code>const userPattern = new URLPattern({ pathname: '/api/users/:userId' });
+const postPattern = new URLPattern({ pathname: '/api/users/:userId/posts/:postId' });
+
+self.addEventListener('fetch', (event) => {
+  const url = event.request.url;
+
+  // 检查用户详情请求
+  const userMatch = userPattern.exec(url);
+  if (userMatch) {
+    const userId = userMatch.pathname.groups.userId;
+    event.respondWith(getUserFromCache(userId));
+    return;
+  }
+
+  // 检查文章详情请求
+  const postMatch = postPattern.exec(url);
+  if (postMatch) {
+    const { userId, postId } = postMatch.pathname.groups;
+    event.respondWith(getPostFromCache(userId, postId));
+    return;
+  }
+});</code></pre>
+  </div>
+
+  <div class="demo-box">
+    <h2>4. 缓存策略路由</h2>
+    <pre><code>// 定义不同资源的缓存策略
+const routes = [
+  {
+    pattern: new URLPattern({ pathname: '/api/config' }),
+    strategy: 'network-first',  // 配置优先从网络获取
+    cacheName: 'config-cache'
+  },
+  {
+    pattern: new URLPattern({ pathname: '/api/users/*' }),
+    strategy: 'stale-while-revalidate',  // 用户数据使用 SWR
+    cacheName: 'users-cache'
+  },
+  {
+    pattern: new URLPattern({ pathname: '/static/*' }),
+    strategy: 'cache-first',  // 静态资源缓存优先
+    cacheName: 'static-cache'
+  },
+  {
+    pattern: new URLPattern({ pathname: '*.{js,css}' }),
+    strategy: 'cache-first',
+    cacheName: 'assets-cache'
+  }
+];
+
+self.addEventListener('fetch', (event) => {
+  const url = event.request.url;
+
+  for (const route of routes) {
+    if (route.pattern.test(url)) {
+      event.respondWith(
+        handleWithStrategy(event.request, route.strategy, route.cacheName)
+      );
+      return;
+    }
+  }
+});</code></pre>
+  </div>
+
+  <div class="demo-box">
+    <h2>5. 离线页面回退</h2>
+    <pre><code>const htmlPattern = new URLPattern({ pathname: '*' });
+
+self.addEventListener('fetch', (event) => {
+  // 只处理 HTML 页面请求
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request)
+        .catch(() => {
+          // 网络失败时返回离线页面
+          return caches.match('/offline.html');
+        })
+    );
+  }
+});</code></pre>
+  </div>
+
+  <div class="demo-box">
+    <h2>6. 完整示例：Service Worker 路由器</h2>
+    <pre><code>// sw.js
+class ServiceWorkerRouter {
+  constructor() {
+    this.routes = [];
+  }
+
+  get(pattern, handler) {
+    this.routes.push({
+      method: 'GET',
+      pattern: new URLPattern(pattern),
+      handler
+    });
+  }
+
+  post(pattern, handler) {
+    this.routes.push({
+      method: 'POST',
+      pattern: new URLPattern(pattern),
+      handler
+    });
+  }
+
+  handle(event) {
+    const { request } = event;
+
+    for (const route of this.routes) {
+      if (route.method !== request.method) continue;
+
+      const match = route.pattern.exec(request.url);
+      if (match) {
+        return route.handler(request, match);
+      }
+    }
+
+    return fetch(request);
+  }
+}
+
+// 使用路由器
+const router = new ServiceWorkerRouter();
+
+router.get({ pathname: '/api/users/:id' }, async (request, match) => {
+  const userId = match.pathname.groups.id;
+  const cache = await caches.open('users');
+  const cached = await cache.match(request);
+
+  if (cached) return cached;
+
+  const response = await fetch(request);
+  cache.put(request, response.clone());
+  return response;
+});
+
+router.get({ pathname: '/static/*' }, async (request) => {
+  const cache = await caches.open('static');
+  return (await cache.match(request)) || fetch(request);
+});
+
+self.addEventListener('fetch', (event) => {
+  event.respondWith(router.handle(event));
+});</code></pre>
+  </div>
+
+  <div class="warning">
+    <strong>注意：</strong> 此页面展示的是 Service Worker 中的代码示例。
+    要实际运行这些代码，需要创建单独的 sw.js 文件并在主页面中注册。
+  </div>
+
+  <div class="demo-box">
+    <h2>注册 Service Worker</h2>
+    <pre><code>// 在主页面中注册 Service Worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js')
+    .then(registration => {
+      console.log('SW registered:', registration);
+    })
+    .catch(error => {
+      console.log('SW registration failed:', error);
+    });
+}</code></pre>
+  </div>
+</body>
+</html>

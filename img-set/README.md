@@ -24,7 +24,7 @@ background-image: image-set(
 
 ## 分辨率单位
 
-- ​**`x`**​** 或 **​**`dppx`**: 每像素点数（dots per pixel），`1x` = `1dppx`
+- ​**`x`​**​** 或 ​**​**`dppx`**: 每像素点数（dots per pixel），`1x` = `1dppx`
 - ​**`dpi`**: 每英寸点数（dots per inch），`96dpi` ≈ `1x`
 - ​**`dpcm`**: 每厘米点数（dots per centimeter）
 

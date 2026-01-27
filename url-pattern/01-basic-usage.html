@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>URLPattern 基本用法</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    h1 { color: #333; border-bottom: 2px solid #007bff; padding-bottom: 10px; }
+    h2 { color: #555; margin-top: 30px; }
+    .demo-box {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 15px 0;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    pre {
+      background: #2d2d2d;
+      color: #f8f8f2;
+      padding: 15px;
+      border-radius: 5px;
+      overflow-x: auto;
+    }
+    code { font-family: 'Fira Code', Consolas, monospace; }
+    .result {
+      background: #e8f5e9;
+      border-left: 4px solid #4caf50;
+      padding: 10px 15px;
+      margin: 10px 0;
+    }
+    .result.false {
+      background: #ffebee;
+      border-left-color: #f44336;
+    }
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 5px;
+    }
+    button:hover { background: #0056b3; }
+    input {
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      width: 300px;
+      margin: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>URLPattern 基本用法</h1>
+
+  <div class="demo-box">
+    <h2>1. 创建 URLPattern</h2>
+    <p>URLPattern 可以通过字符串或对象两种方式创建：</p>
+    <pre><code>// 方式一：使用完整 URL 模式字符串
+const pattern1 = new URLPattern('https://example.com/users/:id');
+
+// 方式二：使用路径 + baseURL
+const pattern2 = new URLPattern('/users/:id', 'https://example.com');
+
+// 方式三：使用对象
+const pattern3 = new URLPattern({
+  protocol: 'https',
+  hostname: 'example.com',
+  pathname: '/users/:id'
+});</code></pre>
+  </div>
+
+  <div class="demo-box">
+    <h2>2. test() 方法 - 测试匹配</h2>
+    <p>返回布尔值，表示 URL 是否匹配模式。</p>
+    <pre><code>const pattern = new URLPattern('/users/:id', 'https://example.com');
+pattern.test('https://example.com/users/123'); // true
+pattern.test('https://example.com/posts/123'); // false</code></pre>
+
+    <h3>交互演示</h3>
+    <p>模式：<code>/users/:id</code> (baseURL: https://example.com)</p>
+    <input type="text" id="testUrl" placeholder="输入要测试的 URL" value="https://example.com/users/123">
+    <button onclick="runTest()">测试匹配</button>
+    <div id="testResult" class="result"></div>
+  </div>
+
+  <div class="demo-box">
+    <h2>3. exec() 方法 - 执行匹配</h2>
+    <p>返回匹配结果对象，包含捕获的组信息。不匹配时返回 null。</p>
+    <pre><code>const pattern = new URLPattern('/users/:id', 'https://example.com');
+const result = pattern.exec('https://example.com/users/123');
+console.log(result.pathname.groups); // { id: '123' }</code></pre>
+
+    <button onclick="runExec()">执行 exec()</button>
+    <div id="execResult" class="result"></div>
+  </div>
+
+  <div class="demo-box">
+    <h2>4. 查看模式属性</h2>
+    <p>URLPattern 实例有多个只读属性，表示各部分的模式：</p>
+    <button onclick="showProperties()">显示属性</button>
+    <div id="propsResult" class="result"></div>
+  </div>
+
+  <script>
+    // 检查浏览器支持
+    if (!('URLPattern' in window)) {
+      document.body.innerHTML = '<h1>您的浏览器不支持 URLPattern</h1>' +
+        '<p>请使用 Chrome 95+、Edge 95+ 或 Safari 17+</p>';
+    }
+
+    const baseURL = 'https://example.com';
+    const pattern = new URLPattern('/users/:id', baseURL);
+
+    function runTest() {
+      const url = document.getElementById('testUrl').value;
+      const result = pattern.test(url);
+      const resultDiv = document.getElementById('testResult');
+      resultDiv.textContent = `test('${url}') = ${result}`;
+      resultDiv.className = result ? 'result' : 'result false';
+    }
+
+    function runExec() {
+      const url = document.getElementById('testUrl').value;
+      const result = pattern.exec(url);
+      const resultDiv = document.getElementById('execResult');
+      if (result) {
+        resultDiv.innerHTML = `<pre>${JSON.stringify(result, null, 2)}</pre>`;
+        resultDiv.className = 'result';
+      } else {
+        resultDiv.textContent = 'exec() 返回 null（不匹配）';
+        resultDiv.className = 'result false';
+      }
+    }
+
+    function showProperties() {
+      const props = {
+        protocol: pattern.protocol,
+        username: pattern.username,
+        password: pattern.password,
+        hostname: pattern.hostname,
+        port: pattern.port,
+        pathname: pattern.pathname,
+        search: pattern.search,
+        hash: pattern.hash
+      };
+      document.getElementById('propsResult').innerHTML =
+        `<pre>${JSON.stringify(props, null, 2)}</pre>`;
+    }
+
+    // 初始化显示
+    runTest();
+  </script>
+</body>
+</html>
