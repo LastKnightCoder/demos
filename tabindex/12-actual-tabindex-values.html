@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>12 - 实际测试：summary 和 contenteditable 的 tabIndex 值</title>
+  <style>
+    body { font-family: sans-serif; max-width: 900px; margin: 40px auto; padding: 0 20px; line-height: 1.6; }
+    h1 { font-size: 1.4rem; }
+    .section { margin: 24px 0; padding: 16px; border: 1px solid #ddd; border-radius: 6px; }
+    .section h2 { margin: 0 0 12px; font-size: 1rem; }
+    .info { background: #e8f0fe; border: 1px solid #0066cc; padding: 12px 16px;
+      border-radius: 6px; margin: 16px 0; font-size: 0.9rem; }
+    .warning { background: #fff3cd; border: 1px solid #ffc107; padding: 12px 16px;
+      border-radius: 6px; margin: 16px 0; font-size: 0.9rem; }
+    code { background: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-size: 0.85em; }
+    pre { background: #1e1e1e; color: #d4d4d4; padding: 12px; border-radius: 4px;
+      overflow-x: auto; font-size: 0.85rem; line-height: 1.5; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.9rem; }
+    th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+    th { background: #f5f5f5; font-weight: 600; }
+    .test-area { margin: 16px 0; padding: 16px; background: #f8f9fa; border-radius: 6px; }
+    button { padding: 8px 16px; margin: 8px 4px; }
+    details { margin: 12px 0; }
+    summary { cursor: pointer; padding: 8px; background: #f5f5f5; border-radius: 4px; }
+    summary:focus, [contenteditable]:focus, button:focus {
+      outline: 3px solid #0066cc;
+      outline-offset: 2px;
+    }
+    [contenteditable] {
+      border: 2px dashed #aaa; padding: 8px; border-radius: 4px;
+      min-height: 40px; background: #fafafa; display: inline-block; min-width: 300px;
+    }
+    .result-box { margin-top: 12px; padding: 12px; background: #e8f0fe; border-radius: 4px; }
+    .highlight { background: #fff3cd; font-weight: 600; }
+    .correct { color: #28a745; font-weight: 600; }
+    .incorrect { color: #dc3545; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <h1>实际测试：summary 和 contenteditable 的 tabIndex 值</h1>
+
+  <div class="warning">
+    <strong>重要更正：</strong>之前的文档有误！根据实际测试：
+    <ul style="margin: 8px 0;">
+      <li><code>&lt;summary&gt;</code> 的 <code>tabIndex</code> 在现代浏览器中是 <strong>0</strong>（不是 -1）</li>
+      <li><code>contenteditable</code> 的 <code>tabIndex</code> 确实是 <strong>-1</strong>，但可以被 Tab 聚焦</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>1. 实际测试结果</h2>
+
+    <div class="test-area">
+      <h3 style="margin: 0 0 12px; font-size: 0.95rem;">测试元素：</h3>
+
+      <button id="test-button">普通按钮</button>
+
+      <details>
+        <summary id="test-summary">折叠面板 summary</summary>
+        <p>内容</p>
+      </details>
+
+      <div id="test-contenteditable" contenteditable="true">可编辑区域</div>
+
+      <div id="test-div">普通 div</div>
+
+      <div id="test-div-tabindex" tabindex="0" style="display:inline-block; padding:8px; border:1px solid #ccc;">
+        div[tabindex="0"]
+      </div>
+    </div>
+
+    <button onclick="runTest()">点击运行测试</button>
+
+    <div class="result-box" id="test-result">点击上面的按钮运行测试...</div>
+  </div>
+
+  <div class="section">
+    <h2>2. 浏览器差异说明</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>元素</th>
+          <th>Chrome/Edge</th>
+          <th>Firefox</th>
+          <th>Safari</th>
+          <th>Tab 键行为</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>&lt;button&gt;</code></td>
+          <td>0</td>
+          <td>0</td>
+          <td>0</td>
+          <td>✅ 可聚焦</td>
+        </tr>
+        <tr>
+          <td><code>&lt;summary&gt;</code></td>
+          <td class="highlight">0</td>
+          <td class="highlight">0</td>
+          <td class="highlight">0</td>
+          <td>✅ 可聚焦</td>
+        </tr>
+        <tr>
+          <td><code>contenteditable</code></td>
+          <td class="highlight">-1</td>
+          <td class="highlight">-1</td>
+          <td class="highlight">-1</td>
+          <td>✅ 可聚焦（特殊处理）</td>
+        </tr>
+        <tr>
+          <td>普通 <code>&lt;div&gt;</code></td>
+          <td>-1</td>
+          <td>-1</td>
+          <td>-1</td>
+          <td>❌ 不可聚焦</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="info">
+      <strong>结论：</strong>
+      <ul style="margin: 8px 0;">
+        <li><code>&lt;summary&gt;</code> 在所有现代浏览器中 <code>tabIndex</code> 都是 <strong>0</strong></li>
+        <li><code>contenteditable</code> 的 <code>tabIndex</code> 是 <strong>-1</strong>，但浏览器仍然让它可以被 Tab 聚焦</li>
+        <li>所以只有 <code>contenteditable</code> 是"tabIndex=-1 但可聚焦"的特殊情况</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>3. 为什么之前的说法有误？</h2>
+
+    <p>可能的原因：</p>
+    <ul>
+      <li><strong>规范变更：</strong>HTML 规范可能在早期版本中定义 <code>&lt;summary&gt;</code> 的 tabIndex 为 -1，后来改成了 0</li>
+      <li><strong>浏览器实现差异：</strong>早期浏览器可能返回 -1，但现代浏览器统一改成了 0</li>
+      <li><strong>文档过时：</strong>很多技术文档和教程可能基于旧版本的规范或浏览器行为</li>
+    </ul>
+
+    <div class="warning">
+      <strong>教训：</strong>技术细节应该以<strong>实际测试</strong>为准，而不是仅依赖文档或理论。
+      浏览器行为和规范都可能随时间变化。
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>4. 更正后的规则</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>元素类型</th>
+          <th>默认 tabIndex</th>
+          <th>Tab 键行为</th>
+          <th>说明</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>标准可聚焦元素</strong><br>
+            <code>&lt;button&gt;</code>, <code>&lt;input&gt;</code>, <code>&lt;a href&gt;</code>, <code>&lt;select&gt;</code>
+          </td>
+          <td class="highlight">0</td>
+          <td>✅ 可聚焦</td>
+          <td>原生交互控件</td>
+        </tr>
+        <tr>
+          <td><strong>&lt;summary&gt;</strong></td>
+          <td class="highlight">0</td>
+          <td>✅ 可聚焦</td>
+          <td>现代浏览器中与标准元素一致</td>
+        </tr>
+        <tr>
+          <td><strong>contenteditable</strong></td>
+          <td class="highlight">-1</td>
+          <td>✅ 可聚焦（特殊）</td>
+          <td>唯一的"tabIndex=-1 但可聚焦"的情况</td>
+        </tr>
+        <tr>
+          <td><strong>普通元素</strong><br>
+            <code>&lt;div&gt;</code>, <code>&lt;span&gt;</code>
+          </td>
+          <td>-1</td>
+          <td>❌ 不可聚焦</td>
+          <td>非交互元素</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>5. 实际影响</h2>
+
+    <p>这个更正对之前的结论有什么影响？</p>
+
+    <h3 style="font-size:0.95rem; margin-top:16px;">✅ 仍然正确的结论：</h3>
+    <ul>
+      <li>手动设置 <code>tabindex</code> 会覆盖默认行为（优先级最高）</li>
+      <li>不能只看 <code>tabIndex</code> 值判断可聚焦性（contenteditable 就是例外）</li>
+      <li>Tab 键只移动焦点，Enter/Space 才触发点击</li>
+      <li>自定义元素需要手动处理键盘事件</li>
+    </ul>
+
+    <h3 style="font-size:0.95rem; margin-top:16px;">❌ 需要更正的说法：</h3>
+    <ul>
+      <li><del><code>&lt;summary&gt;</code> 的 tabIndex 是 -1</del> → <strong>实际是 0</strong></li>
+      <li><del><code>&lt;summary&gt;</code> 是"tabIndex=-1 但可聚焦"的特殊情况</del> → <strong>它就是标准的 tabIndex=0</strong></li>
+      <li>只有 <code>contenteditable</code> 是真正的"tabIndex=-1 但可聚焦"的特殊情况</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>6. 为什么 contenteditable 是 -1 但可聚焦？</h2>
+
+    <p>现在只剩下 <code>contenteditable</code> 这一个特殊情况了。原因：</p>
+
+    <ul>
+      <li><strong>历史原因：</strong><code>contenteditable</code> 最初是 IE 的私有特性（1990 年代末），后来才标准化</li>
+      <li><strong>语义区分：</strong><code>tabIndex=-1</code> 表示"这不是标准的表单控件，而是一个可编辑区域"</li>
+      <li><strong>向后兼容：</strong>改成 0 会破坏大量依赖 <code>tabIndex === 0</code> 判断标准控件的代码</li>
+      <li><strong>浏览器特殊处理：</strong>浏览器内部将 <code>contenteditable</code> 视为可聚焦，即使 tabIndex 是 -1</li>
+    </ul>
+
+    <pre><code>// 判断元素是否可被 Tab 聚焦（更正后的版本）
+function isTabbable(element) {
+  // 特殊情况：contenteditable
+  if (element.contentEditable === 'true' && !element.hasAttribute('tabindex')) {
+    return true; // tabIndex=-1 但可聚焦
+  }
+
+  // 标准情况：tabIndex >= 0
+  if (element.tabIndex >= 0) {
+    return !element.disabled && element.offsetParent !== null;
+  }
+
+  return false;
+}</code></pre>
+  </div>
+
+  <div class="section">
+    <h2>7. 浏览器信息</h2>
+    <pre id="browser-info" style="font-size: 0.8rem;"></pre>
+  </div>
+
+  <script>
+    // 显示浏览器信息
+    document.getElementById('browser-info').textContent = navigator.userAgent;
+
+    function runTest() {
+      const button = document.getElementById('test-button');
+      const summary = document.getElementById('test-summary');
+      const contenteditable = document.getElementById('test-contenteditable');
+      const div = document.getElementById('test-div');
+      const divTabindex = document.getElementById('test-div-tabindex');
+
+      const elements = [
+        { name: 'button', el: button },
+        { name: 'summary', el: summary },
+        { name: 'contenteditable', el: contenteditable },
+        { name: 'div (普通)', el: div },
+        { name: 'div[tabindex="0"]', el: divTabindex }
+      ];
+
+      let html = '<h3 style="margin: 0 0 12px; font-size: 0.95rem;">测试结果：</h3>';
+      html += '<table style="width:100%; font-size:0.9rem;">';
+      html += '<thead><tr><th>元素</th><th>tabIndex 值</th><th>hasAttribute("tabindex")</th><th>预期可聚焦</th></tr></thead>';
+      html += '<tbody>';
+
+      elements.forEach(({ name, el }) => {
+        const tabIndex = el.tabIndex;
+        const hasAttr = el.hasAttribute('tabindex');
+        const tabbable = (tabIndex >= 0 && !hasAttr) ||
+                        (tabIndex >= 0 && hasAttr) ||
+                        (el.contentEditable === 'true' && !hasAttr);
+
+        html += '<tr>';
+        html += `<td><code>${name}</code></td>`;
+        html += `<td class="highlight"><strong>${tabIndex}</strong></td>`;
+        html += `<td>${hasAttr}</td>`;
+        html += `<td>${tabbable ? '✅ 是' : '❌ 否'}</td>`;
+        html += '</tr>';
+      });
+
+      html += '</tbody></table>';
+
+      html += '<div style="margin-top: 16px; padding: 12px; background: #fff3cd; border-radius: 4px;">';
+      html += '<strong>关键发现：</strong><br>';
+      html += `<span class="correct">✓ summary.tabIndex = ${summary.tabIndex}</span> （不是 -1！）<br>`;
+      html += `<span class="correct">✓ contenteditable.tabIndex = ${contenteditable.tabIndex}</span> （确实是 -1）<br>`;
+      html += '<br>所以只有 contenteditable 是"tabIndex=-1 但可聚焦"的特殊情况。';
+      html += '</div>';
+
+      html += '<div style="margin-top: 12px; font-size: 0.9rem; color: #555;">';
+      html += '按 <kbd style="background:#333;color:white;padding:2px 6px;border-radius:3px;">Tab</kbd> 键测试：';
+      html += 'button → summary → contenteditable → div[tabindex="0"]';
+      html += '</div>';
+
+      document.getElementById('test-result').innerHTML = html;
+    }
+
+    // 页面加载时自动运行测试
+    window.addEventListener('load', runTest);
+  </script>
+</body>
+</html>

@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>09 - 为什么特殊元素默认 tabIndex=-1？</title>
+  <style>
+    body { font-family: sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; line-height: 1.6; }
+    h1 { font-size: 1.4rem; }
+    .section { margin: 24px 0; padding: 16px; border: 1px solid #ddd; border-radius: 6px; }
+    .section h2 { margin: 0 0 12px; font-size: 1rem; }
+    .info { background: #e8f0fe; border: 1px solid #0066cc; padding: 12px 16px;
+      border-radius: 6px; margin: 16px 0; font-size: 0.9rem; }
+    .warning { background: #fff3cd; border: 1px solid #ffc107; padding: 12px 16px;
+      border-radius: 6px; margin: 16px 0; font-size: 0.9rem; }
+    code { background: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-size: 0.85em; }
+    pre { background: #1e1e1e; color: #d4d4d4; padding: 12px; border-radius: 4px;
+      overflow-x: auto; font-size: 0.85rem; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.9rem; }
+    th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+    th { background: #f5f5f5; font-weight: 600; }
+    .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+    .compare-box { padding: 16px; border-radius: 6px; }
+    .good { background: #d4edda; border: 2px solid #28a745; }
+    .bad { background: #f8d7da; border: 2px solid #dc3545; }
+    .compare-box h3 { margin: 0 0 12px; font-size: 0.95rem; }
+    details { margin: 8px 0; }
+    summary { cursor: pointer; padding: 8px; background: #f5f5f5; border-radius: 4px; }
+    summary:focus { outline: 3px solid #0066cc; }
+    [contenteditable] {
+      border: 2px dashed #aaa; padding: 8px; border-radius: 4px;
+      min-height: 40px; background: #fafafa; display: inline-block; min-width: 200px;
+    }
+    [contenteditable]:focus { outline: 3px solid #0066cc; background: #e8f0fe; }
+    .highlight { background: #fff3cd; font-weight: 600; }
+    ul { line-height: 1.8; }
+  </style>
+</head>
+<body>
+  <h1>为什么特殊元素默认 tabIndex=-1？</h1>
+
+  <div class="info">
+    <strong>核心问题：</strong>为什么 <code>&lt;summary&gt;</code> 和 <code>contenteditable</code>
+    的默认 <code>tabIndex</code> 是 -1，而不是像 <code>&lt;button&gt;</code> 那样设置为 0？
+  </div>
+
+  <div class="section">
+    <h2>1. 设计原因：区分"原生可聚焦"和"条件可聚焦"</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>元素类型</th>
+          <th>默认 tabIndex</th>
+          <th>设计意图</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>原生可聚焦元素</strong><br>
+            <code>&lt;button&gt;</code>, <code>&lt;input&gt;</code>, <code>&lt;a href&gt;</code>
+          </td>
+          <td class="highlight">0</td>
+          <td>
+            这些元素<strong>天生就是交互控件</strong>，无论在什么上下文中都应该可聚焦。<br>
+            tabIndex=0 明确表示"我是标准的可聚焦元素"。
+          </td>
+        </tr>
+        <tr>
+          <td><strong>条件可聚焦元素</strong><br>
+            <code>&lt;summary&gt;</code>, <code>contenteditable</code>
+          </td>
+          <td class="highlight">-1</td>
+          <td>
+            这些元素的可聚焦性<strong>依赖于上下文</strong>：<br>
+            - <code>&lt;summary&gt;</code> 只在作为 <code>&lt;details&gt;</code> 的子元素时才可聚焦<br>
+            - <code>contenteditable</code> 只在属性值为 <code>true</code> 时才可聚焦<br>
+            tabIndex=-1 表示"我不是标准的可聚焦元素，但浏览器会根据上下文决定"。
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3 style="font-size:0.95rem; margin-top:16px;">为什么不统一设置为 0？</h3>
+    <ul>
+      <li><strong>语义清晰：</strong>tabIndex=-1 告诉开发者"这个元素的聚焦行为是特殊的，不是标准的"</li>
+      <li><strong>可扩展性：</strong>如果未来需要改变行为，tabIndex=-1 提供了更大的灵活性</li>
+      <li><strong>向后兼容：</strong>早期 HTML 规范中这些元素不可聚焦，后来才加入特殊处理</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>2. 实际差异：开发者可以区分元素类型</h2>
+
+    <p>通过 <code>tabIndex</code> 值，开发者可以判断元素的聚焦行为类型：</p>
+
+    <pre><code>// 判断元素是否是"原生可聚焦元素"
+function isNativelyFocusable(element) {
+  // tabIndex === 0 且未手动设置 tabindex 属性
+  return element.tabIndex === 0 && !element.hasAttribute('tabindex');
+}
+
+// 判断元素是否是"特殊可聚焦元素"
+function isSpeciallyFocusable(element) {
+  // tabIndex === -1 但实际可聚焦
+  return element.tabIndex === -1 &&
+         (element.tagName === 'SUMMARY' ||
+          element.contentEditable === 'true');
+}
+
+// 测试
+const button = document.querySelector('button');
+const summary = document.querySelector('summary');
+
+console.log(isNativelyFocusable(button));   // true
+console.log(isNativelyFocusable(summary));  // false
+console.log(isSpeciallyFocusable(summary)); // true</code></pre>
+  </div>
+
+  <div class="section">
+    <h2>3. 历史原因：向后兼容</h2>
+
+    <div class="warning">
+      <strong>历史背景：</strong>
+      <ul style="margin: 8px 0;">
+        <li><code>&lt;summary&gt;</code> 是 HTML5 新增的元素（2014 年左右）</li>
+        <li><code>contenteditable</code> 最初是 IE 的私有特性（1990 年代末），后来才标准化</li>
+        <li>这些特性加入时，已经有大量网站依赖现有的 tabIndex 行为</li>
+      </ul>
+    </div>
+
+    <p><strong>如果当时设置为 tabIndex=0 会发生什么？</strong></p>
+    <ul>
+      <li>开发者可能会误以为这些元素和 <code>&lt;button&gt;</code> 完全一样</li>
+      <li>某些依赖 <code>tabIndex === 0</code> 判断的代码会误判</li>
+      <li>破坏了"tabIndex=0 表示标准可聚焦元素"的约定</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>4. 对比：如果它们的 tabIndex 是 0</h2>
+
+    <div class="compare">
+      <div class="compare-box bad">
+        <h3>❌ 假设 summary 的 tabIndex=0</h3>
+        <pre style="font-size:0.8rem; margin:8px 0;"><code>const summary = document.querySelector('summary');
+console.log(summary.tabIndex); // 0
+
+// 开发者可能会误以为：
+// "哦，tabIndex=0，那它和 button 一样"
+// 但实际上它的行为是特殊的：
+// - 只在 details 内部才可聚焦
+// - 点击会触发 details 的展开/折叠
+// - 不能用 disabled 属性禁用</code></pre>
+        <p style="font-size:0.85rem; margin:4px 0;">
+          容易让开发者产生误解，认为它是标准的交互控件。
+        </p>
+      </div>
+
+      <div class="compare-box good">
+        <h3>✅ 实际 summary 的 tabIndex=-1</h3>
+        <pre style="font-size:0.8rem; margin:8px 0;"><code>const summary = document.querySelector('summary');
+console.log(summary.tabIndex); // -1
+
+// 开发者会注意到：
+// "咦，tabIndex=-1，但它可以被 Tab 聚焦？"
+// "这说明它有特殊行为，我需要查文档"
+//
+// 这样开发者会更谨慎地处理这个元素</code></pre>
+        <p style="font-size:0.85rem; margin:4px 0;">
+          明确告诉开发者：这个元素的聚焦行为是特殊的。
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>5. 实际测试：行为确实一样</h2>
+
+    <p>虽然 <code>tabIndex</code> 值不同，但 Tab 键的行为确实一样。按 Tab 键测试：</p>
+
+    <div style="margin: 16px 0;">
+      <button>按钮 (tabIndex=0)</button>
+      <details>
+        <summary>折叠面板 (tabIndex=-1，但可聚焦)</summary>
+        <p>内容</p>
+      </details>
+      <div contenteditable style="display:inline-block; width:200px;">
+        可编辑区域 (tabIndex=-1，但可聚焦)
+      </div>
+      <input type="text" placeholder="输入框 (tabIndex=0)">
+    </div>
+
+    <p style="font-size:0.9rem; color:#555;">
+      上面的元素按 DOM 顺序依次聚焦，虽然 <code>tabIndex</code> 值不同，
+      但 Tab 键行为完全一致。
+    </p>
+  </div>
+
+  <div class="section">
+    <h2>6. 总结：为什么这样设计？</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>原因</th>
+          <th>说明</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>语义区分</strong></td>
+          <td>tabIndex=0 表示"标准可聚焦元素"，tabIndex=-1 表示"特殊可聚焦元素"</td>
+        </tr>
+        <tr>
+          <td><strong>开发者提示</strong></td>
+          <td>tabIndex=-1 提醒开发者这个元素的行为是特殊的，需要注意</td>
+        </tr>
+        <tr>
+          <td><strong>向后兼容</strong></td>
+          <td>保持与早期规范的兼容性，不破坏现有代码</td>
+        </tr>
+        <tr>
+          <td><strong>可扩展性</strong></td>
+          <td>未来如果需要改变行为，tabIndex=-1 提供了更大的灵活性</td>
+        </tr>
+        <tr>
+          <td><strong>条件可聚焦</strong></td>
+          <td>这些元素的可聚焦性依赖于上下文，不是无条件的</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="info" style="margin-top:16px;">
+      <strong>结论：</strong>虽然 Tab 键行为看起来一样，但 <code>tabIndex=-1</code>
+      是一个<strong>语义标记</strong>，告诉开发者"这个元素的聚焦行为是特殊的，不是标准的交互控件"。
+      这是一种<strong>设计上的权衡</strong>，牺牲了一点一致性，换来了更清晰的语义和更好的向后兼容性。
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>7. 实际影响：开发者需要注意什么？</h2>
+
+    <ul>
+      <li><strong>不要只看 <code>tabIndex</code> 值判断可聚焦性：</strong>
+        需要实际测试或检查元素类型
+      </li>
+      <li><strong>手动设置 <code>tabindex</code> 时要谨慎：</strong>
+        <code>&lt;summary tabindex="-1"&gt;</code> 会真的变成不可聚焦
+      </li>
+      <li><strong>焦点管理时要包含这些特殊元素：</strong>
+        在计算可聚焦元素时，不能只查询 <code>[tabindex="0"]</code>
+      </li>
+    </ul>
+
+    <pre><code>// ❌ 错误：只查询 tabindex="0" 的元素
+const focusable = document.querySelectorAll('[tabindex="0"]');
+
+// ✅ 正确：查询所有可能可聚焦的元素
+const focusable = document.querySelectorAll(
+  'a[href], button, input, select, textarea, ' +
+  'details, summary, [contenteditable="true"], [tabindex="0"]'
+);</code></pre>
+  </div>
+</body>
+</html>

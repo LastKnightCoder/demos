@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>06 - 默认可聚焦元素的 tabIndex 值</title>
+  <style>
+    body { font-family: sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; line-height: 1.6; }
+    h1 { font-size: 1.4rem; }
+    .info { background: #e8f0fe; border: 1px solid #0066cc; padding: 12px 16px;
+      border-radius: 6px; margin: 16px 0; font-size: 0.9rem; }
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 0.9rem; }
+    th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+    th { background: #f5f5f5; font-weight: 600; }
+    code { background: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-size: 0.85em; }
+    .demo-section { margin: 24px 0; padding: 16px; border: 1px solid #ddd; border-radius: 6px; }
+    .demo-section h2 { margin: 0 0 12px; font-size: 1rem; }
+    button { padding: 6px 12px; margin: 4px; }
+    input, select, textarea { margin: 4px; padding: 6px; }
+    .result { margin-top: 12px; padding: 10px; background: #1e1e1e; color: #d4d4d4;
+      border-radius: 4px; font-family: monospace; font-size: 0.85rem; min-height: 30px; }
+    .result span { color: #9cdcfe; }
+    .highlight { background: #fff3cd; }
+  </style>
+</head>
+<body>
+  <h1>默认可聚焦元素的 tabIndex 值</h1>
+
+  <div class="info">
+    点击下方任意元素，查看它的 <code>tabIndex</code> 属性值（JavaScript 中的 <code>element.tabIndex</code>）。
+  </div>
+
+  <div class="demo-section">
+    <h2>完整的默认可聚焦元素列表</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>元素</th>
+          <th>默认 tabIndex 值</th>
+          <th>条件</th>
+          <th>说明</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>&lt;a&gt;</code></td>
+          <td class="highlight"><strong>0</strong></td>
+          <td>有 <code>href</code> 属性</td>
+          <td>无 href 的 a 标签 tabIndex 为 -1</td>
+        </tr>
+        <tr>
+          <td><code>&lt;button&gt;</code></td>
+          <td class="highlight"><strong>0</strong></td>
+          <td>未被 <code>disabled</code></td>
+          <td>disabled 时 tabIndex 仍为 0，但不可聚焦</td>
+        </tr>
+        <tr>
+          <td><code>&lt;input&gt;</code></td>
+          <td class="highlight"><strong>0</strong></td>
+          <td>未被 <code>disabled</code>，非 <code>type="hidden"</code></td>
+          <td>包括 text, checkbox, radio, file 等所有可见类型</td>
+        </tr>
+        <tr>
+          <td><code>&lt;select&gt;</code></td>
+          <td class="highlight"><strong>0</strong></td>
+          <td>未被 <code>disabled</code></td>
+          <td>下拉选择框</td>
+        </tr>
+        <tr>
+          <td><code>&lt;textarea&gt;</code></td>
+          <td class="highlight"><strong>0</strong></td>
+          <td>未被 <code>disabled</code></td>
+          <td>多行文本输入框</td>
+        </tr>
+        <tr>
+          <td><code>&lt;details&gt;</code></td>
+          <td class="highlight"><strong>0</strong></td>
+          <td>始终可聚焦</td>
+          <td>HTML5 折叠面板元素</td>
+        </tr>
+        <tr>
+          <td><code>&lt;summary&gt;</code></td>
+          <td class="highlight"><strong>-1</strong></td>
+          <td>作为 details 的子元素</td>
+          <td>但实际可以被 Tab 聚焦（浏览器特殊处理）</td>
+        </tr>
+        <tr>
+          <td><code>&lt;iframe&gt;</code></td>
+          <td class="highlight"><strong>0</strong></td>
+          <td>始终可聚焦</td>
+          <td>内嵌框架</td>
+        </tr>
+        <tr>
+          <td><code>&lt;audio&gt;</code></td>
+          <td class="highlight"><strong>0</strong></td>
+          <td>有 <code>controls</code> 属性</td>
+          <td>无 controls 时不可聚焦</td>
+        </tr>
+        <tr>
+          <td><code>&lt;video&gt;</code></td>
+          <td class="highlight"><strong>0</strong></td>
+          <td>有 <code>controls</code> 属性</td>
+          <td>无 controls 时不可聚焦</td>
+        </tr>
+        <tr>
+          <td><code>&lt;area&gt;</code></td>
+          <td class="highlight"><strong>0</strong></td>
+          <td>有 <code>href</code> 属性</td>
+          <td>图像映射区域</td>
+        </tr>
+        <tr>
+          <td>可编辑元素</td>
+          <td class="highlight"><strong>-1</strong></td>
+          <td>有 <code>contenteditable</code> 属性</td>
+          <td>但实际可以被 Tab 聚焦</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="demo-section">
+    <h2>实际测试：点击元素查看其 tabIndex</h2>
+
+    <p><strong>链接和按钮：</strong></p>
+    <a href="#" id="link-with-href">有 href 的链接</a> &nbsp;
+    <a id="link-without-href">无 href 的链接</a> &nbsp;
+    <button id="button-normal">普通按钮</button> &nbsp;
+    <button id="button-disabled" disabled>禁用按钮</button>
+
+    <p><strong>表单元素：</strong></p>
+    <input type="text" id="input-text" placeholder="文本输入框"> &nbsp;
+    <input type="checkbox" id="input-checkbox"> &nbsp;
+    <input type="radio" id="input-radio" name="test"> &nbsp;
+    <select id="select-normal"><option>下拉框</option></select> &nbsp;
+    <textarea id="textarea-normal" rows="2" placeholder="文本域"></textarea>
+
+    <p><strong>媒体和其他：</strong></p>
+    <details id="details-element">
+      <summary id="summary-element">折叠面板（点击展开）</summary>
+      <p>这是折叠的内容</p>
+    </details>
+    <br>
+    <audio controls id="audio-element" src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA="></audio>
+    <br>
+    <div contenteditable id="contenteditable-div" style="border:1px solid #ccc; padding:8px; margin-top:8px; display:inline-block;">
+      可编辑 div
+    </div>
+
+    <p><strong>非可聚焦元素（对比）：</strong></p>
+    <div id="div-normal" style="display:inline-block; padding:8px; border:1px solid #ccc;">普通 div</div> &nbsp;
+    <span id="span-normal" style="padding:8px; border:1px solid #ccc;">普通 span</span>
+
+    <div class="result" id="result">点击上方任意元素查看其 tabIndex 值...</div>
+  </div>
+
+  <div class="demo-section">
+    <h2>关键结论</h2>
+    <ul>
+      <li><strong>大多数默认可聚焦元素的 tabIndex 值为 0</strong>（表示按 DOM 顺序参与 Tab 导航）</li>
+      <li><strong>少数元素的 tabIndex 为 -1</strong>（如 contenteditable、summary），但浏览器仍会让它们参与 Tab 导航</li>
+      <li><strong>非可聚焦元素的 tabIndex 为 -1</strong>（如普通 div、span）</li>
+      <li><strong>disabled 的表单元素 tabIndex 仍为 0</strong>，但实际不可聚焦（浏览器行为）</li>
+      <li><strong>tabIndex 属性值 ≠ 是否可聚焦</strong>：浏览器会根据元素类型和状态综合判断</li>
+    </ul>
+  </div>
+
+  <script>
+    // 监听所有元素的点击事件
+    document.querySelectorAll('a, button, input, select, textarea, details, summary, audio, div, span').forEach(el => {
+      el.addEventListener('click', function(e) {
+        const tagName = this.tagName.toLowerCase();
+        const id = this.id || '(无 id)';
+        const tabIndex = this.tabIndex;
+        const href = this.href || '';
+        const disabled = this.disabled;
+        const contenteditable = this.contentEditable;
+
+        let info = `<span>${tagName}</span> (id: ${id})<br>`;
+        info += `tabIndex: <strong style="color:#4ec9b0">${tabIndex}</strong><br>`;
+
+        if (href) info += `href: ${href}<br>`;
+        if (disabled !== undefined) info += `disabled: ${disabled}<br>`;
+        if (contenteditable !== 'inherit') info += `contenteditable: ${contenteditable}<br>`;
+
+        // 判断是否实际可聚焦
+        const canFocus = document.activeElement === this ||
+                        (tabIndex >= 0 && !disabled) ||
+                        (tagName === 'summary') ||
+                        (contenteditable === 'true');
+
+        info += `实际可 Tab 聚焦: <strong style="color:${canFocus ? '#4ec9b0' : '#f48771'}">${canFocus ? '是' : '否'}</strong>`;
+
+        document.getElementById('result').innerHTML = info;
+        e.preventDefault();
+      });
+    });
+  </script>
+</body>
+</html>

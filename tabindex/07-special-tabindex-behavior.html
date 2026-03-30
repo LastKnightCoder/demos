@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>07 - tabIndex=-1 但仍可聚焦的特殊情况</title>
+  <style>
+    body { font-family: sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; line-height: 1.6; }
+    h1 { font-size: 1.4rem; }
+    .info { background: #fff3cd; border: 1px solid #ffc107; padding: 12px 16px;
+      border-radius: 6px; margin: 16px 0; font-size: 0.9rem; }
+    .section { margin: 24px 0; padding: 16px; border: 1px solid #ddd; border-radius: 6px; }
+    .section h2 { margin: 0 0 12px; font-size: 1rem; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.9rem; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background: #f5f5f5; font-weight: 600; }
+    code { background: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-size: 0.85em; }
+    .demo-box {
+      display: inline-block; padding: 8px 16px; margin: 6px;
+      border: 2px solid #aaa; border-radius: 4px; background: #f5f5f5;
+    }
+    .demo-box:focus {
+      outline: 3px solid #0066cc;
+      outline-offset: 2px;
+      background: #e8f0fe;
+    }
+    button:focus { outline: 3px solid #0066cc; outline-offset: 2px; }
+    .order-badge {
+      display: inline-block; width: 28px; height: 28px; border-radius: 50%;
+      background: #0066cc; color: white; font-size: 0.8rem; text-align: center;
+      line-height: 28px; margin-right: 8px; font-weight: bold;
+    }
+    .highlight { background: #fff3cd; }
+    details { margin: 8px 0; }
+    summary { cursor: pointer; padding: 8px; background: #f5f5f5; border-radius: 4px; }
+    summary:focus { outline: 3px solid #0066cc; }
+    [contenteditable] {
+      border: 2px dashed #aaa; padding: 8px; border-radius: 4px;
+      min-height: 40px; background: #fafafa;
+    }
+    [contenteditable]:focus {
+      outline: 3px solid #0066cc;
+      background: #e8f0fe;
+    }
+    .result {
+      margin-top: 12px; padding: 10px; background: #1e1e1e; color: #d4d4d4;
+      border-radius: 4px; font-family: monospace; font-size: 0.85rem;
+    }
+    .result span { color: #9cdcfe; }
+  </style>
+</head>
+<body>
+  <h1>为什么 tabIndex=-1 但仍可被 Tab 聚焦？</h1>
+
+  <div class="info">
+    <strong>核心原因：</strong>浏览器对某些特殊元素有内置的聚焦行为，不完全依赖 <code>tabIndex</code> 属性值。
+    这些元素虽然 JavaScript 读取的 <code>element.tabIndex</code> 为 -1，但浏览器仍将它们视为"可交互元素"。
+  </div>
+
+  <div class="section">
+    <h2>1. 哪些元素有这种特殊行为？</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>元素</th>
+          <th>tabIndex 值</th>
+          <th>Tab 键行为</th>
+          <th>原因</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>&lt;summary&gt;</code></td>
+          <td class="highlight">-1</td>
+          <td>✅ 可以被 Tab 聚焦</td>
+          <td>浏览器将其视为 <code>&lt;details&gt;</code> 的交互触发器</td>
+        </tr>
+        <tr>
+          <td><code>contenteditable</code></td>
+          <td class="highlight">-1</td>
+          <td>✅ 可以被 Tab 聚焦</td>
+          <td>可编辑区域被视为输入控件</td>
+        </tr>
+        <tr>
+          <td>普通 <code>&lt;div&gt;</code></td>
+          <td>-1</td>
+          <td>❌ 不能被 Tab 聚焦</td>
+          <td>非交互元素，符合预期</td>
+        </tr>
+        <tr>
+          <td><code>&lt;div tabindex="-1"&gt;</code></td>
+          <td>-1</td>
+          <td>❌ 不能被 Tab 聚焦</td>
+          <td>显式设置为 -1，只能通过 JS 聚焦</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>2. 聚焦顺序测试（按 Tab 键观察）</h2>
+    <p>下面的元素按 DOM 顺序排列，观察 Tab 键的实际聚焦顺序：</p>
+
+    <div style="margin: 16px 0;">
+      <span class="order-badge">1</span>
+      <button id="btn1">普通按钮 (tabIndex=0)</button>
+    </div>
+
+    <div style="margin: 16px 0;">
+      <span class="order-badge">2</span>
+      <details id="details1">
+        <summary id="summary1">折叠面板 summary (tabIndex=-1，但可聚焦)</summary>
+        <p>这是折叠的内容</p>
+      </details>
+    </div>
+
+    <div style="margin: 16px 0;">
+      <span class="order-badge">3</span>
+      <div contenteditable id="editable1" style="display:inline-block; width:300px;">
+        可编辑 div (tabIndex=-1，但可聚焦)
+      </div>
+    </div>
+
+    <div style="margin: 16px 0;">
+      <span class="order-badge">4</span>
+      <input type="text" id="input1" placeholder="普通输入框 (tabIndex=0)">
+    </div>
+
+    <div style="margin: 16px 0;">
+      <span class="order-badge">❌</span>
+      <div class="demo-box" id="div-normal">普通 div (tabIndex=-1，不可聚焦)</div>
+    </div>
+
+    <div style="margin: 16px 0;">
+      <span class="order-badge">❌</span>
+      <div class="demo-box" tabindex="-1" id="div-explicit">
+        显式 tabindex="-1" 的 div（不可聚焦）
+      </div>
+    </div>
+
+    <div style="margin: 16px 0;">
+      <span class="order-badge">5</span>
+      <button id="btn2">最后一个按钮 (tabIndex=0)</button>
+    </div>
+
+    <div class="result" id="focus-log">等待聚焦事件...</div>
+  </div>
+
+  <div class="section">
+    <h2>3. 技术解释</h2>
+
+    <h3 style="font-size:0.95rem; margin-top:16px;">为什么会这样？</h3>
+    <ul>
+      <li><strong>HTML 规范的定义：</strong>
+        <code>&lt;summary&gt;</code> 和 <code>contenteditable</code> 元素在规范中被定义为
+        "可聚焦区域"（focusable area），即使它们的默认 <code>tabIndex</code> 为 -1。
+      </li>
+      <li><strong>浏览器的实现：</strong>
+        浏览器在计算 Tab 顺序时，不仅看 <code>tabIndex</code> 属性，
+        还会检查元素的类型、状态、是否可编辑等因素。
+      </li>
+      <li><strong>用户体验考虑：</strong>
+        这些元素具有交互性（点击展开、输入文本），如果不能用 Tab 键访问，
+        会严重影响键盘用户的体验。
+      </li>
+    </ul>
+
+    <h3 style="font-size:0.95rem; margin-top:16px;">聚焦顺序规则</h3>
+    <ol>
+      <li><strong>正整数 tabindex（1, 2, 3...）：</strong>按数值从小到大聚焦（不推荐使用）</li>
+      <li><strong>tabindex="0" 和特殊元素（summary、contenteditable）：</strong>
+        按 DOM 顺序聚焦，即使某些元素的 <code>tabIndex</code> 读取值为 -1
+      </li>
+      <li><strong>tabindex="-1" 的普通元素：</strong>不参与 Tab 导航，只能通过 JS 聚焦</li>
+    </ol>
+
+    <h3 style="font-size:0.95rem; margin-top:16px;">如何判断元素是否可被 Tab 聚焦？</h3>
+    <p>不能只看 <code>element.tabIndex</code>，应该实际测试或使用以下 JavaScript：</p>
+    <pre style="background:#1e1e1e; color:#d4d4d4; padding:12px; border-radius:4px; overflow-x:auto;"><code>function isTabbable(element) {
+  // 检查元素是否在 Tab 顺序中
+  if (element.tabIndex < 0) {
+    // 特殊元素：summary 和 contenteditable
+    return element.tagName === 'SUMMARY' ||
+           element.contentEditable === 'true';
+  }
+  // tabIndex >= 0 且未被禁用
+  return !element.disabled &&
+         element.offsetParent !== null; // 可见
+}</code></pre>
+  </div>
+
+  <div class="section">
+    <h2>4. 实际应用建议</h2>
+    <ul>
+      <li><strong>不要依赖 <code>tabIndex</code> 值来判断可聚焦性：</strong>
+        使用实际测试或检查元素类型
+      </li>
+      <li><strong>自定义组件时显式设置 <code>tabindex="0"</code>：</strong>
+        不要依赖浏览器的特殊行为，明确表达意图
+      </li>
+      <li><strong>焦点管理时测试所有交互元素：</strong>
+        包括 <code>&lt;summary&gt;</code> 和 <code>contenteditable</code>
+      </li>
+    </ul>
+  </div>
+
+  <script>
+    // 监听所有聚焦事件
+    const elements = [
+      'btn1', 'details1', 'summary1', 'editable1', 'input1',
+      'div-normal', 'div-explicit', 'btn2'
+    ];
+
+    let focusOrder = 1;
+
+    elements.forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+
+      el.addEventListener('focus', function() {
+        const tagName = this.tagName.toLowerCase();
+        const tabIndex = this.tabIndex;
+        const contenteditable = this.contentEditable;
+
+        let info = `<span>[聚焦顺序 ${focusOrder++}]</span> `;
+        info += `&lt;${tagName}&gt; (id: ${id})<br>`;
+        info += `tabIndex: <strong style="color:#4ec9b0">${tabIndex}</strong>`;
+
+        if (contenteditable !== 'inherit') {
+          info += ` | contenteditable: ${contenteditable}`;
+        }
+
+        document.getElementById('focus-log').innerHTML = info;
+      });
+    });
+
+    // 重置计数器
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'F5') focusOrder = 1;
+    });
+  </script>
+</body>
+</html>

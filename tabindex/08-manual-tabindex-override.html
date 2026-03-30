@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>08 - 手动设置 tabIndex 的效果</title>
+  <style>
+    body { font-family: sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; line-height: 1.6; }
+    h1 { font-size: 1.4rem; }
+    .info { background: #e8f0fe; border: 1px solid #0066cc; padding: 12px 16px;
+      border-radius: 6px; margin: 16px 0; font-size: 0.9rem; }
+    .warning { background: #fff3cd; border: 1px solid #ffc107; padding: 12px 16px;
+      border-radius: 6px; margin: 16px 0; font-size: 0.9rem; }
+    .section { margin: 24px 0; padding: 16px; border: 1px solid #ddd; border-radius: 6px; }
+    .section h2 { margin: 0 0 12px; font-size: 1rem; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.9rem; }
+    th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+    th { background: #f5f5f5; font-weight: 600; }
+    code { background: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-size: 0.85em; }
+    .test-row { margin: 12px 0; padding: 12px; background: #fafafa; border-radius: 4px; }
+    .test-row label { display: block; font-weight: 600; margin-bottom: 6px; color: #555; }
+    input, button, select, textarea { margin: 4px; padding: 8px 12px; font-size: 0.95rem; }
+    input:focus, button:focus, select:focus, textarea:focus, details:focus, [contenteditable]:focus {
+      outline: 3px solid #0066cc;
+      outline-offset: 2px;
+    }
+    .badge { display: inline-block; font-size: 0.75rem; padding: 3px 8px;
+      border-radius: 3px; margin-left: 8px; font-weight: 600; }
+    .badge-yes { background: #d4edda; color: #155724; }
+    .badge-no { background: #f8d7da; color: #721c24; }
+    .highlight { background: #fff3cd; font-weight: 600; }
+    details { margin: 8px 0; }
+    summary { cursor: pointer; padding: 8px; background: #f5f5f5; border-radius: 4px; }
+    [contenteditable] {
+      border: 2px dashed #aaa; padding: 8px; border-radius: 4px;
+      min-height: 40px; background: #fafafa; display: inline-block; min-width: 200px;
+    }
+  </style>
+</head>
+<body>
+  <h1>手动设置 tabIndex 的效果测试</h1>
+
+  <div class="info">
+    <strong>核心结论：</strong>手动设置 <code>tabIndex="-1"</code> <strong>会覆盖</strong>元素的默认聚焦行为。
+    即使是 <code>&lt;input&gt;</code>、<code>&lt;button&gt;</code> 等默认可聚焦元素，
+    设置 <code>tabindex="-1"</code> 后也会从 Tab 导航中移除。
+  </div>
+
+  <div class="section">
+    <h2>规则总结表</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>元素类型</th>
+          <th>默认 tabIndex</th>
+          <th>手动设置 tabindex="-1"</th>
+          <th>Tab 键行为</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>&lt;input&gt;</code></td>
+          <td>0</td>
+          <td class="highlight">覆盖为 -1</td>
+          <td>❌ 不可聚焦（被移除）</td>
+        </tr>
+        <tr>
+          <td><code>&lt;button&gt;</code></td>
+          <td>0</td>
+          <td class="highlight">覆盖为 -1</td>
+          <td>❌ 不可聚焦（被移除）</td>
+        </tr>
+        <tr>
+          <td><code>&lt;select&gt;</code></td>
+          <td>0</td>
+          <td class="highlight">覆盖为 -1</td>
+          <td>❌ 不可聚焦（被移除）</td>
+        </tr>
+        <tr>
+          <td><code>&lt;textarea&gt;</code></td>
+          <td>0</td>
+          <td class="highlight">覆盖为 -1</td>
+          <td>❌ 不可聚焦（被移除）</td>
+        </tr>
+        <tr>
+          <td><code>&lt;a href&gt;</code></td>
+          <td>0</td>
+          <td class="highlight">覆盖为 -1</td>
+          <td>❌ 不可聚焦（被移除）</td>
+        </tr>
+        <tr>
+          <td><code>&lt;summary&gt;</code></td>
+          <td>-1（特殊）</td>
+          <td class="highlight">显式设置 -1</td>
+          <td>❌ 不可聚焦（被移除）</td>
+        </tr>
+        <tr>
+          <td><code>contenteditable</code></td>
+          <td>-1（特殊）</td>
+          <td class="highlight">显式设置 -1</td>
+          <td>❌ 不可聚焦（被移除）</td>
+        </tr>
+        <tr>
+          <td><code>&lt;div&gt;</code></td>
+          <td>-1</td>
+          <td>设置为 0</td>
+          <td>✅ 可聚焦（被加入）</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="warning">
+    <strong>重要：</strong>手动设置的 <code>tabindex</code> 属性<strong>优先级最高</strong>，
+    会覆盖浏览器的默认行为和特殊规则。
+  </div>
+
+  <div class="section">
+    <h2>实际测试（按 Tab 键验证）</h2>
+
+    <div class="test-row">
+      <label>1. 普通 input（默认 tabIndex=0）<span class="badge badge-yes">可聚焦</span></label>
+      <input type="text" placeholder="正常的输入框">
+    </div>
+
+    <div class="test-row">
+      <label>2. input tabindex="-1"（手动设置）<span class="badge badge-no">不可聚焦</span></label>
+      <input type="text" tabindex="-1" placeholder="被移除 Tab 顺序的输入框">
+      <p style="font-size:0.85rem; color:#888; margin:4px 0 0">
+        虽然是输入框，但 Tab 键会跳过它。只能用鼠标点击或 JS 聚焦。
+      </p>
+    </div>
+
+    <div class="test-row">
+      <label>3. 普通 button（默认 tabIndex=0）<span class="badge badge-yes">可聚焦</span></label>
+      <button>正常的按钮</button>
+    </div>
+
+    <div class="test-row">
+      <label>4. button tabindex="-1"（手动设置）<span class="badge badge-no">不可聚焦</span></label>
+      <button tabindex="-1">被移除 Tab 顺序的按钮</button>
+      <button onclick="document.querySelector('button[tabindex=\'-1\']').focus()">
+        点击此按钮用 JS 聚焦上面的按钮
+      </button>
+    </div>
+
+    <div class="test-row">
+      <label>5. 普通 select（默认 tabIndex=0）<span class="badge badge-yes">可聚焦</span></label>
+      <select>
+        <option>选项 1</option>
+        <option>选项 2</option>
+      </select>
+    </div>
+
+    <div class="test-row">
+      <label>6. select tabindex="-1"（手动设置）<span class="badge badge-no">不可聚焦</span></label>
+      <select tabindex="-1">
+        <option>被移除的下拉框</option>
+      </select>
+    </div>
+
+    <div class="test-row">
+      <label>7. 普通 summary（默认 tabIndex=-1，但可聚焦）<span class="badge badge-yes">可聚焦</span></label>
+      <details>
+        <summary>正常的折叠面板</summary>
+        <p>内容</p>
+      </details>
+    </div>
+
+    <div class="test-row">
+      <label>8. summary tabindex="-1"（显式设置）<span class="badge badge-no">不可聚焦</span></label>
+      <details>
+        <summary tabindex="-1">显式设置 tabindex="-1" 的 summary</summary>
+        <p>内容</p>
+      </details>
+      <p style="font-size:0.85rem; color:#888; margin:4px 0 0">
+        虽然 summary 默认可聚焦，但显式设置 tabindex="-1" 后会被移除。
+      </p>
+    </div>
+
+    <div class="test-row">
+      <label>9. 普通 contenteditable（默认 tabIndex=-1，但可聚焦）<span class="badge badge-yes">可聚焦</span></label>
+      <div contenteditable>正常的可编辑区域</div>
+    </div>
+
+    <div class="test-row">
+      <label>10. contenteditable tabindex="-1"（显式设置）<span class="badge badge-no">不可聚焦</span></label>
+      <div contenteditable tabindex="-1">显式设置 tabindex="-1" 的可编辑区域</div>
+      <p style="font-size:0.85rem; color:#888; margin:4px 0 0">
+        显式设置后，Tab 键会跳过它。
+      </p>
+    </div>
+
+    <div class="test-row">
+      <label>11. 普通 div（默认不可聚焦）<span class="badge badge-no">不可聚焦</span></label>
+      <div style="padding:8px; border:1px solid #ccc; display:inline-block;">普通 div</div>
+    </div>
+
+    <div class="test-row">
+      <label>12. div tabindex="0"（手动设置）<span class="badge badge-yes">可聚焦</span></label>
+      <div tabindex="0" style="padding:8px; border:1px solid #ccc; display:inline-block;">
+        设置 tabindex="0" 的 div
+      </div>
+      <p style="font-size:0.85rem; color:#888; margin:4px 0 0">
+        原本不可聚焦的 div，设置 tabindex="0" 后加入 Tab 顺序。
+      </p>
+    </div>
+
+    <div class="test-row">
+      <label>13. 最后一个正常按钮（用于测试结束）<span class="badge badge-yes">可聚焦</span></label>
+      <button>结束按钮</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>使用场景</h2>
+
+    <h3 style="font-size:0.95rem; margin-top:16px;">何时使用 tabindex="-1"？</h3>
+    <ul>
+      <li><strong>临时禁用 Tab 访问：</strong>
+        模态框打开时，将背景内容的交互元素设置为 <code>tabindex="-1"</code>，
+        防止焦点逃逸到背景。
+      </li>
+      <li><strong>自定义焦点管理：</strong>
+        复杂组件（如自定义下拉菜单）中，只让容器可聚焦，内部选项设置为 <code>tabindex="-1"</code>，
+        通过方向键导航。
+      </li>
+      <li><strong>隐藏但保留可访问性：</strong>
+        某些元素视觉上隐藏（如折叠的手风琴内容），但需要通过 JS 聚焦时显示。
+      </li>
+    </ul>
+
+    <h3 style="font-size:0.95rem; margin-top:16px;">何时使用 tabindex="0"？</h3>
+    <ul>
+      <li><strong>自定义交互组件：</strong>
+        用 <code>&lt;div&gt;</code> 实现的按钮、卡片、菜单项等，需要加入 Tab 顺序。
+      </li>
+      <li><strong>恢复默认行为：</strong>
+        如果之前设置了 <code>tabindex="-1"</code>，可以用 <code>tabindex="0"</code> 恢复。
+      </li>
+    </ul>
+
+    <h3 style="font-size:0.95rem; margin-top:16px;">注意事项</h3>
+    <ul>
+      <li><code>disabled</code> 属性优先级更高：
+        <code>&lt;button disabled tabindex="0"&gt;</code> 仍然不可聚焦
+      </li>
+      <li>移除 <code>tabindex</code> 属性会恢复默认行为：
+        <code>element.removeAttribute('tabindex')</code>
+      </li>
+      <li>不要滥用 <code>tabindex="-1"</code>：
+        会破坏键盘用户的体验，只在必要时使用
+      </li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>JavaScript 动态控制示例</h2>
+    <pre style="background:#1e1e1e; color:#d4d4d4; padding:12px; border-radius:4px; overflow-x:auto;"><code>// 临时禁用元素的 Tab 访问
+const input = document.querySelector('input');
+input.setAttribute('tabindex', '-1');
+
+// 恢复 Tab 访问
+input.setAttribute('tabindex', '0');
+// 或者移除属性，恢复默认行为
+input.removeAttribute('tabindex');
+
+// 模态框打开时，禁用背景内容
+const backgroundElements = document.querySelectorAll('button, a, input');
+backgroundElements.forEach(el => {
+  el.dataset.originalTabindex = el.getAttribute('tabindex') || '';
+  el.setAttribute('tabindex', '-1');
+});
+
+// 模态框关闭时，恢复背景内容
+backgroundElements.forEach(el => {
+  if (el.dataset.originalTabindex) {
+    el.setAttribute('tabindex', el.dataset.originalTabindex);
+  } else {
+    el.removeAttribute('tabindex');
+  }
+});</code></pre>
+  </div>
+</body>
+</html>

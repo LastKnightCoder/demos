@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>13 - Tab 和 Shift+Tab 的默认行为</title>
+  <style>
+    body { font-family: sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; line-height: 1.6; }
+    h1 { font-size: 1.4rem; }
+    .section { margin: 24px 0; padding: 16px; border: 1px solid #ddd; border-radius: 6px; }
+    .section h2 { margin: 0 0 12px; font-size: 1rem; }
+    .info { background: #e8f0fe; border: 1px solid #0066cc; padding: 12px 16px;
+      border-radius: 6px; margin: 16px 0; font-size: 0.9rem; }
+    code { background: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-size: 0.85em; }
+    kbd { background: #333; color: white; padding: 3px 8px; border-radius: 3px;
+      font-size: 0.85em; font-family: monospace; display: inline-block; margin: 0 2px; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.9rem; }
+    th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+    th { background: #f5f5f5; font-weight: 600; }
+    .test-area { margin: 16px 0; padding: 16px; background: #f8f9fa; border-radius: 6px; }
+    button, input, select { margin: 8px 4px; padding: 8px 16px; font-size: 0.95rem; }
+    button:focus, input:focus, select:focus, [tabindex]:focus {
+      outline: 3px solid #0066cc;
+      outline-offset: 2px;
+    }
+    .order-badge {
+      display: inline-block; width: 28px; height: 28px; border-radius: 50%;
+      background: #0066cc; color: white; font-size: 0.8rem; text-align: center;
+      line-height: 28px; margin-right: 8px; font-weight: bold;
+    }
+    .log {
+      margin-top: 12px; padding: 10px; background: #1e1e1e; color: #d4d4d4;
+      border-radius: 4px; font-family: monospace; font-size: 0.85rem;
+      min-height: 80px; max-height: 200px; overflow-y: auto;
+    }
+    .log-entry { margin: 4px 0; }
+    .forward { color: #4ec9b0; }
+    .backward { color: #dcdcaa; }
+    .highlight { background: #fff3cd; font-weight: 600; }
+    pre { background: #1e1e1e; color: #d4d4d4; padding: 12px; border-radius: 4px;
+      overflow-x: auto; font-size: 0.85rem; line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <h1>Tab 和 Shift+Tab 的默认行为</h1>
+
+  <div class="info">
+    <strong>✅ 是的，这是浏览器的默认行为：</strong>
+    <ul style="margin: 8px 0;">
+      <li><kbd>Tab</kbd> — 向前移动焦点到下一个可聚焦元素</li>
+      <li><kbd>Shift</kbd> + <kbd>Tab</kbd> — 向后移动焦点到上一个可聚焦元素</li>
+    </ul>
+    这是 Web 标准的一部分，所有浏览器都实现了这个行为，无需任何 JavaScript 代码。
+  </div>
+
+  <div class="section">
+    <h2>1. 标准键盘导航行为</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>按键</th>
+          <th>行为</th>
+          <th>是否需要 JS</th>
+          <th>说明</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><kbd>Tab</kbd></td>
+          <td class="highlight">向前移动焦点</td>
+          <td>❌ 不需要</td>
+          <td>浏览器默认行为，按 DOM 顺序（或 tabindex 顺序）</td>
+        </tr>
+        <tr>
+          <td><kbd>Shift</kbd> + <kbd>Tab</kbd></td>
+          <td class="highlight">向后移动焦点</td>
+          <td>❌ 不需要</td>
+          <td>浏览器默认行为，反向遍历可聚焦元素</td>
+        </tr>
+        <tr>
+          <td><kbd>Enter</kbd></td>
+          <td>激活元素</td>
+          <td>❌ 不需要（原生元素）<br>✅ 需要（自定义元素）</td>
+          <td>按钮、链接自动支持，自定义元素需要监听</td>
+        </tr>
+        <tr>
+          <td><kbd>Space</kbd></td>
+          <td>激活元素</td>
+          <td>❌ 不需要（原生元素）<br>✅ 需要（自定义元素）</td>
+          <td>按钮、复选框自动支持</td>
+        </tr>
+        <tr>
+          <td><kbd>Escape</kbd></td>
+          <td>取消/关闭</td>
+          <td>✅ 需要</td>
+          <td>需要 JS 监听，用于关闭模态框、菜单等</td>
+        </tr>
+        <tr>
+          <td><kbd>↑</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd></td>
+          <td>在选项间导航</td>
+          <td>❌ 不需要（select）<br>✅ 需要（自定义组件）</td>
+          <td>下拉框自动支持，自定义组件需要监听</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>2. 实际测试：Tab 和 Shift+Tab</h2>
+
+    <div class="info">
+      <strong>测试步骤：</strong>
+      <ol style="margin: 8px 0;">
+        <li>按 <kbd>Tab</kbd> 键向前移动焦点（1 → 2 → 3 → 4 → 5）</li>
+        <li>按 <kbd>Shift</kbd> + <kbd>Tab</kbd> 向后移动焦点（5 → 4 → 3 → 2 → 1）</li>
+        <li>观察下方的日志记录</li>
+      </ol>
+    </div>
+
+    <div class="test-area">
+      <h3 style="margin: 0 0 12px; font-size: 0.95rem;">测试区域：</h3>
+
+      <div style="margin: 12px 0;">
+        <span class="order-badge">1</span>
+        <button id="btn1">按钮 1</button>
+      </div>
+
+      <div style="margin: 12px 0;">
+        <span class="order-badge">2</span>
+        <input type="text" id="input1" placeholder="输入框 1">
+      </div>
+
+      <div style="margin: 12px 0;">
+        <span class="order-badge">3</span>
+        <select id="select1">
+          <option>下拉框</option>
+          <option>选项 2</option>
+        </select>
+      </div>
+
+      <div style="margin: 12px 0;">
+        <span class="order-badge">4</span>
+        <input type="text" id="input2" placeholder="输入框 2">
+      </div>
+
+      <div style="margin: 12px 0;">
+        <span class="order-badge">5</span>
+        <button id="btn2">按钮 2</button>
+      </div>
+
+      <div class="log" id="focus-log">
+        <div class="log-entry">等待焦点事件...</div>
+      </div>
+
+      <button onclick="clearLog()" style="margin-top: 8px;">清空日志</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>3. 焦点循环行为</h2>
+
+    <p>当焦点到达最后一个可聚焦元素时：</p>
+    <ul>
+      <li><strong>按 <kbd>Tab</kbd>：</strong>焦点移动到<strong>页面的第一个可聚焦元素</strong>（包括地址栏、浏览器 UI）</li>
+      <li><strong>按 <kbd>Shift</kbd> + <kbd>Tab</kbd>：</strong>焦点移动到<strong>浏览器 UI</strong>（如地址栏、工具栏）</li>
+    </ul>
+
+    <div class="info">
+      <strong>注意：</strong>焦点不会自动在页面内循环。如果需要在特定区域内循环（如模态框），
+      需要用 JavaScript 实现"焦点陷阱"（Focus Trap）。
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>4. 焦点陷阱（Focus Trap）示例</h2>
+
+    <p>在模态框等场景中，需要用 JavaScript 实现焦点循环：</p>
+
+    <pre><code>// 焦点陷阱：限制 Tab 键只在模态框内循环
+function trapFocus(containerElement) {
+  containerElement.addEventListener('keydown', function(e) {
+    if (e.key !== 'Tab') return;
+
+    // 获取容器内所有可聚焦元素
+    const focusableElements = containerElement.querySelectorAll(
+      'a[href], button:not([disabled]), input:not([disabled]), ' +
+      'select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+
+    const firstElement = focusableElements[0];
+    const lastElement = focusableElements[focusableElements.length - 1];
+
+    if (e.shiftKey) {
+      // Shift+Tab：从第一个元素往前，跳到最后一个
+      if (document.activeElement === firstElement) {
+        e.preventDefault();
+        lastElement.focus();
+      }
+    } else {
+      // Tab：从最后一个元素往后，跳到第一个
+      if (document.activeElement === lastElement) {
+        e.preventDefault();
+        firstElement.focus();
+      }
+    }
+  });
+}</code></pre>
+
+    <p>详见 <a href="./04-modal-focus-trap.html">04-modal-focus-trap.html</a> 的完整实现。</p>
+  </div>
+
+  <div class="section">
+    <h2>5. 跨浏览器兼容性</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>浏览器</th>
+          <th><kbd>Tab</kbd></th>
+          <th><kbd>Shift</kbd> + <kbd>Tab</kbd></th>
+          <th>说明</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Chrome / Edge</td>
+          <td>✅ 支持</td>
+          <td>✅ 支持</td>
+          <td>完全符合标准</td>
+        </tr>
+        <tr>
+          <td>Firefox</td>
+          <td>✅ 支持</td>
+          <td>✅ 支持</td>
+          <td>完全符合标准</td>
+        </tr>
+        <tr>
+          <td>Safari</td>
+          <td>✅ 支持</td>
+          <td>✅ 支持</td>
+          <td>完全符合标准</td>
+        </tr>
+        <tr>
+          <td>移动浏览器</td>
+          <td>⚠️ 有限支持</td>
+          <td>⚠️ 有限支持</td>
+          <td>移动设备通常没有物理键盘，依赖触摸交互</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="info">
+      <strong>结论：</strong>所有现代桌面浏览器都完全支持 <kbd>Tab</kbd> 和 <kbd>Shift</kbd> + <kbd>Tab</kbd> 的默认行为，
+      这是 Web 标准的一部分，无需任何 JavaScript 代码。
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>6. 常见问题</h2>
+
+    <h3 style="font-size:0.95rem; margin-top:16px;">Q: 可以禁用 Tab 键的默认行为吗？</h3>
+    <p>可以，但<strong>强烈不推荐</strong>。可以用 <code>e.preventDefault()</code> 阻止：</p>
+    <pre><code>document.addEventListener('keydown', function(e) {
+  if (e.key === 'Tab') {
+    e.preventDefault(); // 阻止 Tab 键的默认行为
+    // 自定义行为...
+  }
+});</code></pre>
+    <p><strong>警告：</strong>禁用 Tab 键会严重破坏键盘用户的体验，只在特殊场景（如焦点陷阱）中使用。</p>
+
+    <h3 style="font-size:0.95rem; margin-top:16px;">Q: 可以改变 Tab 键的顺序吗？</h3>
+    <p>可以，有两种方式：</p>
+    <ul>
+      <li><strong>推荐：</strong>调整 DOM 顺序，让元素按期望的顺序排列</li>
+      <li><strong>不推荐：</strong>使用正整数 <code>tabindex</code>（难以维护，破坏用户预期）</li>
+    </ul>
+
+    <h3 style="font-size:0.95rem; margin-top:16px;">Q: 移动设备支持 Tab 键吗？</h3>
+    <p>移动设备通常没有物理键盘，依赖触摸交互。但如果连接了外接键盘，Tab 键行为与桌面浏览器一致。</p>
+  </div>
+
+  <div class="section">
+    <h2>7. 总结</h2>
+
+    <div class="info">
+      <strong>关键要点：</strong>
+      <ul style="margin: 8px 0;">
+        <li><kbd>Tab</kbd> 和 <kbd>Shift</kbd> + <kbd>Tab</kbd> 是<strong>浏览器的默认行为</strong>，无需 JavaScript</li>
+        <li>所有现代浏览器都支持，这是 Web 标准的一部分</li>
+        <li>焦点按 DOM 顺序（或 tabindex 顺序）移动</li>
+        <li>焦点不会自动在页面内循环，需要 JS 实现焦点陷阱</li>
+        <li>不要禁用或改变 Tab 键的默认行为，除非有充分理由</li>
+        <li>优先调整 DOM 顺序，而不是使用正整数 tabindex</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    const focusLog = document.getElementById('focus-log');
+    let logEntries = [];
+    let lastFocusedElement = null;
+
+    // 监听所有测试元素的焦点事件
+    const testElements = ['btn1', 'input1', 'select1', 'input2', 'btn2'];
+
+    testElements.forEach((id, index) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+
+      el.addEventListener('focus', function() {
+        const currentIndex = testElements.indexOf(id);
+        const lastIndex = lastFocusedElement ? testElements.indexOf(lastFocusedElement.id) : -1;
+
+        let direction = '';
+        let className = '';
+
+        if (lastIndex !== -1) {
+          if (currentIndex > lastIndex) {
+            direction = '→ 向前（Tab）';
+            className = 'forward';
+          } else if (currentIndex < lastIndex) {
+            direction = '← 向后（Shift+Tab）';
+            className = 'backward';
+          }
+        }
+
+        const timestamp = new Date().toLocaleTimeString();
+        const message = `[${timestamp}] ${id} 获得焦点 ${direction}`;
+
+        logEntries.push({ message, className });
+
+        // 只保留最近 15 条
+        if (logEntries.length > 15) {
+          logEntries.shift();
+        }
+
+        updateLog();
+        lastFocusedElement = el;
+      });
+    });
+
+    function updateLog() {
+      const html = logEntries.map(entry => {
+        return `<div class="log-entry ${entry.className}">${entry.message}</div>`;
+      }).join('');
+
+      focusLog.innerHTML = html || '<div class="log-entry">等待焦点事件...</div>';
+      focusLog.scrollTop = focusLog.scrollHeight;
+    }
+
+    function clearLog() {
+      logEntries = [];
+      lastFocusedElement = null;
+      updateLog();
+    }
+  </script>
+</body>
+</html>

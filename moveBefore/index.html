@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>moveBefore API Demo</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, sans-serif;
+      background: #f5f5f5;
+      color: #1a1a1a;
+      padding: 2rem;
+    }
+
+    h1 {
+      font-size: 1.75rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle {
+      color: #666;
+      margin-bottom: 2.5rem;
+      font-size: 0.95rem;
+    }
+
+    .compat-banner {
+      background: #fff3cd;
+      border: 1px solid #ffc107;
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      margin-bottom: 2rem;
+      font-size: 0.9rem;
+      display: none;
+    }
+
+    .compat-banner.show { display: block; }
+
+    .demos {
+      display: grid;
+      gap: 2rem;
+    }
+
+    .demo {
+      background: #fff;
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+
+    .demo h2 {
+      font-size: 1.1rem;
+      margin-bottom: 0.4rem;
+    }
+
+    .demo p {
+      font-size: 0.875rem;
+      color: #555;
+      margin-bottom: 1.25rem;
+      line-height: 1.6;
+    }
+
+    .stage {
+      display: flex;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .column {
+      flex: 1;
+      min-width: 220px;
+    }
+
+    .column-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+      color: #888;
+    }
+
+    .slot {
+      border: 2px dashed #ddd;
+      border-radius: 8px;
+      padding: 0.75rem;
+      min-height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      transition: border-color 0.2s;
+    }
+
+    .slot.highlight { border-color: #4f46e5; }
+
+    .actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1rem;
+      flex-wrap: wrap;
+    }
+
+    button {
+      padding: 0.45rem 1rem;
+      border-radius: 6px;
+      border: 1px solid #ddd;
+      background: #fff;
+      cursor: pointer;
+      font-size: 0.875rem;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    button:hover { background: #f0f0f0; }
+
+    button.primary {
+      background: #4f46e5;
+      color: #fff;
+      border-color: #4f46e5;
+    }
+
+    button.primary:hover { background: #4338ca; }
+
+    button.secondary {
+      background: #e5e7eb;
+      border-color: #e5e7eb;
+    }
+
+    button.secondary:hover { background: #d1d5db; }
+
+    /* ── Demo 1: iframe ── */
+    .iframe-box {
+      width: 100%;
+      height: 90px;
+      border: none;
+      border-radius: 6px;
+      background: #f9f9f9;
+    }
+
+    /* ── Demo 2: animation ── */
+    .ball {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #f97316, #ef4444);
+      animation: spin 1.5s linear infinite;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 1.4rem;
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+
+    /* ── Demo 3: focus ── */
+    .focus-input {
+      width: 100%;
+      padding: 0.5rem 0.75rem;
+      border: 2px solid #ddd;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .focus-input:focus { border-color: #4f46e5; }
+
+    /* ── Demo 4: popover ── */
+    .popover-btn {
+      background: #4f46e5;
+      color: #fff;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.875rem;
+      anchor-name: --pop-anchor;
+    }
+
+    .popover-btn:hover { background: #4338ca; }
+
+    #myPopover {
+      position: absolute;
+      position-anchor: --pop-anchor;
+      top: calc(anchor(bottom) + 8px);
+      left: anchor(left);
+      margin: 0;
+      border: none;
+      border-radius: 8px;
+      background: #1a1a1a;
+      color: #fff;
+      padding: 0.6rem 1rem;
+      font-size: 0.875rem;
+      white-space: nowrap;
+    }
+
+    /* ── Demo 5: Web Components ── */
+    .log {
+      background: #1a1a1a;
+      color: #a3e635;
+      border-radius: 6px;
+      padding: 0.75rem;
+      font-family: monospace;
+      font-size: 0.8rem;
+      min-height: 80px;
+      max-height: 160px;
+      overflow-y: auto;
+      margin-top: 1rem;
+    }
+
+    .log-entry { margin-bottom: 0.2rem; }
+    .log-entry.move { color: #60a5fa; }
+    .log-entry.connect { color: #a3e635; }
+    .log-entry.disconnect { color: #f87171; }
+
+    .wc-box {
+      background: #ede9fe;
+      border: 2px solid #8b5cf6;
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      font-size: 0.875rem;
+      color: #5b21b6;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+
+<h1>moveBefore API</h1>
+<p class="subtitle">原子移动 DOM 节点，保留所有内部状态</p>
+
+<div class="compat-banner" id="compatBanner">
+  ⚠️ 你的浏览器不支持 <code>moveBefore</code>（需要 Chrome 133+）。部分 demo 将使用 <code>insertBefore</code> 降级，你可以观察到状态丢失的现象。
+</div>
+
+<div class="demos">
+
+  <!-- Demo 1: iframe -->
+  <div class="demo">
+    <h2>Demo 1 · iframe 不重新加载</h2>
+    <p>
+      iframe 内嵌了一个每秒递增的计时器。用 <code>insertBefore</code> 移动后 iframe 会重新加载，计数归零；
+      用 <code>moveBefore</code> 移动后计时器继续运行。
+    </p>
+    <div class="stage">
+      <div class="column">
+        <div class="column-label">区域 A</div>
+        <div class="slot" id="iframeSlotA">
+          <iframe class="iframe-box" id="timerIframe" src="iframe-timer.html"></iframe>
+        </div>
+      </div>
+      <div class="column">
+        <div class="column-label">区域 B</div>
+        <div class="slot" id="iframeSlotB"></div>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="primary" onclick="moveIframe('moveBefore')">moveBefore 移动</button>
+      <button class="secondary" onclick="moveIframe('insertBefore')">insertBefore 移动</button>
+    </div>
+  </div>
+
+  <!-- Demo 2: animation -->
+  <div class="demo">
+    <h2>Demo 2 · CSS 动画不中断</h2>
+    <p>
+      球体正在持续旋转。用 <code>insertBefore</code> 移动后动画会从头开始；
+      用 <code>moveBefore</code> 移动后动画无缝继续。
+    </p>
+    <div class="stage">
+      <div class="column">
+        <div class="column-label">区域 A</div>
+        <div class="slot" id="animSlotA">
+          <div class="ball" id="ball">🔥</div>
+        </div>
+      </div>
+      <div class="column">
+        <div class="column-label">区域 B</div>
+        <div class="slot" id="animSlotB"></div>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="primary" onclick="moveBall('moveBefore')">moveBefore 移动</button>
+      <button class="secondary" onclick="moveBall('insertBefore')">insertBefore 移动</button>
+    </div>
+  </div>
+
+  <!-- Demo 3: focus -->
+  <div class="demo">
+    <h2>Demo 3 · 焦点与选区保留</h2>
+    <p>
+      先在输入框中选中部分文字，再移动节点。
+      <code>insertBefore</code> 会导致焦点和选区完全丢失；<code>moveBefore</code> 保留焦点（元素仍是 <code>activeElement</code>，选区数据也在），但视觉光标需要再次交互才会显示——这是浏览器当前实现的已知限制，不是代码问题。
+    </p>
+    <div class="stage">
+      <div class="column">
+        <div class="column-label">区域 A</div>
+        <div class="slot" id="focusSlotA">
+          <input class="focus-input" id="focusInput" placeholder="输入内容，选中文字后再移动…" value="Hello, moveBefore!">
+        </div>
+      </div>
+      <div class="column">
+        <div class="column-label">区域 B</div>
+        <div class="slot" id="focusSlotB"></div>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="primary" onmousedown="event.preventDefault()" onclick="moveFocus('moveBefore')">moveBefore 移动</button>
+      <button class="secondary" onmousedown="event.preventDefault()" onclick="moveFocus('insertBefore')">insertBefore 移动</button>
+    </div>
+  </div>
+
+  <!-- Demo 4: popover -->
+  <div class="demo">
+    <h2>Demo 4 · Popover 不被关闭</h2>
+    <p>
+      先点击按钮打开 popover，再移动节点。
+      <code>insertBefore</code> 会导致 popover 关闭；<code>moveBefore</code> 保持其打开状态。
+    </p>
+    <div class="stage">
+      <div class="column">
+        <div class="column-label">区域 A</div>
+        <div class="slot" id="popoverSlotA">
+          <div id="popoverWidget">
+            <button class="popover-btn" popovertarget="myPopover" popovertargetaction="toggle">点我打开 Popover</button>
+            <div id="myPopover" popover="manual">👋 我是 Popover，移动我试试！</div>
+          </div>
+        </div>
+      </div>
+      <div class="column">
+        <div class="column-label">区域 B</div>
+        <div class="slot" id="popoverSlotB"></div>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="primary" onclick="movePopover('moveBefore')">moveBefore 移动</button>
+      <button class="secondary" onclick="movePopover('insertBefore')">insertBefore 移动</button>
+    </div>
+  </div>
+
+  <!-- Demo 6: 使用限制 -->
+  <div class="demo">
+    <h2>Demo 6 · 使用限制</h2>
+    <p>
+      <code>moveBefore</code> 要求被移动的节点必须已在页面中（<code>isConnected === true</code>）。
+      对未连接的节点调用会抛出错误，而 <code>insertBefore</code> 则没有此限制。
+    </p>
+    <div class="stage">
+      <div class="column">
+        <div class="column-label">已连接的节点</div>
+        <div class="slot" id="limitSlotA">
+          <div id="connectedNode" style="background:#d1fae5;border:2px solid #10b981;border-radius:8px;padding:.6rem 1rem;font-size:.875rem;color:#065f46;font-weight:500;">✅ 我在页面中</div>
+        </div>
+      </div>
+      <div class="column">
+        <div class="column-label">目标区域</div>
+        <div class="slot" id="limitSlotB"></div>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="primary" onclick="limitDemo('connected')">moveBefore 移动已连接节点</button>
+      <button class="secondary" onclick="limitDemo('disconnected')">moveBefore 移动未连接节点</button>
+      <button class="secondary" onclick="limitDemo('detachedRef')">moveBefore 使用未连接的参考节点</button>
+    </div>
+    <div class="log" id="limitLog"></div>
+  </div>
+
+  <!-- Demo 5: Web Components -->
+  <div class="demo">
+    <h2>Demo 5 · Web Components 生命周期</h2>
+    <p>
+      移动自定义元素时，<code>moveBefore</code> 只触发 <code>connectedMoveCallback</code>，
+      不会触发 <code>disconnectedCallback</code> 和 <code>connectedCallback</code>。
+    </p>
+    <div class="stage">
+      <div class="column">
+        <div class="column-label">区域 A</div>
+        <div class="slot" id="wcSlotA">
+          <my-widget id="myWidget"></my-widget>
+        </div>
+      </div>
+      <div class="column">
+        <div class="column-label">区域 B</div>
+        <div class="slot" id="wcSlotB"></div>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="primary" onclick="moveWC('moveBefore')">moveBefore 移动</button>
+      <button class="secondary" onclick="moveWC('insertBefore')">insertBefore 移动</button>
+      <button onclick="clearLog()">清空日志</button>
+    </div>
+    <div class="log" id="wcLog"></div>
+  </div>
+
+</div>
+
+<!-- iframe 内容 -->
+<script>
+  // 检测兼容性
+  const supported = 'moveBefore' in Element.prototype
+  if (!supported) {
+    document.getElementById('compatBanner').classList.add('show')
+  }
+
+  function doMove(method, parent, node, ref) {
+    if (method === 'moveBefore' && supported) {
+      parent.moveBefore(node, ref)
+    } else {
+      parent.insertBefore(node, ref)
+    }
+  }
+
+  // Demo 1: iframe
+  function moveIframe(method) {
+    const iframe = document.getElementById('timerIframe')
+    const slotA = document.getElementById('iframeSlotA')
+    const slotB = document.getElementById('iframeSlotB')
+    const inA = slotA.contains(iframe)
+    const target = inA ? slotB : slotA
+    doMove(method, target, iframe, null)
+  }
+
+  // Demo 2: animation
+  function moveBall(method) {
+    const ball = document.getElementById('ball')
+    const slotA = document.getElementById('animSlotA')
+    const slotB = document.getElementById('animSlotB')
+    const inA = slotA.contains(ball)
+    const target = inA ? slotB : slotA
+    doMove(method, target, ball, null)
+  }
+
+  // Demo 3: focus
+  function moveFocus(method) {
+    const input = document.getElementById('focusInput')
+    const slotA = document.getElementById('focusSlotA')
+    const slotB = document.getElementById('focusSlotB')
+    const inA = slotA.contains(input)
+    const target = inA ? slotB : slotA
+    doMove(method, target, input, null)
+  }
+
+  // Demo 4: popover
+  function movePopover(method) {
+    const widget = document.getElementById('popoverWidget')
+    const slotA = document.getElementById('popoverSlotA')
+    const slotB = document.getElementById('popoverSlotB')
+    const inA = slotA.contains(widget)
+    const target = inA ? slotB : slotA
+    doMove(method, target, widget, null)
+  }
+
+  // Demo 6: 使用限制
+  function limitLog(msg, type = '') {
+    const el = document.createElement('div')
+    el.className = `log-entry ${type}`
+    el.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`
+    const logEl = document.getElementById('limitLog')
+    logEl.appendChild(el)
+    logEl.scrollTop = logEl.scrollHeight
+  }
+
+  function limitDemo(mode) {
+    const slotA = document.getElementById('limitSlotA')
+    const slotB = document.getElementById('limitSlotB')
+
+    if (mode === 'connected') {
+      const node = document.getElementById('connectedNode')
+      const inA = slotA.contains(node)
+      const target = inA ? slotB : slotA
+      try {
+        target.moveBefore(node, null)
+        limitLog(`✅ 成功：isConnected = ${node.isConnected}，节点已移动`, 'connect')
+      } catch (e) {
+        limitLog(`❌ 错误：${e.name} - ${e.message}`, 'disconnect')
+      }
+    } else if (mode === 'disconnected') {
+      const detached = document.createElement('div')
+      detached.textContent = '我是未连接的节点'
+      try {
+        slotB.moveBefore(detached, null)
+        limitLog('✅ 成功（不应出现）', 'connect')
+      } catch (e) {
+        limitLog(`❌ 错误：${e.name} — 节点 isConnected = ${detached.isConnected}，moveBefore 要求节点必须在页面中`, 'disconnect')
+      }
+    } else {
+      // detachedRef: referenceNode 未连接
+      const node = document.getElementById('connectedNode')
+      const inA = slotA.contains(node)
+      const target = inA ? slotB : slotA
+      const detachedRef = document.createElement('div')
+      try {
+        target.moveBefore(node, detachedRef)
+        limitLog('✅ 成功（不应出现）', 'connect')
+      } catch (e) {
+        limitLog(`❌ 错误：${e.name} — referenceNode 不是父节点的子节点`, 'disconnect')
+      }
+    }
+  }
+
+  // Demo 5: Web Components
+  function log(msg, type = '') {
+    const el = document.createElement('div')
+    el.className = `log-entry ${type}`
+    el.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`
+    const logEl = document.getElementById('wcLog')
+    logEl.appendChild(el)
+    logEl.scrollTop = logEl.scrollHeight
+  }
+
+  function clearLog() {
+    document.getElementById('wcLog').innerHTML = ''
+  }
+
+  class MyWidget extends HTMLElement {
+    connectedCallback() {
+      log('connectedCallback 触发', 'connect')
+      if (!this.shadowRoot) {
+        this.attachShadow({ mode: 'open' })
+        this.shadowRoot.innerHTML = `<div class="wc-box" style="background:#ede9fe;border:2px solid #8b5cf6;border-radius:8px;padding:.75rem 1rem;font-size:.875rem;color:#5b21b6;font-weight:500;">
+          🧩 Web Component
+        </div>`
+      }
+    }
+    disconnectedCallback() {
+      log('disconnectedCallback 触发 ⚠️', 'disconnect')
+    }
+    connectedMoveCallback() {
+      log('connectedMoveCallback 触发 ✓', 'move')
+    }
+  }
+
+  customElements.define('my-widget', MyWidget)
+
+  function moveWC(method) {
+    const widget = document.getElementById('myWidget')
+    const slotA = document.getElementById('wcSlotA')
+    const slotB = document.getElementById('wcSlotB')
+    const inA = slotA.contains(widget)
+    const target = inA ? slotB : slotA
+    doMove(method, target, widget, null)
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>01 - tabindex 基础值对比</title>
+  <style>
+    body { font-family: sans-serif; max-width: 700px; margin: 40px auto; padding: 0 20px; line-height: 1.6; }
+    h1 { font-size: 1.4rem; }
+    .section { margin: 24px 0; padding: 16px; border: 1px solid #ddd; border-radius: 6px; }
+    .section h2 { margin: 0 0 12px; font-size: 1rem; color: #555; }
+    .box {
+      display: inline-block; padding: 8px 16px; margin: 6px;
+      border: 2px solid #aaa; border-radius: 4px; cursor: pointer;
+      background: #f5f5f5;
+    }
+    .box:focus {
+      outline: 3px solid #0066cc;
+      outline-offset: 2px;
+      background: #e8f0fe;
+    }
+    button:focus {
+      outline: 3px solid #0066cc;
+      outline-offset: 2px;
+    }
+    .tip { font-size: 0.85rem; color: #888; margin-top: 8px; }
+    .badge { display: inline-block; font-size: 0.75rem; padding: 2px 6px; border-radius: 3px; margin-left: 6px; }
+    .badge-green { background: #d4edda; color: #155724; }
+    .badge-blue { background: #cce5ff; color: #004085; }
+    .badge-red { background: #f8d7da; color: #721c24; }
+  </style>
+</head>
+<body>
+  <h1>tabindex 基础值对比</h1>
+  <p>按 <kbd>Tab</kbd> 键在页面中导航，观察哪些元素会获得焦点。</p>
+
+  <div class="section">
+    <h2>原生可聚焦元素（无需 tabindex）<span class="badge badge-green">默认行为</span></h2>
+    <button>原生 Button</button>
+    <input type="text" placeholder="原生 Input">
+    <a href="#">原生链接</a>
+    <p class="tip">这些元素天生就在 Tab 顺序中，无需任何属性。</p>
+  </div>
+
+  <div class="section">
+    <h2>tabindex="0" <span class="badge badge-blue">加入 Tab 顺序</span></h2>
+    <div class="box" tabindex="0">div tabindex="0"</div>
+    <span class="box" tabindex="0">span tabindex="0"</span>
+    <p class="box" tabindex="0">p tabindex="0"</p>
+    <p class="tip">原本不可聚焦的元素，加上 tabindex="0" 后按 DOM 顺序参与 Tab 导航。</p>
+  </div>
+
+  <div class="section">
+    <h2>tabindex="-1" <span class="badge badge-red">不在 Tab 顺序中</span></h2>
+    <div class="box" tabindex="-1" id="minus-one-box">div tabindex="-1"（Tab 键跳过我）</div>
+    <br>
+    <button onclick="document.getElementById('minus-one-box').focus()">
+      点击此按钮将焦点移到上面的 div
+    </button>
+    <p class="tip">tabindex="-1" 的元素不会被 Tab 键聚焦，但可以通过 JS 的 .focus() 主动聚焦。</p>
+  </div>
+
+  <div class="section">
+    <h2>无 tabindex 的 div <span class="badge" style="background:#eee;color:#666">不可聚焦</span></h2>
+    <div class="box">普通 div（无法聚焦）</div>
+    <p class="tip">没有 tabindex 的非交互元素，Tab 键和鼠标点击都无法聚焦它。</p>
+  </div>
+</body>
+</html>

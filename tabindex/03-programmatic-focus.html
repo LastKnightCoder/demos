@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>03 - tabindex="-1" 与程序化焦点</title>
+  <style>
+    body { font-family: sans-serif; max-width: 700px; margin: 40px auto; padding: 0 20px; line-height: 1.6; }
+    h1 { font-size: 1.4rem; }
+    .section { margin: 24px 0; padding: 16px; border: 1px solid #ddd; border-radius: 6px; }
+    .section h2 { margin: 0 0 12px; font-size: 1rem; }
+    button {
+      padding: 8px 16px; background: #0066cc; color: white;
+      border: none; border-radius: 4px; cursor: pointer; font-size: 0.95rem;
+    }
+    button:hover { background: #0052a3; }
+    button:focus { outline: 3px solid #0066cc; outline-offset: 2px; }
+    .target {
+      margin-top: 12px; padding: 16px; border: 2px dashed #ccc;
+      border-radius: 6px; background: #fafafa; transition: background 0.2s, border-color 0.2s;
+    }
+    .target:focus {
+      outline: 3px solid #0066cc;
+      outline-offset: 2px;
+      background: #e8f0fe;
+      border-color: #0066cc;
+    }
+    .tip { font-size: 0.85rem; color: #888; margin-top: 8px; }
+    .log {
+      margin-top: 12px; padding: 10px; background: #1e1e1e; color: #d4d4d4;
+      border-radius: 4px; font-family: monospace; font-size: 0.85rem;
+      min-height: 40px;
+    }
+    .log span { color: #9cdcfe; }
+    #skip-link {
+      position: absolute; top: -40px; left: 0;
+      background: #0066cc; color: white; padding: 8px 16px;
+      text-decoration: none; border-radius: 0 0 4px 0;
+      transition: top 0.2s;
+    }
+    #skip-link:focus { top: 0; }
+    #main-content { padding: 12px; border: 2px solid #28a745; border-radius: 6px; }
+    #main-content:focus { outline: 3px solid #28a745; }
+  </style>
+</head>
+<body>
+  <a href="#main-content" id="skip-link">跳过导航，直达主内容</a>
+
+  <h1>tabindex="-1" 与程序化焦点控制</h1>
+
+  <div class="section">
+    <h2>示例 1：按钮触发焦点跳转</h2>
+    <p>点击按钮，焦点会被移动到下方的 div（它有 tabindex="-1"，Tab 键不会到达它）。</p>
+    <button onclick="focusTarget()">将焦点移到目标区域</button>
+    <div class="target" tabindex="-1" id="focus-target">
+      我是目标区域（tabindex="-1"）<br>
+      <small>Tab 键不会导航到我，但 JS 可以聚焦我。</small>
+    </div>
+    <div class="log" id="log1">等待操作...</div>
+    <p class="tip">常见场景：表单验证失败后，将焦点移到第一个错误字段。</p>
+  </div>
+
+  <div class="section">
+    <h2>示例 2：焦点历史记录（返回触发元素）</h2>
+    <p>点击"打开面板"，焦点移入面板；点击"关闭"，焦点返回原按钮。</p>
+    <button id="open-btn" onclick="openPanel()">打开面板</button>
+    <div class="target" tabindex="-1" id="panel" style="display:none">
+      <strong>面板内容</strong><br>
+      <small>焦点现在在这里。</small><br><br>
+      <button onclick="closePanel()">关闭面板（焦点将返回）</button>
+    </div>
+    <div class="log" id="log2">等待操作...</div>
+    <p class="tip">关闭模态框/面板时，应将焦点归还给触发它的元素，避免用户迷失。</p>
+  </div>
+
+  <div class="section">
+    <h2>示例 3：跳过导航链接（Skip Link）</h2>
+    <p>按 <kbd>Tab</kbd> 键，页面顶部会出现"跳过导航"链接，点击后焦点跳到主内容区。</p>
+    <nav style="padding: 8px; background: #f0f0f0; border-radius: 4px; margin-bottom: 8px;">
+      <a href="#">导航链接 1</a> &nbsp;
+      <a href="#">导航链接 2</a> &nbsp;
+      <a href="#">导航链接 3</a>
+    </nav>
+    <div id="main-content" tabindex="-1">
+      <strong>主内容区域</strong><br>
+      跳过导航后，焦点落在这里。
+    </div>
+    <p class="tip">Skip Link 是无障碍的基础实践，让键盘用户不必每次都 Tab 过整个导航栏。</p>
+  </div>
+
+  <script>
+    function focusTarget() {
+      const target = document.getElementById('focus-target');
+      target.focus();
+      document.getElementById('log1').innerHTML =
+        '<span>focus-target.focus()</span> 已调用 — 焦点现在在目标区域';
+    }
+
+    let lastFocused = null;
+
+    function openPanel() {
+      lastFocused = document.getElementById('open-btn');
+      const panel = document.getElementById('panel');
+      panel.style.display = 'block';
+      panel.focus();
+      document.getElementById('log2').innerHTML =
+        '面板已打开，<span>panel.focus()</span> 已调用';
+    }
+
+    function closePanel() {
+      document.getElementById('panel').style.display = 'none';
+      if (lastFocused) {
+        lastFocused.focus();
+        document.getElementById('log2').innerHTML =
+          '面板已关闭，焦点返回 <span>#open-btn</span>';
+      }
+    }
+  </script>
+</body>
+</html>

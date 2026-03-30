@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>04 - 模态框焦点陷阱</title>
+  <style>
+    body { font-family: sans-serif; max-width: 700px; margin: 40px auto; padding: 0 20px; line-height: 1.6; }
+    h1 { font-size: 1.4rem; }
+    .tip { font-size: 0.85rem; color: #888; }
+    button {
+      padding: 8px 16px; background: #0066cc; color: white;
+      border: none; border-radius: 4px; cursor: pointer; font-size: 0.95rem;
+    }
+    button:hover { background: #0052a3; }
+    button:focus { outline: 3px solid #0066cc; outline-offset: 2px; }
+    button.secondary { background: #6c757d; }
+    button.secondary:hover { background: #545b62; }
+    button.danger { background: #dc3545; }
+    button.danger:hover { background: #b02a37; }
+
+    /* 遮罩层 */
+    .overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5); z-index: 100;
+      align-items: center; justify-content: center;
+    }
+    .overlay.active { display: flex; }
+
+    /* 模态框 */
+    .modal {
+      background: white; border-radius: 8px; padding: 24px;
+      width: 400px; max-width: 90vw; box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    }
+    .modal h2 { margin: 0 0 12px; font-size: 1.1rem; }
+    .modal p { margin: 0 0 16px; color: #555; }
+    .modal-footer { display: flex; gap: 8px; justify-content: flex-end; }
+    .modal input {
+      width: 100%; padding: 8px 12px; border: 2px solid #ccc;
+      border-radius: 4px; font-size: 1rem; box-sizing: border-box; margin-bottom: 12px;
+    }
+    .modal input:focus { outline: 3px solid #0066cc; border-color: #0066cc; }
+
+    .info { background: #e8f0fe; border: 1px solid #0066cc; padding: 12px 16px;
+      border-radius: 6px; margin: 16px 0; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <h1>模态框焦点陷阱（Focus Trap）</h1>
+  <p>焦点陷阱确保 Tab 键在模态框内循环，不会跑到背景内容。</p>
+
+  <div class="info">
+    打开模态框后，按 <kbd>Tab</kbd> / <kbd>Shift+Tab</kbd> 观察焦点只在模态框内循环。
+    按 <kbd>Escape</kbd> 或点击"取消"关闭模态框，焦点会自动返回触发按钮。
+  </div>
+
+  <p>页面背景内容：</p>
+  <button id="trigger-btn" onclick="openModal()">打开模态框</button>
+  &nbsp;
+  <button class="secondary">背景按钮 A</button>
+  &nbsp;
+  <button class="secondary">背景按钮 B</button>
+  <p class="tip">模态框打开时，上面的背景按钮不应该被 Tab 到。</p>
+
+  <!-- 模态框 -->
+  <div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal" id="modal">
+      <h2 id="modal-title">确认操作</h2>
+      <p>请填写以下信息后确认。</p>
+      <input type="text" id="modal-input" placeholder="输入内容...">
+      <div class="modal-footer">
+        <button class="secondary" id="cancel-btn" onclick="closeModal()">取消</button>
+        <button class="danger" id="confirm-btn" onclick="closeModal()">确认删除</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const overlay = document.getElementById('overlay');
+    const modal = document.getElementById('modal');
+    let triggerElement = null;
+
+    // 获取模态框内所有可聚焦元素
+    function getFocusableElements() {
+      return Array.from(modal.querySelectorAll(
+        'a[href], button:not([disabled]), input:not([disabled]), select, textarea, [tabindex="0"]'
+      ));
+    }
+
+    function openModal() {
+      triggerElement = document.getElementById('trigger-btn');
+      overlay.classList.add('active');
+      // 聚焦第一个可聚焦元素
+      const focusable = getFocusableElements();
+      if (focusable.length) focusable[0].focus();
+      // 监听键盘事件
+      overlay.addEventListener('keydown', trapFocus);
+    }
+
+    function closeModal() {
+      overlay.classList.remove('active');
+      overlay.removeEventListener('keydown', trapFocus);
+      // 焦点归还触发元素
+      if (triggerElement) triggerElement.focus();
+    }
+
+    function trapFocus(e) {
+      if (e.key === 'Escape') {
+        closeModal();
+        return;
+      }
+      if (e.key !== 'Tab') return;
+
+      const focusable = getFocusableElements();
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (e.shiftKey) {
+        // Shift+Tab：从第一个元素往前，跳到最后一个
+        if (document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        }
+      } else {
+        // Tab：从最后一个元素往后，跳到第一个
+        if (document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    }
+
+    // 点击遮罩层关闭
+    overlay.addEventListener('click', function(e) {
+      if (e.target === overlay) closeModal();
+    });
+  </script>
+</body>
+</html>

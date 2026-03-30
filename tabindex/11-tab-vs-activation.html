@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>11 - Tab 键 vs 触发点击行为</title>
+  <style>
+    body { font-family: sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; line-height: 1.6; }
+    h1 { font-size: 1.4rem; }
+    .section { margin: 24px 0; padding: 16px; border: 1px solid #ddd; border-radius: 6px; }
+    .section h2 { margin: 0 0 12px; font-size: 1rem; }
+    .info { background: #e8f0fe; border: 1px solid #0066cc; padding: 12px 16px;
+      border-radius: 6px; margin: 16px 0; font-size: 0.9rem; }
+    .warning { background: #fff3cd; border: 1px solid #ffc107; padding: 12px 16px;
+      border-radius: 6px; margin: 16px 0; font-size: 0.9rem; }
+    .danger { background: #f8d7da; border: 1px solid #dc3545; padding: 12px 16px;
+      border-radius: 6px; margin: 16px 0; font-size: 0.9rem; }
+    code { background: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-size: 0.85em; }
+    kbd { background: #333; color: white; padding: 3px 8px; border-radius: 3px;
+      font-size: 0.85em; font-family: monospace; display: inline-block; margin: 0 2px; }
+    pre { background: #1e1e1e; color: #d4d4d4; padding: 12px; border-radius: 4px;
+      overflow-x: auto; font-size: 0.85rem; line-height: 1.5; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.9rem; }
+    th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+    th { background: #f5f5f5; font-weight: 600; }
+    .test-area { margin: 16px 0; padding: 16px; background: #f8f9fa; border-radius: 6px; }
+    button, input, select, a {
+      margin: 8px 4px; padding: 8px 16px; font-size: 0.95rem;
+    }
+    button:focus, input:focus, select:focus, a:focus, [tabindex]:focus {
+      outline: 3px solid #0066cc;
+      outline-offset: 2px;
+    }
+    .log {
+      margin-top: 12px; padding: 10px; background: #1e1e1e; color: #d4d4d4;
+      border-radius: 4px; font-family: monospace; font-size: 0.85rem;
+      min-height: 60px; max-height: 200px; overflow-y: auto;
+    }
+    .log-entry { margin: 4px 0; }
+    .log-focus { color: #9cdcfe; }
+    .log-click { color: #4ec9b0; }
+    .log-keydown { color: #dcdcaa; }
+    .highlight { background: #fff3cd; font-weight: 600; }
+    .custom-button {
+      display: inline-block; padding: 8px 16px; margin: 8px 4px;
+      background: #6c757d; color: white; border-radius: 4px; cursor: pointer;
+    }
+    .custom-button:focus {
+      outline: 3px solid #0066cc;
+      outline-offset: 2px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Tab 键 vs 触发点击行为</h1>
+
+  <div class="danger">
+    <strong>❌ 错误说法：</strong>"通过 Tab 聚焦的元素按下 Tab 可触发点击行为"<br><br>
+    <strong>✅ 正确说法：</strong>"通过 Tab 聚焦的元素按下 <kbd>Enter</kbd> 或 <kbd>Space</kbd> 可触发点击行为"
+  </div>
+
+  <div class="section">
+    <h2>1. 键盘按键的不同作用</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>按键</th>
+          <th>作用</th>
+          <th>说明</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><kbd>Tab</kbd></td>
+          <td class="highlight">移动焦点</td>
+          <td>将焦点移动到下一个可聚焦元素，<strong>不触发任何操作</strong></td>
+        </tr>
+        <tr>
+          <td><kbd>Shift</kbd> + <kbd>Tab</kbd></td>
+          <td class="highlight">反向移动焦点</td>
+          <td>将焦点移动到上一个可聚焦元素，<strong>不触发任何操作</strong></td>
+        </tr>
+        <tr>
+          <td><kbd>Enter</kbd></td>
+          <td class="highlight">激活/提交</td>
+          <td>
+            - 按钮：触发点击<br>
+            - 链接：跳转<br>
+            - 表单：提交<br>
+            - 自定义元素：需要手动监听 keydown
+          </td>
+        </tr>
+        <tr>
+          <td><kbd>Space</kbd></td>
+          <td class="highlight">激活/选择</td>
+          <td>
+            - 按钮：触发点击<br>
+            - 复选框/单选框：切换选中状态<br>
+            - 下拉框：展开选项<br>
+            - 自定义元素：需要手动监听 keydown
+          </td>
+        </tr>
+        <tr>
+          <td><kbd>Escape</kbd></td>
+          <td class="highlight">取消/关闭</td>
+          <td>关闭模态框、下拉菜单等</td>
+        </tr>
+        <tr>
+          <td><kbd>↑</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd></td>
+          <td class="highlight">导航</td>
+          <td>在选项之间移动（下拉框、单选框组、自定义组件）</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>2. 实际测试：Tab 键不会触发点击</h2>
+
+    <div class="info">
+      <strong>测试步骤：</strong>
+      <ol style="margin: 8px 0;">
+        <li>按 <kbd>Tab</kbd> 键聚焦到下面的按钮</li>
+        <li>继续按 <kbd>Tab</kbd> 键，观察是否触发点击</li>
+        <li>然后按 <kbd>Enter</kbd> 或 <kbd>Space</kbd>，观察是否触发点击</li>
+      </ol>
+    </div>
+
+    <div class="test-area">
+      <h3 style="margin: 0 0 12px; font-size: 0.95rem;">测试区域：</h3>
+
+      <button id="test-btn-1" onclick="logClick('按钮 1')">
+        按钮 1（点击我会记录日志）
+      </button>
+
+      <button id="test-btn-2" onclick="logClick('按钮 2')">
+        按钮 2（点击我会记录日志）
+      </button>
+
+      <button id="test-btn-3" onclick="logClick('按钮 3')">
+        按钮 3（点击我会记录日志）
+      </button>
+
+      <br>
+
+      <a href="#" id="test-link" onclick="logClick('链接'); return false;">
+        链接（点击我会记录日志）
+      </a>
+
+      <br>
+
+      <input type="checkbox" id="test-checkbox" onchange="logClick('复选框')">
+      <label for="test-checkbox">复选框（切换我会记录日志）</label>
+
+      <br>
+
+      <select id="test-select" onchange="logClick('下拉框')">
+        <option>选项 1</option>
+        <option>选项 2</option>
+        <option>选项 3</option>
+      </select>
+
+      <br>
+
+      <div class="custom-button" id="test-custom" tabindex="0">
+        自定义按钮（需要手动处理键盘事件）
+      </div>
+
+      <div class="log" id="event-log">
+        <div class="log-entry">等待事件...</div>
+      </div>
+
+      <button onclick="clearLog()" style="margin-top: 8px;">清空日志</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>3. 不同元素的键盘激活方式</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>元素类型</th>
+          <th><kbd>Enter</kbd></th>
+          <th><kbd>Space</kbd></th>
+          <th>说明</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>&lt;button&gt;</code></td>
+          <td>✅ 触发点击</td>
+          <td>✅ 触发点击</td>
+          <td>原生支持，无需额外代码</td>
+        </tr>
+        <tr>
+          <td><code>&lt;a href&gt;</code></td>
+          <td>✅ 跳转链接</td>
+          <td>❌ 无效果</td>
+          <td>链接只响应 Enter</td>
+        </tr>
+        <tr>
+          <td><code>&lt;input type="checkbox"&gt;</code></td>
+          <td>❌ 无效果</td>
+          <td>✅ 切换选中</td>
+          <td>复选框只响应 Space</td>
+        </tr>
+        <tr>
+          <td><code>&lt;input type="radio"&gt;</code></td>
+          <td>❌ 无效果</td>
+          <td>✅ 选中</td>
+          <td>单选框只响应 Space</td>
+        </tr>
+        <tr>
+          <td><code>&lt;select&gt;</code></td>
+          <td>❌ 无效果</td>
+          <td>✅ 展开选项</td>
+          <td>下拉框只响应 Space</td>
+        </tr>
+        <tr>
+          <td><code>&lt;input type="text"&gt;</code></td>
+          <td>❌ 无效果</td>
+          <td>❌ 无效果</td>
+          <td>文本输入框不触发点击，Enter 可能提交表单</td>
+        </tr>
+        <tr>
+          <td><code>&lt;textarea&gt;</code></td>
+          <td>❌ 无效果</td>
+          <td>❌ 无效果</td>
+          <td>多行文本框，Enter 插入换行</td>
+        </tr>
+        <tr>
+          <td><code>&lt;details&gt;</code></td>
+          <td>✅ 展开/折叠</td>
+          <td>✅ 展开/折叠</td>
+          <td>原生支持</td>
+        </tr>
+        <tr>
+          <td>自定义元素<br><code>&lt;div tabindex="0"&gt;</code></td>
+          <td>❌ 需要手动处理</td>
+          <td>❌ 需要手动处理</td>
+          <td>必须监听 keydown 事件</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>4. 自定义元素如何响应键盘</h2>
+
+    <p>如果用 <code>&lt;div tabindex="0"&gt;</code> 实现自定义按钮，必须手动处理键盘事件：</p>
+
+    <pre><code>// ❌ 错误：只监听 click 事件
+const customButton = document.querySelector('.custom-button');
+customButton.addEventListener('click', function() {
+  console.log('按钮被点击');
+});
+// 问题：键盘用户无法激活这个按钮！
+
+// ✅ 正确：同时监听 click 和 keydown 事件
+customButton.addEventListener('click', handleActivation);
+customButton.addEventListener('keydown', function(e) {
+  // Enter 或 Space 键触发激活
+  if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault(); // 防止 Space 滚动页面
+    handleActivation();
+  }
+});
+
+function handleActivation() {
+  console.log('按钮被激活');
+  // 执行按钮的功能
+}</code></pre>
+
+    <div class="warning">
+      <strong>重要：</strong>这就是为什么推荐使用 <code>&lt;button&gt;</code> 而不是 <code>&lt;div tabindex="0"&gt;</code>。
+      原生按钮自动处理所有键盘交互，无需额外代码。
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>5. 常见误区</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>误区</th>
+          <th>正确理解</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>❌ Tab 键触发点击</td>
+          <td>✅ Tab 键只移动焦点，Enter/Space 触发点击</td>
+        </tr>
+        <tr>
+          <td>❌ 所有元素都响应 Enter 和 Space</td>
+          <td>✅ 不同元素响应不同按键（见上表）</td>
+        </tr>
+        <tr>
+          <td>❌ 添加 tabindex="0" 就能用键盘操作</td>
+          <td>✅ 还需要监听 keydown 事件处理 Enter/Space</td>
+        </tr>
+        <tr>
+          <td>❌ 链接响应 Space 键</td>
+          <td>✅ 链接只响应 Enter 键</td>
+        </tr>
+        <tr>
+          <td>❌ 复选框响应 Enter 键</td>
+          <td>✅ 复选框只响应 Space 键</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>6. 无障碍最佳实践</h2>
+
+    <ul>
+      <li><strong>使用语义化 HTML：</strong>
+        <code>&lt;button&gt;</code> 自动支持 Enter 和 Space，无需额外代码
+      </li>
+      <li><strong>自定义元素必须处理键盘：</strong>
+        监听 <code>keydown</code> 事件，响应 Enter 和 Space
+      </li>
+      <li><strong>不要只监听 click：</strong>
+        click 事件不会被键盘触发（除非是原生按钮）
+      </li>
+      <li><strong>测试键盘访问性：</strong>
+        实际用键盘测试，确保所有功能都可以通过键盘操作
+      </li>
+      <li><strong>Space 键要 preventDefault：</strong>
+        防止 Space 键滚动页面
+      </li>
+    </ul>
+
+    <pre><code>// 完整的自定义按钮示例
+const customButton = document.querySelector('.custom-button');
+
+// 处理鼠标点击
+customButton.addEventListener('click', activate);
+
+// 处理键盘激活
+customButton.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault(); // 防止 Space 滚动页面
+    activate();
+  }
+});
+
+function activate() {
+  console.log('按钮被激活');
+  // 执行按钮的功能
+}</code></pre>
+  </div>
+
+  <div class="section">
+    <h2>7. 总结</h2>
+
+    <div class="info">
+      <strong>关键要点：</strong>
+      <ul style="margin: 8px 0;">
+        <li><kbd>Tab</kbd> 键的作用是<strong>移动焦点</strong>，不触发任何操作</li>
+        <li><kbd>Enter</kbd> 和 <kbd>Space</kbd> 键用于<strong>激活元素</strong>（触发点击、提交等）</li>
+        <li>不同元素响应不同的激活键（按钮响应 Enter+Space，链接只响应 Enter，复选框只响应 Space）</li>
+        <li>自定义元素必须手动监听 <code>keydown</code> 事件处理键盘激活</li>
+        <li>优先使用语义化 HTML（<code>&lt;button&gt;</code>），避免自己实现键盘交互</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    const eventLog = document.getElementById('event-log');
+    let logEntries = [];
+
+    // 监听所有测试元素的事件
+    const testElements = [
+      'test-btn-1', 'test-btn-2', 'test-btn-3',
+      'test-link', 'test-checkbox', 'test-select', 'test-custom'
+    ];
+
+    testElements.forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+
+      // 监听焦点事件
+      el.addEventListener('focus', function() {
+        addLog('focus', `${id} 获得焦点`);
+      });
+
+      // 监听键盘事件
+      el.addEventListener('keydown', function(e) {
+        addLog('keydown', `${id} 按下 ${e.key} 键`);
+      });
+    });
+
+    // 自定义按钮需要手动处理键盘事件
+    const customButton = document.getElementById('test-custom');
+    customButton.addEventListener('click', function() {
+      logClick('自定义按钮');
+    });
+    customButton.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        logClick('自定义按钮（通过键盘激活）');
+      }
+    });
+
+    function logClick(elementName) {
+      addLog('click', `${elementName} 被点击/激活`);
+    }
+
+    function addLog(type, message) {
+      const timestamp = new Date().toLocaleTimeString();
+      const entry = {
+        type: type,
+        message: message,
+        time: timestamp
+      };
+      logEntries.push(entry);
+
+      // 只保留最近 20 条
+      if (logEntries.length > 20) {
+        logEntries.shift();
+      }
+
+      updateLog();
+    }
+
+    function updateLog() {
+      const html = logEntries.map(entry => {
+        let className = 'log-entry';
+        if (entry.type === 'focus') className += ' log-focus';
+        if (entry.type === 'click') className += ' log-click';
+        if (entry.type === 'keydown') className += ' log-keydown';
+
+        return `<div class="${className}">[${entry.time}] ${entry.type}: ${entry.message}</div>`;
+      }).join('');
+
+      eventLog.innerHTML = html || '<div class="log-entry">等待事件...</div>';
+      eventLog.scrollTop = eventLog.scrollHeight;
+    }
+
+    function clearLog() {
+      logEntries = [];
+      updateLog();
+    }
+  </script>
+</body>
+</html>

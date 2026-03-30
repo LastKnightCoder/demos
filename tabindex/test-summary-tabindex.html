@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>测试 summary 的 tabIndex 值</title>
+  <style>
+    body { font-family: sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; line-height: 1.6; }
+    .test-area { margin: 20px 0; padding: 16px; background: #f8f9fa; border-radius: 6px; }
+    button { padding: 8px 16px; margin: 8px 4px; }
+    pre { background: #1e1e1e; color: #d4d4d4; padding: 12px; border-radius: 4px; font-size: 0.9rem; }
+    .result { margin-top: 12px; padding: 12px; background: #e8f0fe; border-radius: 4px; }
+    details { margin: 12px 0; }
+    summary { cursor: pointer; padding: 8px; background: #f5f5f5; border-radius: 4px; }
+    [contenteditable] { border: 2px dashed #aaa; padding: 8px; border-radius: 4px; min-height: 40px; }
+  </style>
+</head>
+<body>
+  <h1>测试 summary 和 contenteditable 的 tabIndex 值</h1>
+
+  <div class="test-area">
+    <h3>测试元素：</h3>
+
+    <button id="test-button">普通按钮</button>
+
+    <details>
+      <summary id="test-summary">折叠面板 summary</summary>
+      <p>内容</p>
+    </details>
+
+    <div id="test-contenteditable" contenteditable="true">可编辑区域</div>
+
+    <div id="test-div">普通 div</div>
+  </div>
+
+  <button onclick="testTabIndex()">点击测试 tabIndex 值</button>
+
+  <div class="result" id="result"></div>
+
+  <h3>浏览器信息：</h3>
+  <pre id="browser-info"></pre>
+
+  <script>
+    // 显示浏览器信息
+    document.getElementById('browser-info').textContent = navigator.userAgent;
+
+    function testTabIndex() {
+      const button = document.getElementById('test-button');
+      const summary = document.getElementById('test-summary');
+      const contenteditable = document.getElementById('test-contenteditable');
+      const div = document.getElementById('test-div');
+
+      let result = '=== tabIndex 测试结果 ===\n\n';
+
+      result += `button.tabIndex = ${button.tabIndex}\n`;
+      result += `button.hasAttribute('tabindex') = ${button.hasAttribute('tabindex')}\n\n`;
+
+      result += `summary.tabIndex = ${summary.tabIndex}\n`;
+      result += `summary.hasAttribute('tabindex') = ${summary.hasAttribute('tabindex')}\n\n`;
+
+      result += `contenteditable.tabIndex = ${contenteditable.tabIndex}\n`;
+      result += `contenteditable.hasAttribute('tabindex') = ${contenteditable.hasAttribute('tabindex')}\n\n`;
+
+      result += `div.tabIndex = ${div.tabIndex}\n`;
+      result += `div.hasAttribute('tabindex') = ${div.hasAttribute('tabindex')}\n\n`;
+
+      // 测试是否可以被 Tab 聚焦
+      result += '=== 可聚焦性测试 ===\n\n';
+      result += '请按 Tab 键测试哪些元素可以被聚焦\n';
+
+      document.getElementById('result').innerHTML = '<pre>' + result + '</pre>';
+    }
+
+    // 自动运行测试
+    window.addEventListener('load', testTabIndex);
+  </script>
+</body>
+</html>

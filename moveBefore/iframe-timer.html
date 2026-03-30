@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body {
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      font-family: system-ui, sans-serif;
+      background: #f0fdf4;
+    }
+    .counter {
+      text-align: center;
+    }
+    .count {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #16a34a;
+      line-height: 1;
+    }
+    .label {
+      font-size: 0.75rem;
+      color: #6b7280;
+      margin-top: 0.25rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="counter">
+    <div class="count" id="count">0</div>
+    <div class="label">秒（页面加载后计时）</div>
+  </div>
+  <script>
+    let n = 0
+    setInterval(() => {
+      document.getElementById('count').textContent = ++n
+    }, 1000)
+  </script>
+</body>
+</html>

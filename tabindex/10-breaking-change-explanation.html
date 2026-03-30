@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>10 - 为什么改成 tabIndex=0 会破坏现有代码？</title>
+  <style>
+    body { font-family: sans-serif; max-width: 900px; margin: 40px auto; padding: 0 20px; line-height: 1.6; }
+    h1 { font-size: 1.4rem; }
+    .section { margin: 24px 0; padding: 16px; border: 1px solid #ddd; border-radius: 6px; }
+    .section h2 { margin: 0 0 12px; font-size: 1rem; }
+    .info { background: #e8f0fe; border: 1px solid #0066cc; padding: 12px 16px;
+      border-radius: 6px; margin: 16px 0; font-size: 0.9rem; }
+    .warning { background: #fff3cd; border: 1px solid #ffc107; padding: 12px 16px;
+      border-radius: 6px; margin: 16px 0; font-size: 0.9rem; }
+    .danger { background: #f8d7da; border: 1px solid #dc3545; padding: 12px 16px;
+      border-radius: 6px; margin: 16px 0; font-size: 0.9rem; }
+    code { background: #f5f5f5; padding: 2px 6px; border-radius: 3px; font-size: 0.85em; }
+    pre { background: #1e1e1e; color: #d4d4d4; padding: 12px; border-radius: 4px;
+      overflow-x: auto; font-size: 0.85rem; line-height: 1.5; }
+    .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+    .compare-box { padding: 16px; border-radius: 6px; }
+    .good { background: #d4edda; border: 2px solid #28a745; }
+    .bad { background: #f8d7da; border: 2px solid #dc3545; }
+    .compare-box h3 { margin: 0 0 12px; font-size: 0.95rem; }
+    .timeline { margin: 16px 0; padding: 16px; background: #f8f9fa; border-left: 4px solid #0066cc; }
+    .timeline-item { margin: 12px 0; padding-left: 20px; position: relative; }
+    .timeline-item::before {
+      content: '●'; position: absolute; left: -2px; color: #0066cc;
+      font-size: 1.2rem; line-height: 1;
+    }
+    .code-result { margin-top: 8px; padding: 8px; background: #f8f9fa; border-left: 3px solid #28a745;
+      font-family: monospace; font-size: 0.85rem; }
+    .code-result.error { border-left-color: #dc3545; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.9rem; }
+    th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+    th { background: #f5f5f5; font-weight: 600; }
+    .highlight { background: #fff3cd; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <h1>为什么改成 tabIndex=0 会破坏现有代码？</h1>
+
+  <div class="info">
+    <strong>核心问题：</strong>如果浏览器把 <code>&lt;summary&gt;</code> 和 <code>contenteditable</code>
+    的默认 <code>tabIndex</code> 从 -1 改成 0，会导致大量现有网站的 JavaScript 代码出现 bug。
+  </div>
+
+  <div class="section">
+    <h2>1. 时间线：理解问题的背景</h2>
+
+    <div class="timeline">
+      <div class="timeline-item">
+        <strong>1990 年代末 - 2000 年代初</strong><br>
+        开发者开始使用 <code>tabIndex</code> 属性，形成了一个约定：<br>
+        <code>tabIndex === 0</code> 表示"标准的表单控件"（button, input, select 等）
+      </div>
+      <div class="timeline-item">
+        <strong>2000 年代中期</strong><br>
+        大量网站写了依赖 <code>tabIndex === 0</code> 判断的代码，用于：<br>
+        - 焦点管理（模态框、菜单）<br>
+        - 表单验证<br>
+        - 键盘导航增强<br>
+        - 无障碍功能
+      </div>
+      <div class="timeline-item">
+        <strong>2014 年左右</strong><br>
+        HTML5 引入 <code>&lt;details&gt;</code> 和 <code>&lt;summary&gt;</code> 元素<br>
+        <strong>问题：</strong>如果设置 <code>summary.tabIndex = 0</code>，会破坏现有代码的判断逻辑
+      </div>
+      <div class="timeline-item">
+        <strong>最终决定</strong><br>
+        浏览器厂商决定：<code>summary.tabIndex = -1</code>，但仍可被 Tab 聚焦<br>
+        这样既保持了向后兼容，又实现了新功能
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>2. 真实场景：会被破坏的代码示例</h2>
+
+    <h3 style="font-size:0.95rem; margin-top:16px;">场景 1：模态框焦点管理</h3>
+    <p>这是一个非常常见的代码模式，用于在模态框打开时禁用背景内容：</p>
+
+    <pre><code>// 2010 年写的代码，当时还没有 &lt;summary&gt; 元素
+function openModal() {
+  // 找到所有"标准可聚焦元素"并禁用它们
+  const focusableElements = document.querySelectorAll('*');
+
+  focusableElements.forEach(el => {
+    // 判断逻辑：tabIndex === 0 表示这是一个标准的可聚焦元素
+    if (el.tabIndex === 0) {
+      el.dataset.originalTabindex = '0';
+      el.setAttribute('tabindex', '-1'); // 临时禁用
+    }
+  });
+
+  showModal();
+}
+
+function closeModal() {
+  // 恢复所有被禁用的元素
+  const disabledElements = document.querySelectorAll('[data-original-tabindex]');
+  disabledElements.forEach(el => {
+    el.setAttribute('tabindex', el.dataset.originalTabindex);
+    delete el.dataset.originalTabindex;
+  });
+}</code></pre>
+
+    <div class="compare">
+      <div class="compare-box good">
+        <h3>✅ 当前行为（summary.tabIndex = -1）</h3>
+        <div class="code-result">
+          打开模态框：<br>
+          - button.tabIndex = 0 → 被禁用 ✓<br>
+          - input.tabIndex = 0 → 被禁用 ✓<br>
+          - summary.tabIndex = -1 → <strong>不受影响</strong> ✓<br>
+          <br>
+          结果：代码正常工作，summary 不会被误禁用
+        </div>
+      </div>
+
+      <div class="compare-box bad">
+        <h3>❌ 如果改成 summary.tabIndex = 0</h3>
+        <div class="code-result error">
+          打开模态框：<br>
+          - button.tabIndex = 0 → 被禁用 ✓<br>
+          - input.tabIndex = 0 → 被禁用 ✓<br>
+          - summary.tabIndex = 0 → <strong>被误禁用</strong> ✗<br>
+          <br>
+          结果：summary 被错误地禁用了！<br>
+          关闭模态框后，summary 的 tabindex 被错误地设置为 "0"
+        </div>
+      </div>
+    </div>
+
+    <h3 style="font-size:0.95rem; margin-top:24px;">场景 2：表单验证</h3>
+    <p>很多表单库会检查所有 <code>tabIndex === 0</code> 的元素，认为它们是表单控件：</p>
+
+    <pre><code>// 表单验证库的代码（2012 年写的）
+function validateForm(formElement) {
+  const formControls = [];
+
+  // 遍历表单内的所有元素
+  formElement.querySelectorAll('*').forEach(el => {
+    // 判断：tabIndex === 0 表示这是一个表单控件
+    if (el.tabIndex === 0) {
+      formControls.push(el);
+    }
+  });
+
+  // 验证每个表单控件
+  formControls.forEach(control => {
+    if (control.hasAttribute('required') && !control.value) {
+      showError(control, '此字段为必填项');
+    }
+  });
+}</code></pre>
+
+    <div class="compare">
+      <div class="compare-box good">
+        <h3>✅ 当前行为（summary.tabIndex = -1）</h3>
+        <div class="code-result">
+          表单内的元素：<br>
+          - input (tabIndex=0) → 被验证 ✓<br>
+          - select (tabIndex=0) → 被验证 ✓<br>
+          - summary (tabIndex=-1) → <strong>被忽略</strong> ✓<br>
+          <br>
+          结果：只验证真正的表单控件
+        </div>
+      </div>
+
+      <div class="compare-box bad">
+        <h3>❌ 如果改成 summary.tabIndex = 0</h3>
+        <div class="code-result error">
+          表单内的元素：<br>
+          - input (tabIndex=0) → 被验证 ✓<br>
+          - select (tabIndex=0) → 被验证 ✓<br>
+          - summary (tabIndex=0) → <strong>被误判为表单控件</strong> ✗<br>
+          <br>
+          结果：代码尝试读取 summary.value（不存在）<br>
+          可能导致 JavaScript 错误或错误的验证结果
+        </div>
+      </div>
+    </div>
+
+    <h3 style="font-size:0.95rem; margin-top:24px;">场景 3：自定义键盘导航</h3>
+    <p>一些网站实现了自定义的键盘导航，只处理"标准控件"：</p>
+
+    <pre><code>// 自定义键盘导航（2011 年写的）
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+    // 找到所有"标准可聚焦元素"
+    const focusableElements = Array.from(document.querySelectorAll('*'))
+      .filter(el => el.tabIndex === 0);
+
+    const currentIndex = focusableElements.indexOf(document.activeElement);
+
+    if (e.key === 'ArrowDown') {
+      const nextElement = focusableElements[currentIndex + 1];
+      if (nextElement) nextElement.focus();
+    } else {
+      const prevElement = focusableElements[currentIndex - 1];
+      if (prevElement) prevElement.focus();
+    }
+  }
+});</code></pre>
+
+    <div class="compare">
+      <div class="compare-box good">
+        <h3>✅ 当前行为（summary.tabIndex = -1）</h3>
+        <div class="code-result">
+          方向键导航的元素：<br>
+          - button, input, select 等标准控件<br>
+          - summary <strong>不在导航列表中</strong> ✓<br>
+          <br>
+          结果：只在标准控件之间导航，符合预期
+        </div>
+      </div>
+
+      <div class="compare-box bad">
+        <h3>❌ 如果改成 summary.tabIndex = 0</h3>
+        <div class="code-result error">
+          方向键导航的元素：<br>
+          - button, input, select 等标准控件<br>
+          - summary <strong>也被包含在内</strong> ✗<br>
+          <br>
+          结果：方向键会意外地聚焦到 summary，<br>
+          破坏了原本的导航逻辑
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>3. 影响范围：有多少网站会受影响？</h2>
+
+    <div class="warning">
+      <strong>保守估计：</strong>
+      <ul style="margin: 8px 0;">
+        <li>全球有数百万个网站使用了类似的 <code>tabIndex === 0</code> 判断逻辑</li>
+        <li>这些代码大多写于 2000-2014 年间，当时 <code>&lt;summary&gt;</code> 还不存在</li>
+        <li>如果浏览器突然改变 <code>summary.tabIndex</code> 的值，这些网站会立即出现 bug</li>
+        <li>修复这些 bug 需要更新数百万个网站的代码，几乎不可能</li>
+      </ul>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>代码类型</th>
+          <th>使用场景</th>
+          <th>受影响程度</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>模态框/对话框库</td>
+          <td>Bootstrap, jQuery UI, 自定义实现</td>
+          <td class="highlight">高</td>
+        </tr>
+        <tr>
+          <td>表单验证库</td>
+          <td>jQuery Validate, Parsley.js 等</td>
+          <td class="highlight">高</td>
+        </tr>
+        <tr>
+          <td>无障碍增强脚本</td>
+          <td>焦点管理、键盘导航</td>
+          <td class="highlight">高</td>
+        </tr>
+        <tr>
+          <td>自定义组件库</td>
+          <td>下拉菜单、标签页、手风琴</td>
+          <td class="highlight">中</td>
+        </tr>
+        <tr>
+          <td>测试工具</td>
+          <td>查找可聚焦元素进行自动化测试</td>
+          <td class="highlight">中</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>4. 浏览器的解决方案：特殊处理</h2>
+
+    <p>浏览器厂商采用了一个巧妙的解决方案：</p>
+
+    <div class="info">
+      <strong>双轨制：</strong>
+      <ul style="margin: 8px 0;">
+        <li><strong>JavaScript 层面：</strong><code>element.tabIndex</code> 返回 -1（保持向后兼容）</li>
+        <li><strong>浏览器内部：</strong>仍然将这些元素视为可聚焦，Tab 键可以到达</li>
+      </ul>
+      这样既不破坏现有代码，又实现了新功能。
+    </div>
+
+    <pre><code>// 现有代码的判断逻辑不会被破坏
+const summary = document.querySelector('summary');
+
+console.log(summary.tabIndex);  // -1（保持兼容）
+
+// 但浏览器内部仍然让它可以被 Tab 聚焦
+// 按 Tab 键可以到达 summary 元素
+
+// 现有代码的判断逻辑：
+if (summary.tabIndex === 0) {
+  // 这个分支不会执行，所以不会误判 summary 为标准控件
+  console.log('这是一个标准控件');
+}</code></pre>
+  </div>
+
+  <div class="section">
+    <h2>5. 实际测试：验证兼容性问题</h2>
+
+    <p>下面是一个模拟的"旧代码"，演示如果改成 tabIndex=0 会发生什么：</p>
+
+    <div style="margin: 16px 0; padding: 16px; background: #f8f9fa; border-radius: 6px;">
+      <h4 style="margin: 0 0 12px; font-size: 0.9rem;">测试区域：</h4>
+      <button id="test-btn">按钮</button>
+      <input type="text" id="test-input" placeholder="输入框">
+      <details>
+        <summary id="test-summary">折叠面板</summary>
+        <p>内容</p>
+      </details>
+      <div id="test-div" tabindex="0" style="display:inline-block; padding:8px; border:1px solid #ccc;">
+        自定义元素 (tabindex="0")
+      </div>
+    </div>
+
+    <button onclick="testCurrentBehavior()" style="padding:8px 16px; margin:8px 4px;">
+      测试当前行为（summary.tabIndex = -1）
+    </button>
+    <button onclick="testIfChangedBehavior()" style="padding:8px 16px; margin:8px 4px;">
+      模拟改成 tabIndex = 0 的情况
+    </button>
+
+    <pre id="test-result" style="min-height: 100px; margin-top: 12px;">点击上面的按钮查看测试结果...</pre>
+  </div>
+
+  <div class="section">
+    <h2>6. 总结：为什么不能改？</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>原因</th>
+          <th>详细说明</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>向后兼容性</strong></td>
+          <td>数百万网站依赖 <code>tabIndex === 0</code> 判断标准控件，改变会导致大规模 bug</td>
+        </tr>
+        <tr>
+          <td><strong>约定俗成</strong></td>
+          <td>开发者社区已经形成共识：<code>tabIndex === 0</code> = 标准控件</td>
+        </tr>
+        <tr>
+          <td><strong>修复成本</strong></td>
+          <td>修复所有受影响的网站几乎不可能，很多网站已经无人维护</td>
+        </tr>
+        <tr>
+          <td><strong>语义价值</strong></td>
+          <td><code>tabIndex = -1</code> 提供了语义信息：这是一个特殊元素</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="danger" style="margin-top: 16px;">
+      <strong>结论：</strong>改变 <code>summary.tabIndex</code> 的默认值会破坏 Web 的向后兼容性，
+      这是浏览器厂商绝对不能做的事情。保持 <code>tabIndex = -1</code> 是唯一合理的选择。
+    </div>
+  </div>
+
+  <script>
+    function testCurrentBehavior() {
+      const result = document.getElementById('test-result');
+      const btn = document.getElementById('test-btn');
+      const input = document.getElementById('test-input');
+      const summary = document.getElementById('test-summary');
+      const div = document.getElementById('test-div');
+
+      let output = '=== 当前行为测试（summary.tabIndex = -1）===\n\n';
+      output += '模拟"旧代码"的判断逻辑：\n';
+      output += 'if (element.tabIndex === 0) { /* 这是标准控件 */ }\n\n';
+
+      const elements = [
+        { name: 'button', el: btn },
+        { name: 'input', el: input },
+        { name: 'summary', el: summary },
+        { name: 'div[tabindex="0"]', el: div }
+      ];
+
+      elements.forEach(({ name, el }) => {
+        const tabIndex = el.tabIndex;
+        const isStandard = tabIndex === 0;
+        output += `${name}.tabIndex = ${tabIndex}\n`;
+        output += `  → 被判断为标准控件？${isStandard ? '是 ✓' : '否 ✓'}\n`;
+      });
+
+      output += '\n结果：✅ 只有真正的标准控件被识别\n';
+      output += 'summary 不会被误判，代码正常工作！';
+
+      result.textContent = output;
+    }
+
+    function testIfChangedBehavior() {
+      const result = document.getElementById('test-result');
+      const btn = document.getElementById('test-btn');
+      const input = document.getElementById('test-input');
+      const summary = document.getElementById('test-summary');
+      const div = document.getElementById('test-div');
+
+      let output = '=== 模拟改成 tabIndex = 0 的情况 ===\n\n';
+      output += '假设浏览器把 summary.tabIndex 改成了 0...\n\n';
+      output += '模拟"旧代码"的判断逻辑：\n';
+      output += 'if (element.tabIndex === 0) { /* 这是标准控件 */ }\n\n';
+
+      const elements = [
+        { name: 'button', el: btn, realTabIndex: 0 },
+        { name: 'input', el: input, realTabIndex: 0 },
+        { name: 'summary', el: summary, realTabIndex: 0 }, // 假设改成了 0
+        { name: 'div[tabindex="0"]', el: div, realTabIndex: 0 }
+      ];
+
+      elements.forEach(({ name, el, realTabIndex }) => {
+        const isStandard = realTabIndex === 0;
+        output += `${name}.tabIndex = ${realTabIndex}\n`;
+        output += `  → 被判断为标准控件？${isStandard ? '是' : '否'}`;
+        if (name === 'summary') {
+          output += ' ✗ 错误！\n';
+        } else {
+          output += ' ✓\n';
+        }
+      });
+
+      output += '\n结果：❌ summary 被误判为标准控件！\n';
+      output += '旧代码会尝试：\n';
+      output += '- 读取 summary.value（不存在）\n';
+      output += '- 禁用 summary 的 Tab 访问（破坏功能）\n';
+      output += '- 对 summary 进行表单验证（错误）\n';
+      output += '\n这就是为什么不能改成 tabIndex = 0！';
+
+      result.textContent = output;
+    }
+  </script>
+</body>
+</html>
