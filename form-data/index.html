@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Form Encoding 演示</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #f5f5f5;
+      color: #222;
+      padding: 2rem;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 0.5rem;
+      font-size: 1.6rem;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #666;
+      margin-bottom: 2rem;
+      font-size: 0.95rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    @media (max-width: 700px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1.5rem;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    @media (max-width: 900px) {
+      .grid-3 { grid-template-columns: 1fr; }
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      gap: 1.5rem;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    @media (max-width: 1100px) {
+      .grid-4 { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 600px) {
+      .grid-4 { grid-template-columns: 1fr; }
+    }
+
+    .warn-box {
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      border-radius: 8px;
+      padding: 0.8rem;
+      font-family: monospace;
+      font-size: 0.78rem;
+      white-space: pre-wrap;
+      word-break: break-all;
+      color: #9a3412;
+      min-height: 60px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 10px;
+      padding: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .card h2 {
+      font-size: 1rem;
+      margin-bottom: 0.3rem;
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 0.72rem;
+      padding: 2px 8px;
+      border-radius: 20px;
+      margin-bottom: 1rem;
+      font-family: monospace;
+    }
+
+    .badge-url { background: #dbeafe; color: #1d4ed8; }
+    .badge-multi { background: #dcfce7; color: #15803d; }
+    .badge-warn { background: #fee2e2; color: #b91c1c; }
+    .badge-get  { background: #f3e8ff; color: #7e22ce; }
+    .badge-fetch { background: #fef9c3; color: #854d0e; }
+
+    .section-title {
+      max-width: 1400px;
+      margin: 2rem auto 1rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    @media (max-width: 700px) {
+      .grid-2 { grid-template-columns: 1fr; }
+    }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 0.3rem;
+      margin-top: 0.8rem;
+      color: #444;
+    }
+
+    input[type="text"],
+    input[type="password"],
+    input[type="email"],
+    textarea {
+      width: 100%;
+      padding: 0.5rem 0.7rem;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input:focus, textarea:focus {
+      border-color: #6366f1;
+    }
+
+    textarea { resize: vertical; min-height: 70px; }
+
+    input[type="file"] {
+      font-size: 0.85rem;
+      margin-top: 0.2rem;
+    }
+
+    button[type="submit"] {
+      margin-top: 1.2rem;
+      width: 100%;
+      padding: 0.6rem;
+      background: #6366f1;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    button[type="submit"]:hover { background: #4f46e5; }
+
+    .result-box {
+      margin-top: 1rem;
+      background: #1e1e2e;
+      color: #cdd6f4;
+      border-radius: 8px;
+      padding: 1rem;
+      font-family: monospace;
+      font-size: 0.82rem;
+      min-height: 80px;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .result-label {
+      font-size: 0.78rem;
+      color: #888;
+      margin-top: 1rem;
+      margin-bottom: 0.3rem;
+    }
+
+    .raw-box {
+      background: #fafafa;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 0.8rem;
+      font-family: monospace;
+      font-size: 0.78rem;
+      white-space: pre-wrap;
+      word-break: break-all;
+      color: #374151;
+      min-height: 60px;
+    }
+
+    .diff-section {
+      max-width: 1100px;
+      margin: 2rem auto 0;
+    }
+
+    .diff-section h2 {
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      font-size: 0.88rem;
+    }
+
+    th {
+      background: #6366f1;
+      color: #fff;
+      padding: 0.7rem 1rem;
+      text-align: left;
+    }
+
+    td {
+      padding: 0.65rem 1rem;
+      border-bottom: 1px solid #f3f4f6;
+      vertical-align: top;
+    }
+
+    tr:last-child td { border-bottom: none; }
+    tr:nth-child(even) td { background: #f9fafb; }
+
+    .yes { color: #16a34a; font-weight: 600; }
+    .no  { color: #dc2626; font-weight: 600; }
+
+    .tip {
+      max-width: 1100px;
+      margin: 1.5rem auto 0;
+      background: #fffbeb;
+      border-left: 4px solid #f59e0b;
+      padding: 0.8rem 1rem;
+      border-radius: 0 8px 8px 0;
+      font-size: 0.88rem;
+      color: #78350f;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Form Encoding 演示</h1>
+<p class="subtitle">对比 <code>application/x-www-form-urlencoded</code> 与 <code>multipart/form-data</code></p>
+
+<div class="grid-4">
+
+  <!-- ===== urlencoded ===== -->
+  <div class="card">
+    <h2>表单一：纯文本提交</h2>
+    <span class="badge badge-url">application/x-www-form-urlencoded</span>
+
+    <form id="form-urlencoded">
+      <label>用户名</label>
+      <input type="text" name="username" value="张三" />
+
+      <label>密码</label>
+      <input type="password" name="password" value="abc&123" />
+
+      <label>备注（含特殊字符）</label>
+      <textarea name="note">hello world & 你好 = 世界</textarea>
+
+      <button type="submit">提交（urlencoded）</button>
+    </form>
+
+    <p class="result-label">实际发送的 Request Body（原始）：</p>
+    <div class="raw-box" id="raw-urlencoded">等待提交...</div>
+
+    <p class="result-label">服务端解析结果：</p>
+    <div class="result-box" id="result-urlencoded">等待提交...</div>
+  </div>
+
+  <!-- ===== multipart ===== -->
+  <div class="card">
+    <h2>表单二：文件 + 文本提交</h2>
+    <span class="badge badge-multi">multipart/form-data</span>
+
+    <form id="form-multipart">
+      <label>用户名</label>
+      <input type="text" name="username" value="李四" />
+
+      <label>个人简介</label>
+      <textarea name="bio">前端开发者，喜欢 & 热爱编程</textarea>
+
+      <label>上传头像（选择一张图片）</label>
+      <input type="file" name="avatar" accept="image/*" />
+
+      <label>上传附件（任意文件）</label>
+      <input type="file" name="attachment" />
+
+      <button type="submit">提交（multipart）</button>
+    </form>
+
+    <p class="result-label">Content-Type Header（含 boundary）：</p>
+    <div class="raw-box" id="raw-multipart">等待提交...</div>
+
+    <p class="result-label">服务端解析结果：</p>
+    <div class="result-box" id="result-multipart">等待提交...</div>
+  </div>
+
+  <!-- ===== 错误示范：有文件但用 urlencoded ===== -->
+  <div class="card">
+    <h2>表单三：⚠ 错误示范</h2>
+    <span class="badge badge-warn">有文件 + urlencoded（静默失败）</span>
+
+    <form id="form-wrong">
+      <label>用户名</label>
+      <input type="text" name="username" value="王五" />
+
+      <label>上传文件（选任意文件）</label>
+      <input type="file" name="file" />
+
+      <button type="submit">提交（urlencoded + 文件）</button>
+    </form>
+
+    <p class="result-label">实际发送的 Request Body：</p>
+    <div class="warn-box" id="raw-wrong">等待提交...</div>
+
+    <p class="result-label">服务端收到的内容（文件数据丢失）：</p>
+    <div class="result-box" id="result-wrong">等待提交...</div>
+  </div>
+  <!-- ===== 错误示范：GET + 文件 ===== -->
+  <div class="card">
+    <h2>表单四：⚠ 错误示范</h2>
+    <span class="badge badge-get">GET + 文件（enctype 完全失效）</span>
+
+    <form id="form-get">
+      <label>用户名</label>
+      <input type="text" name="username" value="赵六" />
+
+      <label>上传文件（选任意文件）</label>
+      <input type="file" name="file" />
+
+      <button type="submit">提交（GET + 文件）</button>
+    </form>
+
+    <p class="result-label">实际发送的 URL（文件数据去哪了？）：</p>
+    <div class="warn-box" id="raw-get">等待提交...</div>
+
+    <p class="result-label">服务端收到的内容：</p>
+    <div class="result-box" id="result-get">等待提交...</div>
+  </div>
+
+</div>
+
+<!-- 对比表 -->
+<div class="diff-section">
+  <h2>两种编码方式对比</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>对比维度</th>
+        <th>application/x-www-form-urlencoded</th>
+        <th>multipart/form-data</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>HTML 默认</td>
+        <td class="yes">✓ 是</td>
+        <td class="no">✗ 需指定 enctype</td>
+      </tr>
+      <tr>
+        <td>文件上传</td>
+        <td class="no">✗ 不支持</td>
+        <td class="yes">✓ 支持</td>
+      </tr>
+      <tr>
+        <td>二进制数据</td>
+        <td class="no">✗ 不支持</td>
+        <td class="yes">✓ 原样传输</td>
+      </tr>
+      <tr>
+        <td>中文/特殊字符</td>
+        <td>percent-encoding，体积膨胀</td>
+        <td>原样传输，无膨胀</td>
+      </tr>
+      <tr>
+        <td>请求体格式</td>
+        <td><code>k=v&k=v</code> 单一字符串</td>
+        <td>多段结构，boundary 分隔</td>
+      </tr>
+      <tr>
+        <td>服务端解析</td>
+        <td>简单，内置支持</td>
+        <td>需要 multipart 解析库</td>
+      </tr>
+      <tr>
+        <td>适用场景</td>
+        <td>登录、搜索、简单表单</td>
+        <td>文件上传、富表单</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="tip">
+  <strong>提示：</strong>需先启动服务端 <code>node server.js</code>，然后访问 <code>http://localhost:3000</code> 才能看到服务端解析结果。
+  直接打开 HTML 文件时，提交会失败，但仍可在"实际发送的 Request Body"中看到编码后的原始数据。
+</div>
+
+<!-- form 不指定 enctype 时的行为验证 -->
+<p class="section-title">form 不指定 enctype 时的行为验证（含文件）</p>
+<div class="grid-2">
+
+  <!-- form 无 enctype + 无文件 -->
+  <div class="card">
+    <h2>form 无 enctype + 无文件</h2>
+    <span class="badge badge-url">默认 urlencoded</span>
+
+    <form id="form-default-nofile">
+      <label>用户名</label>
+      <input type="text" name="username" value="默认用户" />
+      <label>备注</label>
+      <input type="text" name="note" value="hello & world" />
+      <button type="submit">提交</button>
+    </form>
+
+    <p class="result-label">服务端收到的 Content-Type：</p>
+    <div class="raw-box" id="raw-default-nofile">等待提交...</div>
+    <p class="result-label">服务端解析结果：</p>
+    <div class="result-box" id="result-default-nofile">等待提交...</div>
+  </div>
+
+  <!-- form 无 enctype + 有文件 -->
+  <div class="card">
+    <h2>form 无 enctype + 有文件</h2>
+    <span class="badge badge-warn">仍是 urlencoded，文件变成 [object File]</span>
+
+    <form id="form-default-file">
+      <label>用户名</label>
+      <input type="text" name="username" value="默认用户2" />
+      <label>上传文件（选任意文件）</label>
+      <input type="file" name="file" />
+      <button type="submit">提交</button>
+    </form>
+
+    <p class="result-label">服务端收到的 Content-Type：</p>
+    <div class="raw-box" id="raw-default-file">等待提交...</div>
+    <p class="result-label">服务端解析结果（文件内容丢失）：</p>
+    <div class="result-box" id="result-default-file">等待提交...</div>
+  </div>
+
+</div>
+
+<!-- fetch 强制指定错误 Content-Type 验证 -->
+<p class="section-title">fetch + FormData 但强制指定 Content-Type: urlencoded</p>
+<div class="grid-2">
+
+  <div class="card">
+    <h2>fetch + FormData + 强制 urlencoded</h2>
+    <span class="badge badge-warn">Content-Type 与 body 格式不匹配</span>
+
+    <form id="form-fetch-mismatch">
+      <label>用户名</label>
+      <input type="text" name="username" value="测试用户" />
+      <label>上传文件</label>
+      <input type="file" name="file" />
+      <button type="submit">提交</button>
+    </form>
+
+    <p class="result-label">发送的 Content-Type（手动覆盖）：</p>
+    <div class="warn-box" id="raw-fetch-mismatch">等待提交...</div>
+    <p class="result-label">服务端解析结果：</p>
+    <div class="result-box" id="result-fetch-mismatch">等待提交...</div>
+  </div>
+
+  <div class="card" style="background:#fffbeb;">
+    <h2>原因分析</h2>
+    <span class="badge badge-warn">为什么会解析失败</span>
+    <div style="margin-top:1rem;font-size:0.88rem;line-height:1.8;color:#444;">
+      <p>fetch 发送的 body 实际上是 <strong>multipart 格式</strong>（有 boundary 分隔各字段），但 Content-Type 头被手动覆盖成了 <code>application/x-www-form-urlencoded</code>，且<strong>没有 boundary</strong>。</p>
+      <br/>
+      <p>服务端按 urlencoded 规则解析，看到的是一堆 multipart 原始字节，完全无法识别，结果是空对象或乱码。</p>
+      <br/>
+      <p>正确做法：传 FormData 时<strong>不要设置 Content-Type</strong>，让浏览器自动加上含 boundary 的 multipart 头。</p>
+    </div>
+  </div>
+
+</div>
+
+<!-- fetch Content-Type 推断验证 -->
+<p class="section-title">fetch 不指定 Content-Type 时的行为验证</p>
+<div class="grid-2">
+
+  <!-- fetch + FormData（自动 multipart） -->
+  <div class="card">
+    <h2>fetch + FormData（不设 Content-Type）</h2>
+    <span class="badge badge-fetch">自动推断为 multipart/form-data</span>
+
+    <form id="form-fetch-formdata">
+      <label>用户名</label>
+      <input type="text" name="username" value="fetch用户" />
+      <label>上传文件</label>
+      <input type="file" name="file" />
+      <button type="submit">提交</button>
+    </form>
+
+    <p class="result-label">服务端收到的 Content-Type：</p>
+    <div class="raw-box" id="raw-fetch-formdata">等待提交...</div>
+    <p class="result-label">服务端解析结果：</p>
+    <div class="result-box" id="result-fetch-formdata">等待提交...</div>
+  </div>
+
+  <!-- fetch + URLSearchParams（自动 urlencoded） -->
+  <div class="card">
+    <h2>fetch + URLSearchParams（不设 Content-Type）</h2>
+    <span class="badge badge-fetch">自动推断为 application/x-www-form-urlencoded</span>
+
+    <form id="form-fetch-urlparams">
+      <label>用户名</label>
+      <input type="text" name="username" value="fetch用户2" />
+      <label>备注</label>
+      <input type="text" name="note" value="hello & world" />
+      <button type="submit">提交</button>
+    </form>
+
+    <p class="result-label">服务端收到的 Content-Type：</p>
+    <div class="raw-box" id="raw-fetch-urlparams">等待提交...</div>
+    <p class="result-label">服务端解析结果：</p>
+    <div class="result-box" id="result-fetch-urlparams">等待提交...</div>
+  </div>
+
+</div>
+
+<script>
+  const SERVER = 'http://localhost:3000'
+
+  // ---- urlencoded ----
+  document.getElementById('form-urlencoded').addEventListener('submit', async (e) => {
+    e.preventDefault()
+    const form = e.target
+    const params = new URLSearchParams(new FormData(form))
+    const rawStr = params.toString()
+
+    document.getElementById('raw-urlencoded').textContent = rawStr
+
+    try {
+      const res = await fetch(`${SERVER}/submit-urlencoded`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: rawStr
+      })
+      const data = await res.json()
+      document.getElementById('result-urlencoded').textContent =
+        JSON.stringify(data, null, 2)
+    } catch {
+      document.getElementById('result-urlencoded').textContent =
+        '⚠ 无法连接服务器，请先运行 node server.js'
+    }
+  })
+
+  // ---- GET + 文件（enctype 完全失效）----
+  document.getElementById('form-get').addEventListener('submit', async (e) => {
+    e.preventDefault()
+    const form = e.target
+    const params = new URLSearchParams(new FormData(form))
+    const url = `${SERVER}/submit-get?${params.toString()}`
+
+    document.getElementById('raw-get').textContent =
+      '⚠ GET 请求：enctype 被忽略，数据拼到 URL，File 对象变成 "[object File]"：\n\n' + url
+
+    try {
+      const res = await fetch(url)
+      const data = await res.json()
+      document.getElementById('result-get').textContent =
+        JSON.stringify(data, null, 2)
+    } catch {
+      document.getElementById('result-get').textContent =
+        '⚠ 无法连接服务器，请先运行 node server.js'
+    }
+  })
+
+  document.getElementById('form-wrong').addEventListener('submit', async (e) => {
+    e.preventDefault()
+    const form = e.target
+    // URLSearchParams 从 FormData 构造时，File 对象被 toString() 成 "[object File]"
+    const params = new URLSearchParams(new FormData(form))
+    const rawStr = params.toString()
+
+    document.getElementById('raw-wrong').textContent =
+      '⚠ File 对象被 toString() 成 "[object File]"，二进制内容完全丢失：\n\n' + rawStr
+
+    try {
+      const res = await fetch(`${SERVER}/submit-wrong`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: rawStr
+      })
+      const data = await res.json()
+      document.getElementById('result-wrong').textContent =
+        JSON.stringify(data, null, 2)
+    } catch {
+      document.getElementById('result-wrong').textContent =
+        '⚠ 无法连接服务器，请先运行 node server.js'
+    }
+  })
+
+  // ---- fetch + FormData 但强制指定 urlencoded（Content-Type 与 body 不匹配）----
+  document.getElementById('form-fetch-mismatch').addEventListener('submit', async (e) => {
+    e.preventDefault()
+    const formData = new FormData(e.target)
+    document.getElementById('raw-fetch-mismatch').textContent =
+      'Content-Type: application/x-www-form-urlencoded\n（body 实际是 multipart 格式，但 boundary 被覆盖掉了）'
+    try {
+      const res = await fetch(`${SERVER}/submit-mismatch`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: formData  // 实际是 multipart 格式
+      })
+      const data = await res.json()
+      document.getElementById('result-fetch-mismatch').textContent =
+        JSON.stringify(data, null, 2)
+    } catch {
+      document.getElementById('result-fetch-mismatch').textContent =
+        '⚠ 无法连接服务器，请先运行 node server.js'
+    }
+  })
+
+  // ---- form 无 enctype + 无文件（默认 urlencoded）----
+  document.getElementById('form-default-nofile').addEventListener('submit', async (e) => {
+    e.preventDefault()
+    const params = new URLSearchParams(new FormData(e.target))
+    try {
+      const res = await fetch(`${SERVER}/submit-urlencoded`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: params.toString()
+      })
+      const data = await res.json()
+      document.getElementById('raw-default-nofile').textContent =
+        'Content-Type: ' + data.contentType
+      document.getElementById('result-default-nofile').textContent =
+        JSON.stringify(data, null, 2)
+    } catch {
+      document.getElementById('raw-default-nofile').textContent =
+        '⚠ 无法连接服务器，请先运行 node server.js'
+    }
+  })
+
+  // ---- form 无 enctype + 有文件（仍是 urlencoded，文件变成 [object File]）----
+  document.getElementById('form-default-file').addEventListener('submit', async (e) => {
+    e.preventDefault()
+    // 模拟浏览器原生 form 无 enctype 的行为：URLSearchParams 序列化，File → [object File]
+    const params = new URLSearchParams(new FormData(e.target))
+    const rawStr = params.toString()
+    document.getElementById('raw-default-file').textContent =
+      '浏览器不会自动切换为 multipart，仍用 urlencoded：\n\n' + rawStr
+    try {
+      const res = await fetch(`${SERVER}/submit-wrong`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: rawStr
+      })
+      const data = await res.json()
+      document.getElementById('result-default-file').textContent =
+        JSON.stringify(data, null, 2)
+    } catch {
+      document.getElementById('result-default-file').textContent =
+        '⚠ 无法连接服务器，请先运行 node server.js'
+    }
+  })
+
+  // ---- fetch + FormData（不设 Content-Type，自动 multipart）----
+  document.getElementById('form-fetch-formdata').addEventListener('submit', async (e) => {
+    e.preventDefault()
+    const formData = new FormData(e.target)
+    try {
+      const res = await fetch(`${SERVER}/submit-multipart`, {
+        method: 'POST',
+        body: formData  // 不设 Content-Type，浏览器自动推断为 multipart + boundary
+      })
+      const data = await res.json()
+      document.getElementById('raw-fetch-formdata').textContent =
+        'Content-Type: ' + data.contentType
+      document.getElementById('result-fetch-formdata').textContent =
+        JSON.stringify(data, null, 2)
+    } catch {
+      document.getElementById('raw-fetch-formdata').textContent =
+        '⚠ 无法连接服务器，请先运行 node server.js'
+    }
+  })
+
+  // ---- fetch + URLSearchParams（不设 Content-Type，自动 urlencoded）----
+  document.getElementById('form-fetch-urlparams').addEventListener('submit', async (e) => {
+    e.preventDefault()
+    const params = new URLSearchParams(new FormData(e.target))
+    try {
+      const res = await fetch(`${SERVER}/submit-urlencoded`, {
+        method: 'POST',
+        body: params  // 不设 Content-Type，浏览器自动推断为 urlencoded
+      })
+      const data = await res.json()
+      document.getElementById('raw-fetch-urlparams').textContent =
+        'Content-Type: ' + data.contentType
+      document.getElementById('result-fetch-urlparams').textContent =
+        JSON.stringify(data, null, 2)
+    } catch {
+      document.getElementById('raw-fetch-urlparams').textContent =
+        '⚠ 无法连接服务器，请先运行 node server.js'
+    }
+  })
+
+  document.getElementById('form-multipart').addEventListener('submit', async (e) => {
+    e.preventDefault()
+    const form = e.target
+    const formData = new FormData(form)
+
+    // 用一个临时 XHR 来拿到真实的 Content-Type（含 boundary）
+    // fetch 会自动设置，我们只能通过 XHR 的 open 后读取
+    // 这里用 fetch，boundary 由浏览器自动生成
+    document.getElementById('raw-multipart').textContent =
+      '（由浏览器自动生成，格式如下）\n' +
+      'Content-Type: multipart/form-data; boundary=----WebKitFormBoundaryXXXXXX\n\n' +
+      '每个字段是一个独立的 part，文件以二进制原样传输。'
+
+    try {
+      const res = await fetch(`${SERVER}/submit-multipart`, {
+        method: 'POST',
+        body: formData   // 不设置 Content-Type，让浏览器自动加 boundary
+      })
+      const data = await res.json()
+      document.getElementById('result-multipart').textContent =
+        JSON.stringify(data, null, 2)
+    } catch {
+      document.getElementById('result-multipart').textContent =
+        '⚠ 无法连接服务器，请先运行 node server.js'
+    }
+  })
+</script>
+</body>
+</html>
