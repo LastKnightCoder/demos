@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>14 - tabIndex 小数值测试</title>
+  <style>
+    body { font-family: sans-serif; max-width: 700px; margin: 40px auto; padding: 0 20px; line-height: 1.6; }
+    h1 { font-size: 1.4rem; }
+    .box {
+      display: inline-block; padding: 8px 16px; margin: 6px;
+      border: 2px solid #aaa; border-radius: 4px; background: #f5f5f5; cursor: pointer;
+    }
+    .box:focus { outline: 3px solid #0066cc; outline-offset: 2px; background: #e8f0fe; }
+    button { padding: 8px 16px; margin: 4px; }
+    button:focus { outline: 3px solid #0066cc; outline-offset: 2px; }
+    pre { background: #1e1e1e; color: #d4d4d4; padding: 12px; border-radius: 4px; font-size: 0.9rem; line-height: 1.6; }
+    .section { margin: 24px 0; padding: 16px; border: 1px solid #ddd; border-radius: 6px; }
+    .section h2 { margin: 0 0 12px; font-size: 1rem; }
+    .tip { font-size: 0.85rem; color: #888; margin: 6px 0; }
+  </style>
+</head>
+<body>
+  <h1>tabIndex 小数值测试</h1>
+
+  <div class="section">
+    <h2>1. HTML 属性设置小数（tabindex="0.5"）</h2>
+    <div class="box" tabindex="0.5" id="html-float">tabindex="0.5"</div>
+    <div class="box" tabindex="1.9" id="html-float2">tabindex="1.9"</div>
+    <div class="box" tabindex="-0.5" id="html-neg-float">tabindex="-0.5"</div>
+    <p class="tip">按 Tab 键，观察这些元素是否可以被聚焦。</p>
+  </div>
+
+  <div class="section">
+    <h2>2. JavaScript 设置小数</h2>
+    <div class="box" id="js-float1">JS: tabIndex = 0.5</div>
+    <div class="box" id="js-float2">JS: tabIndex = 1.9</div>
+    <div class="box" id="js-float3">JS: tabIndex = -0.9</div>
+    <p class="tip">这些元素通过 JS 设置 tabIndex 小数值。</p>
+  </div>
+
+  <div class="section">
+    <h2>3. 对照组（正常元素）</h2>
+    <button>普通按钮（对照）</button>
+    <div class="box" tabindex="0">tabindex="0"（对照）</div>
+    <div class="box" tabindex="-1">tabindex="-1"（对照，不可聚焦）</div>
+  </div>
+
+  <div class="section">
+    <h2>4. 读取结果</h2>
+    <button onclick="readValues()">点击读取所有元素的 tabIndex 值</button>
+    <pre id="result">点击上面的按钮查看结果...</pre>
+  </div>
+
+  <script>
+    // JS 设置小数
+    document.getElementById('js-float1').tabIndex = 0.5;
+    document.getElementById('js-float2').tabIndex = 1.9;
+    document.getElementById('js-float3').tabIndex = -0.9;
+
+    function readValues() {
+      const tests = [
+        { id: 'html-float',    label: 'HTML tabindex="0.5"' },
+        { id: 'html-float2',   label: 'HTML tabindex="1.9"' },
+        { id: 'html-neg-float',label: 'HTML tabindex="-0.5"' },
+        { id: 'js-float1',     label: 'JS tabIndex = 0.5' },
+        { id: 'js-float2',     label: 'JS tabIndex = 1.9' },
+        { id: 'js-float3',     label: 'JS tabIndex = -0.9' },
+      ];
+
+      let output = '';
+      tests.forEach(({ id, label }) => {
+        const el = document.getElementById(id);
+        const attr = el.getAttribute('tabindex');
+        const prop = el.tabIndex;
+        output += `${label}\n`;
+        output += `  getAttribute("tabindex") = ${JSON.stringify(attr)}\n`;
+        output += `  element.tabIndex         = ${prop}\n\n`;
+      });
+
+      document.getElementById('result').textContent = output;
+    }
+
+    // 自动运行
+    window.addEventListener('load', readValues);
+  </script>
+</body>
+</html>

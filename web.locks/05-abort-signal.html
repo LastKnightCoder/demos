@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>05 · AbortSignal 取消锁请求 — Web Locks API</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 32px 24px;
+    }
+
+    .page-header { max-width: 860px; margin: 0 auto 32px; }
+
+    .badge {
+      display: inline-block;
+      background: #4c1d95;
+      color: #c4b5fd;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 3px 10px;
+      border-radius: 4px;
+      margin-bottom: 12px;
+    }
+
+    h1 { font-size: 28px; font-weight: 700; color: #f1f5f9; margin-bottom: 8px; }
+    .subtitle { color: #94a3b8; font-size: 15px; line-height: 1.6; }
+
+    .container { max-width: 860px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; }
+
+    .card {
+      background: #1e2130;
+      border: 1px solid #2d3348;
+      border-radius: 12px;
+      padding: 24px;
+    }
+
+    .card-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 16px;
+    }
+
+    /* 场景卡片 */
+    .scenarios {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .scenario {
+      background: #141824;
+      border: 1px solid #2d3348;
+      border-radius: 10px;
+      padding: 20px;
+    }
+
+    .scenario-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #f1f5f9;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .scenario-desc {
+      font-size: 12px;
+      color: #64748b;
+      margin-bottom: 16px;
+      line-height: 1.6;
+    }
+
+    /* 状态机可视化 */
+    .state-machine {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .state-node {
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      border: 2px solid transparent;
+      transition: all 0.3s;
+      opacity: 0.35;
+    }
+
+    .state-node.active { opacity: 1; transform: scale(1.05); }
+
+    .state-idle { background: #1f2937; border-color: #374151; color: #9ca3af; }
+    .state-waiting { background: #422006; border-color: #92400e; color: #fbbf24; }
+    .state-held { background: #14532d; border-color: #166534; color: #4ade80; }
+    .state-aborted { background: #7f1d1d; border-color: #991b1b; color: #fca5a5; }
+    .state-done { background: #1e3a5f; border-color: #1e40af; color: #93c5fd; }
+
+    .state-arrow { color: #374151; font-size: 14px; }
+
+    /* 타이머 링 */
+    .timer-ring-wrapper {
+      display: flex;
+      justify-content: center;
+      margin: 16px 0;
+    }
+
+    .timer-ring {
+      position: relative;
+      width: 100px;
+      height: 100px;
+    }
+
+    .timer-ring svg {
+      transform: rotate(-90deg);
+    }
+
+    .timer-ring circle {
+      fill: none;
+      stroke-width: 6;
+    }
+
+    .ring-bg { stroke: #2d3348; }
+    .ring-progress { stroke: #a78bfa; stroke-linecap: round; transition: stroke-dashoffset 0.1s linear; }
+    .ring-progress.danger { stroke: #f87171; }
+    .ring-progress.success { stroke: #4ade80; }
+
+    .timer-center {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+    }
+
+    .timer-value {
+      font-size: 20px;
+      font-weight: 800;
+      font-family: monospace;
+      color: #f1f5f9;
+    }
+
+    .timer-label {
+      font-size: 9px;
+      color: #64748b;
+      text-transform: uppercase;
+    }
+
+    /* 按튼 */
+    button {
+      padding: 9px 16px;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-start { background: #4c1d95; color: #c4b5fd; width: 100%; justify-content: center; margin-bottom: 8px; }
+    .btn-start:hover { background: #5b21b6; }
+    .btn-start:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .btn-abort { background: #7f1d1d; color: #fca5a5; width: 100%; justify-content: center; margin-bottom: 8px; }
+    .btn-abort:hover { background: #991b1b; }
+    .btn-abort:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .btn-reset { background: #1f2937; color: #9ca3af; width: 100%; justify-content: center; }
+    .btn-reset:hover { background: #374151; }
+
+    /* 结果标签 */
+    .result-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-top: 8px;
+      min-height: 32px;
+    }
+
+    .result-success { background: #14532d; color: #4ade80; }
+    .result-aborted { background: #7f1d1d; color: #fca5a5; }
+    .result-timeout { background: #78350f; color: #fbbf24; }
+    .result-empty { background: #1f2937; color: #4b5563; }
+
+    /* 代码 */
+    .code-block {
+      background: #0d1117;
+      border: 1px solid #2d3348;
+      border-radius: 8px;
+      padding: 16px;
+      font-family: 'SF Mono', monospace;
+      font-size: 12px;
+      line-height: 1.8;
+      overflow-x: auto;
+    }
+
+    .kw { color: #c792ea; }
+    .fn { color: #82aaff; }
+    .str { color: #c3e88d; }
+    .cm { color: #546e7a; font-style: italic; }
+    .num { color: #f78c6c; }
+
+    /* 日志 */
+    .log-container {
+      background: #0d1117;
+      border: 1px solid #2d3348;
+      border-radius: 8px;
+      padding: 16px;
+      height: 200px;
+      overflow-y: auto;
+      font-family: 'SF Mono', monospace;
+      font-size: 12px;
+      line-height: 1.7;
+    }
+
+    .log-entry { display: flex; gap: 12px; animation: fadeIn 0.2s; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .log-time { color: #4b5563; min-width: 80px; flex-shrink: 0; }
+    .log-waiting { color: #fbbf24; }
+    .log-held { color: #4ade80; }
+    .log-abort { color: #f87171; }
+    .log-timeout { color: #fb923c; }
+    .log-info { color: #64748b; }
+
+    .tip {
+      display: flex;
+      gap: 10px;
+      padding: 12px 16px;
+      background: #1a1130;
+      border: 1px solid #4c1d95;
+      border-radius: 8px;
+      font-size: 13px;
+      color: #c4b5fd;
+      line-height: 1.6;
+    }
+
+    /* 占位锁控制 */
+    .blocker-section {
+      background: #141824;
+      border: 1px solid #2d3348;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .blocker-title {
+      font-size: 12px;
+      color: #64748b;
+      margin-bottom: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .blocker-status {
+      font-size: 13px;
+      color: #94a3b8;
+      margin-bottom: 10px;
+    }
+
+    .blocker-status.active { color: #fb923c; }
+
+    .btn-blocker-start { background: #431407; color: #fdba74; }
+    .btn-blocker-start:hover { background: #7c2d12; }
+    .btn-blocker-release { background: #14532d; color: #86efac; }
+    .btn-blocker-release:hover { background: #166534; }
+    .btn-blocker-release:disabled { opacity: 0.4; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+
+<div class="page-header">
+  <div class="badge">Demo 05</div>
+  <h1>AbortSignal：超时与取消</h1>
+  <p class="subtitle">
+    通过 <code>AbortController</code> 或 <code>AbortSignal.timeout()</code> 取消<strong>等待中</strong>的锁请求。
+    注意：只能取消等待，不能取消已持有的锁。
+  </p>
+</div>
+
+<div class="container">
+
+  <!-- 占位锁控制 -->
+  <div class="card">
+    <div class="card-title">前置条件：占用锁</div>
+    <p style="font-size:13px;color:#94a3b8;margin-bottom:12px;">
+      先让一个"占位者"持有锁，这样后续的请求才会进入等待状态，才能演示取消功能。
+    </p>
+    <div class="blocker-section">
+      <div class="blocker-title">占位锁状态</div>
+      <div class="blocker-status" id="blockerStatus">未持有</div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-blocker-start" id="btnBlockerStart" onclick="startBlocker()">
+          🔒 占用锁（手动持有）
+        </button>
+        <button class="btn-blocker-release" id="btnBlockerRelease" onclick="releaseBlocker()" disabled>
+          🔓 释放占位锁
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 两个场景 -->
+  <div class="scenarios">
+
+    <!-- 场景 1：手动取消 -->
+    <div class="scenario">
+      <div class="scenario-title">
+        🛑 场景 A：手动取消
+      </div>
+      <div class="scenario-desc">
+        请求锁后，在获得锁之前手动点击"取消"按钮，触发 AbortError。
+      </div>
+
+      <div class="state-machine" id="stateA">
+        <div class="state-node state-idle active" id="stateA-idle">空闲</div>
+        <div class="state-arrow">→</div>
+        <div class="state-node state-waiting" id="stateA-waiting">等待中</div>
+        <div class="state-arrow">→</div>
+        <div class="state-node state-aborted" id="stateA-aborted">已取消</div>
+      </div>
+
+      <button class="btn-start" id="btnStartA" onclick="startScenarioA()">
+        ▶ 请求锁（开始等待）
+      </button>
+      <button class="btn-abort" id="btnAbortA" onclick="abortA()" disabled>
+        ✕ 手动取消
+      </button>
+      <button class="btn-reset" onclick="resetA()">↺ 重置</button>
+
+      <div class="result-badge result-empty" id="resultA">等待操作...</div>
+    </div>
+
+    <!-- 场景 2：超时取消 -->
+    <div class="scenario">
+      <div class="scenario-title">
+        ⏱ 场景 B：超时自动取消
+      </div>
+      <div class="scenario-desc">
+        设置 3 秒超时。如果 3 秒内未获得锁，自动触发 TimeoutError。
+      </div>
+
+      <div class="state-machine" id="stateB">
+        <div class="state-node state-idle active" id="stateB-idle">空闲</div>
+        <div class="state-arrow">→</div>
+        <div class="state-node state-waiting" id="stateB-waiting">等待中</div>
+        <div class="state-arrow">→</div>
+        <div class="state-node state-aborted" id="stateB-timeout">超时</div>
+      </div>
+
+      <div class="timer-ring-wrapper">
+        <div class="timer-ring">
+          <svg width="100" height="100" viewBox="0 0 100 100">
+            <circle class="ring-bg" cx="50" cy="50" r="42"/>
+            <circle class="ring-progress" id="ringB" cx="50" cy="50" r="42"
+              stroke-dasharray="263.9" stroke-dashoffset="263.9"/>
+          </svg>
+          <div class="timer-center">
+            <div class="timer-value" id="timerB">3.0</div>
+            <div class="timer-label">秒</div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-start" id="btnStartB" onclick="startScenarioB()">
+        ▶ 请求锁（3s 超时）
+      </button>
+      <button class="btn-reset" onclick="resetB()">↺ 重置</button>
+
+      <div class="result-badge result-empty" id="resultB">等待操作...</div>
+    </div>
+
+  </div>
+
+  <!-- 代码展示 -->
+  <div class="card">
+    <div class="card-title">代码示例</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div>
+        <div style="font-size:11px;color:#64748b;text-transform:uppercase;margin-bottom:8px;">手动取消</div>
+        <div class="code-block">
+<span class="kw">const</span> ac = <span class="kw">new</span> <span class="fn">AbortController</span>();<br>
+<br>
+<span class="kw">try</span> {<br>
+&nbsp;&nbsp;<span class="kw">await</span> navigator.locks.<span class="fn">request</span>(<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="str">'resource'</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{ signal: ac.signal },<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">async</span> () => { <span class="cm">/* ... */</span> }<br>
+&nbsp;&nbsp;);<br>
+} <span class="kw">catch</span> (err) {<br>
+&nbsp;&nbsp;<span class="kw">if</span> (err.name === <span class="str">'AbortError'</span>) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="cm">// 被手动取消</span><br>
+&nbsp;&nbsp;}<br>
+}<br>
+<br>
+<span class="cm">// 取消等待：</span><br>
+ac.<span class="fn">abort</span>();
+        </div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:#64748b;text-transform:uppercase;margin-bottom:8px;">超时取消</div>
+        <div class="code-block">
+<span class="kw">try</span> {<br>
+&nbsp;&nbsp;<span class="kw">await</span> navigator.locks.<span class="fn">request</span>(<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="str">'resource'</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;signal: AbortSignal.<span class="fn">timeout</span>(<span class="num">3000</span>)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;},<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">async</span> () => { <span class="cm">/* ... */</span> }<br>
+&nbsp;&nbsp;);<br>
+} <span class="kw">catch</span> (err) {<br>
+&nbsp;&nbsp;<span class="kw">if</span> (err.name === <span class="str">'TimeoutError'</span>) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="cm">// 超时自动取消</span><br>
+&nbsp;&nbsp;}<br>
+}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tip">
+    <span>⚠️</span>
+    <span>
+      <strong>重要：</strong>AbortSignal 只能取消<em>等待中</em>的锁请求。
+      一旦回调开始执行（锁已持有），abort 信号不会中断正在运行的回调。
+      如果需要中断正在执行的操作，需要在回调内部自行检查 <code>signal.aborted</code>。
+    </span>
+  </div>
+
+  <!-- 日志 -->
+  <div class="card">
+    <div class="card-title">事件日志</div>
+    <div class="log-container" id="logContainer">
+      <div class="log-entry">
+        <span class="log-time">--:--:--</span>
+        <span class="log-info">先点击「占用锁」，再尝试各场景...</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // 占位锁控制
+  let blockerRelease = null;
+  let blockerActive = false;
+
+  function startBlocker() {
+    if (blockerActive) return;
+    blockerActive = true;
+
+    document.getElementById('btnBlockerStart').disabled = true;
+    document.getElementById('btnBlockerRelease').disabled = false;
+    document.getElementById('blockerStatus').textContent = '🔒 锁已被占用（等待手动释放）';
+    document.getElementById('blockerStatus').className = 'blocker-status active';
+
+    log('🔒 占位者获取锁，手动持有中...', 'held');
+
+    navigator.locks.request('abort-demo-lock', async () => {
+      await new Promise(resolve => { blockerRelease = resolve; });
+      log('🔓 占位者释放锁', 'held');
+    });
+  }
+
+  function releaseBlocker() {
+    if (blockerRelease) {
+      blockerRelease();
+      blockerRelease = null;
+    }
+    blockerActive = false;
+    document.getElementById('btnBlockerStart').disabled = false;
+    document.getElementById('btnBlockerRelease').disabled = true;
+    document.getElementById('blockerStatus').textContent = '未持有';
+    document.getElementById('blockerStatus').className = 'blocker-status';
+  }
+
+  // 场景 A：手动取消
+  let controllerA = null;
+
+  function setStateA(state) {
+    ['idle', 'waiting', 'aborted'].forEach(s => {
+      document.getElementById(`stateA-${s}`).classList.remove('active');
+    });
+    const map = { idle: 'idle', waiting: 'waiting', aborted: 'aborted', done: 'idle' };
+    const nodeId = `stateA-${map[state] || 'idle'}`;
+    document.getElementById(nodeId)?.classList.add('active');
+  }
+
+  async function startScenarioA() {
+    if (controllerA) return;
+    controllerA = new AbortController();
+
+    document.getElementById('btnStartA').disabled = true;
+    document.getElementById('btnAbortA').disabled = false;
+    document.getElementById('resultA').className = 'result-badge result-empty';
+    document.getElementById('resultA').textContent = '等待获取锁...';
+
+    setStateA('waiting');
+    log('场景A：请求锁，等待中...', 'waiting');
+
+    try {
+      await navigator.locks.request(
+        'abort-demo-lock',
+        { signal: controllerA.signal },
+        async (lock) => {
+          setStateA('done');
+          log('场景A：获得锁！（占位者已释放）', 'held');
+          document.getElementById('resultA').className = 'result-badge result-success';
+          document.getElementById('resultA').textContent = '✅ 成功获得锁';
+          await sleep(1500);
+        }
+      );
+    } catch (err) {
+      if (err.name === 'AbortError') {
+        setStateA('aborted');
+        log('场景A：AbortError — 锁请求被手动取消', 'abort');
+        document.getElementById('resultA').className = 'result-badge result-aborted';
+        document.getElementById('resultA').textContent = '🛑 AbortError：已手动取消';
+      }
+    } finally {
+      controllerA = null;
+      document.getElementById('btnStartA').disabled = false;
+      document.getElementById('btnAbortA').disabled = true;
+    }
+  }
+
+  function abortA() {
+    if (controllerA) {
+      controllerA.abort();
+      log('场景A：调用 controller.abort()', 'abort');
+    }
+  }
+
+  function resetA() {
+    if (controllerA) controllerA.abort();
+    controllerA = null;
+    setStateA('idle');
+    document.getElementById('btnStartA').disabled = false;
+    document.getElementById('btnAbortA').disabled = true;
+    document.getElementById('resultA').className = 'result-badge result-empty';
+    document.getElementById('resultA').textContent = '等待操作...';
+  }
+
+  // 场景 B：超时取消
+  let timerBInterval = null;
+  let timerBStart = null;
+  const TIMEOUT_B = 3000;
+
+  function setStateB(state) {
+    ['idle', 'waiting', 'timeout'].forEach(s => {
+      document.getElementById(`stateB-${s}`)?.classList.remove('active');
+    });
+    const map = { idle: 'idle', waiting: 'waiting', timeout: 'timeout', done: 'idle' };
+    document.getElementById(`stateB-${map[state] || 'idle'}`)?.classList.add('active');
+  }
+
+  function startTimerB() {
+    timerBStart = Date.now();
+    const ring = document.getElementById('ringB');
+    const circumference = 263.9;
+
+    timerBInterval = setInterval(() => {
+      const elapsed = Date.now() - timerBStart;
+      const remaining = Math.max(0, TIMEOUT_B - elapsed);
+      const progress = elapsed / TIMEOUT_B;
+      const offset = circumference * (1 - progress);
+
+      document.getElementById('timerB').textContent = (remaining / 1000).toFixed(1);
+      ring.style.strokeDashoffset = offset;
+
+      if (remaining < 1000) {
+        ring.className = 'ring-progress danger';
+      }
+
+      if (elapsed >= TIMEOUT_B) {
+        clearInterval(timerBInterval);
+      }
+    }, 50);
+  }
+
+  function stopTimerB(success = false) {
+    clearInterval(timerBInterval);
+    const ring = document.getElementById('ringB');
+    if (success) {
+      ring.className = 'ring-progress success';
+      ring.style.strokeDashoffset = '0';
+    }
+  }
+
+  async function startScenarioB() {
+    document.getElementById('btnStartB').disabled = true;
+    document.getElementById('resultB').className = 'result-badge result-empty';
+    document.getElementById('resultB').textContent = '等待获取锁（3s 超时）...';
+    document.getElementById('timerB').textContent = '3.0';
+    document.getElementById('ringB').className = 'ring-progress';
+    document.getElementById('ringB').style.strokeDashoffset = '263.9';
+
+    setStateB('waiting');
+    startTimerB();
+    log(`场景B：请求锁，3秒超时...`, 'waiting');
+
+    try {
+      await navigator.locks.request(
+        'abort-demo-lock',
+        { signal: AbortSignal.timeout(TIMEOUT_B) },
+        async (lock) => {
+          stopTimerB(true);
+          setStateB('done');
+          log('场景B：获得锁！（在超时前获得）', 'held');
+          document.getElementById('resultB').className = 'result-badge result-success';
+          document.getElementById('resultB').textContent = '✅ 成功获得锁（超时前）';
+          await sleep(1500);
+        }
+      );
+    } catch (err) {
+      stopTimerB(false);
+      if (err.name === 'TimeoutError' || err.name === 'AbortError') {
+        setStateB('timeout');
+        log('场景B：TimeoutError — 3秒内未获得锁，自动取消', 'timeout');
+        document.getElementById('resultB').className = 'result-badge result-timeout';
+        document.getElementById('resultB').textContent = '⏱ TimeoutError：等待超时';
+      }
+    } finally {
+      document.getElementById('btnStartB').disabled = false;
+    }
+  }
+
+  function resetB() {
+    stopTimerB();
+    setStateB('idle');
+    document.getElementById('btnStartB').disabled = false;
+    document.getElementById('resultB').className = 'result-badge result-empty';
+    document.getElementById('resultB').textContent = '等待操作...';
+    document.getElementById('timerB').textContent = '3.0';
+    document.getElementById('ringB').className = 'ring-progress';
+    document.getElementById('ringB').style.strokeDashoffset = '263.9';
+  }
+
+  function log(msg, type = 'info') {
+    const container = document.getElementById('logContainer');
+    const time = new Date().toTimeString().slice(0, 8);
+    const entry = document.createElement('div');
+    entry.className = 'log-entry';
+    entry.innerHTML = `<span class="log-time">${time}</span><span class="log-${type}">${msg}</span>`;
+    container.appendChild(entry);
+    container.scrollTop = container.scrollHeight;
+  }
+
+  function sleep(ms) {
+    return new Promise(r => setTimeout(r, ms));
+  }
+</script>
+
+</body>
+</html>

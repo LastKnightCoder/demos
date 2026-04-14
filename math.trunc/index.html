@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Math.trunc() 交互演示</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #22263a;
+      --border: #2e3350;
+      --accent: #6c8fff;
+      --accent2: #a78bfa;
+      --green: #34d399;
+      --red: #f87171;
+      --yellow: #fbbf24;
+      --text: #e2e8f0;
+      --muted: #8892b0;
+      --radius: 12px;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 32px 16px 64px;
+    }
+
+    .container { max-width: 860px; margin: 0 auto; }
+
+    /* Header */
+    header { text-align: center; margin-bottom: 48px; }
+    header .badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #6c8fff22, #a78bfa22);
+      border: 1px solid #6c8fff44;
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: 20px;
+      margin-bottom: 16px;
+    }
+    header h1 {
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 800;
+      background: linear-gradient(135deg, #e2e8f0, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 12px;
+    }
+    header p { color: var(--muted); font-size: 1.05rem; line-height: 1.6; }
+
+    /* Section */
+    section { margin-bottom: 40px; }
+    .section-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 16px;
+    }
+
+    /* Card */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+
+    /* Interactive Input */
+    .input-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .input-row label { color: var(--muted); font-size: 0.9rem; white-space: nowrap; }
+    .num-input {
+      flex: 1;
+      min-width: 160px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 1.3rem;
+      font-weight: 600;
+      padding: 10px 16px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .num-input:focus { border-color: var(--accent); }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 12px;
+      margin-top: 20px;
+    }
+    .result-item {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      transition: border-color 0.2s;
+    }
+    .result-item.highlight { border-color: var(--accent); background: #6c8fff0d; }
+    .result-item .fn-name { font-size: 0.78rem; color: var(--muted); margin-bottom: 6px; font-family: monospace; }
+    .result-item .fn-val { font-size: 1.5rem; font-weight: 700; color: var(--text); }
+    .result-item.highlight .fn-val { color: var(--accent); }
+
+    /* Number line */
+    .number-line-wrap { margin-top: 24px; }
+    .number-line-label { font-size: 0.8rem; color: var(--muted); margin-bottom: 8px; }
+    .number-line {
+      position: relative;
+      height: 48px;
+      background: var(--surface2);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .nl-track {
+      position: absolute;
+      top: 50%;
+      left: 0; right: 0;
+      height: 2px;
+      background: var(--border);
+      transform: translateY(-50%);
+    }
+    .nl-zero {
+      position: absolute;
+      top: 0; bottom: 0;
+      left: 50%;
+      width: 1px;
+      background: var(--muted);
+      opacity: 0.5;
+    }
+    .nl-zero-label {
+      position: absolute;
+      bottom: 4px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 10px;
+      color: var(--muted);
+    }
+    .nl-marker {
+      position: absolute;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      transition: left 0.35s cubic-bezier(.34,1.56,.64,1);
+    }
+    .nl-marker.original { background: var(--yellow); z-index: 2; }
+    .nl-marker.truncated { background: var(--accent); z-index: 3; width: 14px; height: 14px; }
+    .nl-legend {
+      display: flex; gap: 16px; margin-top: 8px; flex-wrap: wrap;
+    }
+    .nl-legend span { font-size: 0.78rem; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+    .nl-legend .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+
+    /* Comparison table */
+    .compare-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    .compare-table th {
+      text-align: left;
+      padding: 10px 14px;
+      color: var(--muted);
+      font-weight: 600;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .compare-table td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      font-family: monospace;
+      font-size: 0.95rem;
+    }
+    .compare-table tr:last-child td { border-bottom: none; }
+    .compare-table .method-name { color: var(--accent2); }
+    .compare-table .val-pos { color: var(--green); }
+    .compare-table .val-neg { color: var(--red); }
+    .compare-table tr.active-row td { background: #6c8fff0d; }
+    .compare-table tr.active-row .method-name { color: var(--accent); font-weight: 700; }
+
+    /* Scenarios */
+    .scenarios { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+    .scenario-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      cursor: pointer;
+      transition: border-color 0.2s, transform 0.15s;
+    }
+    .scenario-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+    .scenario-card .sc-icon { font-size: 1.8rem; margin-bottom: 10px; }
+    .scenario-card .sc-title { font-weight: 700; margin-bottom: 6px; font-size: 0.95rem; }
+    .scenario-card .sc-desc { font-size: 0.82rem; color: var(--muted); line-height: 1.5; margin-bottom: 12px; }
+    .scenario-card .sc-demo {
+      background: var(--bg);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-family: monospace;
+      font-size: 0.82rem;
+      color: var(--green);
+      line-height: 1.7;
+    }
+
+    /* Polyfill */
+    .code-block {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+      font-family: 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 0.85rem;
+      line-height: 1.7;
+      overflow-x: auto;
+    }
+    .kw { color: #c792ea; }
+    .fn { color: #82aaff; }
+    .str { color: #c3e88d; }
+    .num { color: #f78c6c; }
+    .cm { color: #546e7a; font-style: italic; }
+
+    /* Footer */
+    footer { text-align: center; margin-top: 64px; color: var(--muted); font-size: 0.82rem; }
+    footer a { color: var(--accent); text-decoration: none; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="badge">JavaScript Built-in</div>
+    <h1>Math.trunc()</h1>
+    <p>截断数字的小数部分，直接返回整数部分，始终朝零的方向取整。</p>
+  </header>
+
+  <!-- 交互计算器 -->
+  <section>
+    <div class="section-title">交互演示</div>
+    <div class="card">
+      <div class="input-row">
+        <label>输入任意数字：</label>
+        <input class="num-input" id="numInput" type="number" value="4.7" step="0.1" />
+      </div>
+
+      <div class="result-grid" id="resultGrid">
+        <div class="result-item highlight">
+          <div class="fn-name">Math.trunc(x)</div>
+          <div class="fn-val" id="rTrunc">—</div>
+        </div>
+        <div class="result-item">
+          <div class="fn-name">Math.floor(x)</div>
+          <div class="fn-val" id="rFloor">—</div>
+        </div>
+        <div class="result-item">
+          <div class="fn-name">Math.ceil(x)</div>
+          <div class="fn-val" id="rCeil">—</div>
+        </div>
+        <div class="result-item">
+          <div class="fn-name">Math.round(x)</div>
+          <div class="fn-val" id="rRound">—</div>
+        </div>
+      </div>
+
+      <!-- 数轴可视化 -->
+      <div class="number-line-wrap">
+        <div class="number-line-label">数轴可视化（范围 −10 ~ 10）</div>
+        <div class="number-line" id="numberLine">
+          <div class="nl-track"></div>
+          <div class="nl-zero"></div>
+          <div class="nl-zero-label">0</div>
+          <div class="nl-marker original" id="markerOriginal" title="原始值"></div>
+          <div class="nl-marker truncated" id="markerTrunc" title="trunc 结果"></div>
+        </div>
+        <div class="nl-legend">
+          <span><span class="dot" style="background:var(--yellow)"></span>原始值</span>
+          <span><span class="dot" style="background:var(--accent)"></span>Math.trunc() 结果</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 方法对比 -->
+  <section>
+    <div class="section-title">与其他取整方法对比</div>
+    <div class="card">
+      <table class="compare-table" id="compareTable">
+        <thead>
+          <tr>
+            <th>方法</th>
+            <th>说明</th>
+            <th>正数 (4.7)</th>
+            <th>负数 (-4.7)</th>
+            <th>当前输入</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="active-row">
+            <td class="method-name">Math.trunc()</td>
+            <td>向零截断</td>
+            <td class="val-pos">4</td>
+            <td class="val-neg">-4</td>
+            <td id="cmpTrunc">—</td>
+          </tr>
+          <tr>
+            <td class="method-name">Math.floor()</td>
+            <td>向 −∞ 取整</td>
+            <td class="val-pos">4</td>
+            <td class="val-neg">-5</td>
+            <td id="cmpFloor">—</td>
+          </tr>
+          <tr>
+            <td class="method-name">Math.ceil()</td>
+            <td>向 +∞ 取整</td>
+            <td class="val-pos">5</td>
+            <td class="val-neg">-4</td>
+            <td id="cmpCeil">—</td>
+          </tr>
+          <tr>
+            <td class="method-name">Math.round()</td>
+            <td>四舍五入</td>
+            <td class="val-pos">5</td>
+            <td class="val-neg">-5</td>
+            <td id="cmpRound">—</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 使用场景 -->
+  <section>
+    <div class="section-title">实际使用场景</div>
+    <div class="scenarios">
+
+      <div class="scenario-card">
+        <div class="sc-icon">⏱️</div>
+        <div class="sc-title">时间格式化</div>
+        <div class="sc-desc">将秒数转换为 分:秒 格式，截断小数避免显示异常。</div>
+        <div class="sc-demo" id="demoTime">loading...</div>
+      </div>
+
+      <div class="scenario-card">
+        <div class="sc-icon">🎮</div>
+        <div class="sc-title">游戏格子坐标</div>
+        <div class="sc-desc">根据像素坐标快速定位角色所在的地图格子。</div>
+        <div class="sc-demo" id="demoGame">loading...</div>
+      </div>
+
+      <div class="scenario-card">
+        <div class="sc-icon">📄</div>
+        <div class="sc-title">分页计算</div>
+        <div class="sc-desc">计算数据列表共需多少页，截断后加余数判断。</div>
+        <div class="sc-demo" id="demoPaging">loading...</div>
+      </div>
+
+      <div class="scenario-card">
+        <div class="sc-icon">💰</div>
+        <div class="sc-title">货币整数部分</div>
+        <div class="sc-desc">提取价格的整数元，用于显示大字号主价格。</div>
+        <div class="sc-demo" id="demoPrice">loading...</div>
+      </div>
+
+      <div class="scenario-card">
+        <div class="sc-icon">📐</div>
+        <div class="sc-title">像素对齐</div>
+        <div class="sc-desc">UI 布局中截断亚像素值，避免模糊渲染。</div>
+        <div class="sc-demo" id="demoPixel">loading...</div>
+      </div>
+
+      <div class="scenario-card">
+        <div class="sc-icon">🔢</div>
+        <div class="sc-title">进制转换辅助</div>
+        <div class="sc-desc">辗转相除法中截断商，逐步提取各位数字。</div>
+        <div class="sc-demo" id="demoBase">loading...</div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Polyfill -->
+  <section>
+    <div class="section-title">IE 兼容 Polyfill</div>
+    <div class="card">
+      <div class="code-block">
+<span class="cm">// IE 不支持 Math.trunc，可用此 polyfill</span>
+<span class="kw">if</span> (!Math.trunc) {
+  Math.trunc = <span class="kw">function</span> <span class="fn">trunc</span>(x) {
+    <span class="kw">return</span> x &lt; <span class="num">0</span> ? Math.<span class="fn">ceil</span>(x) : Math.<span class="fn">floor</span>(x);
+  };
+}
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>Math.trunc() · ES2015 (ES6) · <a href="https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Math/trunc" target="_blank">MDN 文档</a></p>
+  </footer>
+
+</div>
+
+<script>
+  const input = document.getElementById('numInput');
+
+  function clamp(v, min, max) { return Math.min(Math.max(v, min), max); }
+
+  function toPercent(v) {
+    // map [-10, 10] → [0%, 100%]
+    return ((clamp(v, -10, 10) + 10) / 20 * 100).toFixed(2) + '%';
+  }
+
+  function update() {
+    const raw = input.value;
+    const x = parseFloat(raw);
+
+    const trunc = Math.trunc(x);
+    const floor = Math.floor(x);
+    const ceil  = Math.ceil(x);
+    const round = Math.round(x);
+
+    const fmt = v => isNaN(v) ? 'NaN' : String(v);
+
+    document.getElementById('rTrunc').textContent = fmt(trunc);
+    document.getElementById('rFloor').textContent = fmt(floor);
+    document.getElementById('rCeil').textContent  = fmt(ceil);
+    document.getElementById('rRound').textContent = fmt(round);
+
+    document.getElementById('cmpTrunc').textContent = fmt(trunc);
+    document.getElementById('cmpFloor').textContent = fmt(floor);
+    document.getElementById('cmpCeil').textContent  = fmt(ceil);
+    document.getElementById('cmpRound').textContent = fmt(round);
+
+    // Number line
+    if (!isNaN(x)) {
+      document.getElementById('markerOriginal').style.left = toPercent(x);
+      document.getElementById('markerTrunc').style.left    = toPercent(trunc);
+    }
+
+    updateScenarios(x);
+  }
+
+  function updateScenarios(x) {
+    // 时间格式化
+    const totalSec = Math.abs(isNaN(x) ? 0 : x) * 10 + 5;
+    const mins = Math.trunc(totalSec / 60);
+    const secs = Math.trunc(totalSec % 60);
+    document.getElementById('demoTime').innerHTML =
+      `totalSeconds = <b>${totalSec.toFixed(1)}</b>\n` +
+      `Math.trunc(${totalSec.toFixed(1)} / 60) = <b>${mins}</b>\n` +
+      `Math.trunc(${totalSec.toFixed(1)} % 60) = <b>${secs}</b>\n` +
+      `→ 时长：<b>${mins}:${String(secs).padStart(2,'0')}</b>`;
+
+    // 游戏格子
+    const px = isNaN(x) ? 0 : Math.abs(x) * 37 + 12;
+    const tileSize = 32;
+    const tile = Math.trunc(px / tileSize);
+    document.getElementById('demoGame').innerHTML =
+      `playerX = <b>${px.toFixed(1)}px</b>, tileSize = <b>${tileSize}</b>\n` +
+      `Math.trunc(${px.toFixed(1)} / ${tileSize}) = <b>${tile}</b>\n` +
+      `→ 角色在第 <b>${tile}</b> 格`;
+
+    // 分页
+    const total = Math.abs(Math.trunc(isNaN(x) ? 10 : x)) * 7 + 23;
+    const pageSize = 10;
+    const pages = Math.trunc(total / pageSize) + (total % pageSize > 0 ? 1 : 0);
+    document.getElementById('demoPaging').innerHTML =
+      `totalItems = <b>${total}</b>, pageSize = <b>${pageSize}</b>\n` +
+      `Math.trunc(${total} / ${pageSize}) = <b>${Math.trunc(total/pageSize)}</b>\n` +
+      `→ 共 <b>${pages}</b> 页`;
+
+    // 货币
+    const price = Math.abs(isNaN(x) ? 0 : x) + 9.99;
+    const intPart = Math.trunc(price);
+    const decPart = Math.round((price - intPart) * 100);
+    document.getElementById('demoPrice').innerHTML =
+      `price = <b>¥${price.toFixed(2)}</b>\n` +
+      `Math.trunc(${price.toFixed(2)}) = <b>${intPart}</b>\n` +
+      `→ 显示：<b>¥${intPart}</b><small>.${String(decPart).padStart(2,'0')}</small>`;
+
+    // 像素
+    const rawW = isNaN(x) ? 33.33 : Math.abs(x) * 3.7 + 10.5;
+    document.getElementById('demoPixel').innerHTML =
+      `rawWidth = <b>${rawW.toFixed(3)}</b>\n` +
+      `Math.trunc(${rawW.toFixed(3)}) = <b>${Math.trunc(rawW)}</b>\n` +
+      `→ 像素宽度：<b>${Math.trunc(rawW)}px</b>（无亚像素）`;
+
+    // 进制转换
+    const n = Math.abs(Math.trunc(isNaN(x) ? 0 : x)) || 13;
+    let tmp = n, bits = [];
+    if (tmp === 0) bits = ['0'];
+    else while (tmp > 0) { bits.unshift(tmp % 2); tmp = Math.trunc(tmp / 2); }
+    document.getElementById('demoBase').innerHTML =
+      `十进制 <b>${n}</b> → 二进制\n` +
+      `Math.trunc(${n} / 2) 逐步截断\n` +
+      `→ <b>${bits.join('')}</b>`;
+  }
+
+  input.addEventListener('input', update);
+  update();
+</script>
+</body>
+</html>

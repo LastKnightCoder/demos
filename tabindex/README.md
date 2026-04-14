@@ -108,7 +108,7 @@
 
 ### 1. 手动设置 tabindex 的优先级
 
-​**手动设置的 **​**`tabindex`**​** 属性会完全覆盖元素的默认行为，优先级最高。**
+​**手动设置的 ​`tabindex`​ 属性会完全覆盖元素的默认行为，优先级最高。**
 
 ```
 手动设置的 tabindex > 浏览器特殊规则 > 元素默认行为
@@ -116,7 +116,7 @@
 
 ​**具体效果：**
 
-- ​**默认可聚焦元素设置 **​**`tabindex="-1"`**​**：**
+- ​**默认可聚焦元素设置 ​`tabindex="-1"`​：**
   
   ```HTML
   <input type="text" tabindex="-1">
@@ -126,7 +126,7 @@
   - ❌ 不能被 Tab 键聚焦（被移除出 Tab 顺序）
   - ✅ 仍可通过鼠标点击或 JS 的 `.focus()` 聚焦
   - 用途：临时禁用 Tab 访问（如模态框打开时禁用背景内容）
-- ​**特殊元素（summary、contenteditable）设置 **​**`tabindex="-1"`**​**：**
+- ​**特殊元素（summary、contenteditable）设置 ​`tabindex="-1"`​：**
   
   ```HTML
   <summary tabindex="-1">折叠面板</summary>
@@ -134,7 +134,7 @@
   ```
   
   - ❌ 不能被 Tab 键聚焦（显式设置覆盖了浏览器的特殊行为）
-- ​**普通元素设置 **​**`tabindex="0"`**​**：**
+- ​**普通元素设置 `tabindex="0"`​：**
   
   ```HTML
   <div tabindex="0">自定义按钮</div>
@@ -160,7 +160,7 @@
 
 ### 3. 判断元素是否可聚焦
 
-​**不能只看 **​**`element.tabIndex`**​** 值！** 应该实际测试或使用以下逻辑：
+​**不能只看 `element.tabIndex` 值！** 应该实际测试或使用以下逻辑：
 
 ```JAVASCRIPT
 function isTabbable(element) {
@@ -177,7 +177,7 @@ function isTabbable(element) {
 
 ### 4. 常见使用场景
 
-​**使用 **​**`tabindex="-1"`**​** 的场景：**
+​**使用 `tabindex="-1"`​ 的场景：**
 
 - ​**临时禁用 Tab 访问：** 模态框打开时，将背景内容的交互元素设置为 `tabindex="-1"`
   
@@ -206,17 +206,17 @@ function isTabbable(element) {
   </div>
   ```
 
-​**使用 **​**`tabindex="0"`**​** 的场景：**
+​**使用 `tabindex="0"`​ 的场景：**
 
 - ​**自定义交互组件：** 用 `<div>` 实现的按钮、卡片、菜单项等
 - ​**恢复默认行为：** 如果之前设置了 `tabindex="-1"`，可以用 `tabindex="0"` 恢复
 
 ### 5. 其他注意事项
 
-- ​**`disabled`**​** 属性优先级更高：** `<button disabled tabindex="0">` 仍然不可聚焦
-- ​**移除 **​**`tabindex`**​** 属性恢复默认：** `element.removeAttribute('tabindex')`
-- ​**不要滥用 **​**`tabindex="-1"`**​**：** 会破坏键盘用户体验，只在必要时使用
-- ​**`tabIndex`**​** 属性值 ≠ 是否可聚焦：** 浏览器会根据元素类型和状态综合判断
+- ​**`disabled`​**​** 属性优先级更高：** `<button disabled tabindex="0">` 仍然不可聚焦
+- ​**移除 ​**​**`tabindex`**​**​ 属性恢复默认：** `element.removeAttribute('tabindex')`
+- ​**不要滥用 ​**​**`tabindex="-1"`**​**​：** 会破坏键盘用户体验，只在必要时使用
+- ​**`tabIndex`​**​** 属性值 ≠ 是否可聚焦：** 浏览器会根据元素类型和状态综合判断
 
 ---
 

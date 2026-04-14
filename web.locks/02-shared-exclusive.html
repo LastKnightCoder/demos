@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>02 · 共享锁与独占锁 — Web Locks API</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 32px 24px;
+    }
+
+    .page-header {
+      max-width: 900px;
+      margin: 0 auto 32px;
+    }
+
+    .badge {
+      display: inline-block;
+      background: #14532d;
+      color: #86efac;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 3px 10px;
+      border-radius: 4px;
+      margin-bottom: 12px;
+    }
+
+    h1 { font-size: 28px; font-weight: 700; color: #f1f5f9; margin-bottom: 8px; }
+    .subtitle { color: #94a3b8; font-size: 15px; line-height: 1.6; }
+
+    .container { max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; }
+
+    .card {
+      background: #1e2130;
+      border: 1px solid #2d3348;
+      border-radius: 12px;
+      padding: 24px;
+    }
+
+    .card-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 16px;
+    }
+
+    /* 矩阵表格 */
+    .matrix {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    .matrix th, .matrix td {
+      padding: 12px 16px;
+      text-align: center;
+      border: 1px solid #2d3348;
+    }
+
+    .matrix th {
+      background: #141824;
+      color: #94a3b8;
+      font-weight: 600;
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+
+    .matrix td:first-child {
+      text-align: left;
+      color: #94a3b8;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .cell-ok { color: #4ade80; font-weight: 700; }
+    .cell-wait { color: #facc15; font-weight: 700; }
+
+    /* 工作者卡片 */
+    .workers-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 12px;
+    }
+
+    .worker-card {
+      background: #141824;
+      border: 2px solid #2d3348;
+      border-radius: 10px;
+      padding: 16px;
+      text-align: center;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .worker-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: transparent;
+      transition: background 0.3s;
+    }
+
+    .worker-card.shared::before { background: #3b82f6; }
+    .worker-card.exclusive::before { background: #f97316; }
+    .worker-card.waiting::before { background: #facc15; }
+
+    .worker-card.shared { border-color: #1e40af; }
+    .worker-card.exclusive { border-color: #9a3412; }
+    .worker-card.waiting { border-color: #78350f; }
+    .worker-card.idle { border-color: #2d3348; }
+
+    .worker-avatar {
+      font-size: 28px;
+      margin-bottom: 8px;
+    }
+
+    .worker-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: #f1f5f9;
+      margin-bottom: 4px;
+    }
+
+    .worker-status {
+      font-size: 11px;
+      font-weight: 500;
+      padding: 2px 8px;
+      border-radius: 4px;
+      display: inline-block;
+    }
+
+    .status-shared { background: #1e3a5f; color: #60a5fa; }
+    .status-exclusive { background: #431407; color: #fb923c; }
+    .status-waiting { background: #422006; color: #fbbf24; }
+    .status-idle { background: #1f2937; color: #6b7280; }
+
+    .worker-timer {
+      font-size: 11px;
+      color: #4b5563;
+      margin-top: 6px;
+      font-family: monospace;
+    }
+
+    /* 控制面板 */
+    .controls-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .control-group {
+      background: #141824;
+      border: 1px solid #2d3348;
+      border-radius: 8px;
+      padding: 16px;
+    }
+
+    .control-group-title {
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .title-shared { color: #60a5fa; }
+    .title-exclusive { color: #fb923c; }
+
+    button {
+      padding: 9px 16px;
+      border: none;
+      border-radius: 7px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      width: 100%;
+      margin-bottom: 8px;
+    }
+
+    .btn-shared { background: #1e3a5f; color: #93c5fd; }
+    .btn-shared:hover { background: #1e40af; }
+
+    .btn-exclusive { background: #431407; color: #fdba74; }
+    .btn-exclusive:hover { background: #7c2d12; }
+
+    .btn-clear { background: #1f2937; color: #9ca3af; margin-top: 4px; }
+    .btn-clear:hover { background: #374151; }
+
+    /* 时间线 */
+    .timeline {
+      position: relative;
+      padding: 8px 0;
+    }
+
+    .timeline-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+      height: 32px;
+    }
+
+    .timeline-label {
+      font-size: 12px;
+      color: #64748b;
+      width: 80px;
+      flex-shrink: 0;
+      text-align: right;
+    }
+
+    .timeline-track {
+      flex: 1;
+      height: 20px;
+      background: #141824;
+      border-radius: 4px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .timeline-block {
+      position: absolute;
+      top: 2px;
+      height: 16px;
+      border-radius: 3px;
+      font-size: 10px;
+      display: flex;
+      align-items: center;
+      padding: 0 6px;
+      white-space: nowrap;
+      overflow: hidden;
+      transition: width 0.1s linear;
+    }
+
+    .block-shared { background: #1e40af; color: #bfdbfe; }
+    .block-exclusive { background: #9a3412; color: #fed7aa; }
+    .block-waiting { background: #78350f; color: #fde68a; }
+
+    .log-container {
+      background: #0d1117;
+      border: 1px solid #2d3348;
+      border-radius: 8px;
+      padding: 16px;
+      height: 220px;
+      overflow-y: auto;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 12px;
+      line-height: 1.7;
+    }
+
+    .log-entry { display: flex; gap: 12px; animation: fadeIn 0.2s ease; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .log-time { color: #4b5563; min-width: 80px; flex-shrink: 0; }
+    .log-shared { color: #60a5fa; }
+    .log-exclusive { color: #fb923c; }
+    .log-waiting { color: #fbbf24; }
+    .log-release { color: #4ade80; }
+    .log-info { color: #64748b; }
+
+    .tip {
+      display: flex;
+      gap: 10px;
+      padding: 12px 16px;
+      background: #1a2744;
+      border: 1px solid #1e3a5f;
+      border-radius: 8px;
+      font-size: 13px;
+      color: #93c5fd;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+
+<div class="page-header">
+  <div class="badge">Demo 02</div>
+  <h1>共享锁与独占锁</h1>
+  <p class="subtitle">
+    多个共享锁可以同时持有，但独占锁必须等所有共享锁释放后才能获得。
+    这是实现<strong>读写锁（Readers-Writer Lock）</strong>的基础。
+  </p>
+</div>
+
+<div class="container">
+
+  <!-- 并发矩阵 -->
+  <div class="card">
+    <div class="card-title">并发兼容矩阵</div>
+    <table class="matrix">
+      <thead>
+        <tr>
+          <th>新请求 \ 当前持有</th>
+          <th>无锁</th>
+          <th>共享锁（shared）</th>
+          <th>独占锁（exclusive）</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>共享锁请求</td>
+          <td class="cell-ok">✅ 立即获得</td>
+          <td class="cell-ok">✅ 立即获得</td>
+          <td class="cell-wait">⏳ 等待</td>
+        </tr>
+        <tr>
+          <td>独占锁请求</td>
+          <td class="cell-ok">✅ 立即获得</td>
+          <td class="cell-wait">⏳ 等待</td>
+          <td class="cell-wait">⏳ 等待</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 工作者状态 -->
+  <div class="card">
+    <div class="card-title">并发工作者状态</div>
+    <div class="workers-grid" id="workersGrid">
+      <!-- 动态生成 -->
+    </div>
+  </div>
+
+  <!-- 控制面板 -->
+  <div class="card">
+    <div class="card-title">添加工作者</div>
+    <div class="controls-grid">
+      <div class="control-group">
+        <div class="control-group-title title-shared">
+          📖 共享锁（读操作）
+        </div>
+        <button class="btn-shared" onclick="addWorker('shared', 2000)">添加读者（2s）</button>
+        <button class="btn-shared" onclick="addWorker('shared', 4000)">添加读者（4s）</button>
+        <button class="btn-shared" onclick="addThreeReaders()">同时添加 3 个读者</button>
+      </div>
+      <div class="control-group">
+        <div class="control-group-title title-exclusive">
+          ✏️ 独占锁（写操作）
+        </div>
+        <button class="btn-exclusive" onclick="addWorker('exclusive', 2000)">添加写者（2s）</button>
+        <button class="btn-exclusive" onclick="addWorker('exclusive', 3000)">添加写者（3s）</button>
+        <button class="btn-exclusive" onclick="addWriterAfterReaders()">读者进行中时添加写者</button>
+      </div>
+    </div>
+    <button class="btn-clear" onclick="clearAll()">🗑 清空所有</button>
+  </div>
+
+  <div class="tip">
+    <span>💡</span>
+    <span>
+      <strong>关键规则：</strong>共享锁之间不互斥，多个读者可以同时工作。
+      但独占锁与任何锁都互斥——写者必须等所有读者完成后才能开始，
+      且写者持有期间不允许新的读者进入。
+    </span>
+  </div>
+
+  <!-- 日志 -->
+  <div class="card">
+    <div class="card-title">事件日志</div>
+    <div class="log-container" id="logContainer">
+      <div class="log-entry">
+        <span class="log-time">--:--:--</span>
+        <span class="log-info">添加工作者来观察共享锁与独占锁的并发行为...</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  let workerCount = 0;
+  const workers = new Map(); // id -> { name, mode, state, startTime }
+
+  const AVATARS = {
+    shared: ['👁', '📖', '🔍', '👀', '📚'],
+    exclusive: ['✏️', '🖊', '📝', '💾', '🔧'],
+  };
+
+  function log(msg, type = 'info') {
+    const container = document.getElementById('logContainer');
+    const time = new Date().toTimeString().slice(0, 8);
+    const entry = document.createElement('div');
+    entry.className = 'log-entry';
+    entry.innerHTML = `<span class="log-time">${time}</span><span class="log-${type}">${msg}</span>`;
+    container.appendChild(entry);
+    container.scrollTop = container.scrollHeight;
+  }
+
+  function renderWorkers() {
+    const grid = document.getElementById('workersGrid');
+    grid.innerHTML = '';
+
+    if (workers.size === 0) {
+      grid.innerHTML = '<div style="color:#4b5563;font-size:13px;padding:16px;">暂无工作者，点击上方按钮添加</div>';
+      return;
+    }
+
+    workers.forEach((w, id) => {
+      const card = document.createElement('div');
+      card.className = `worker-card ${w.state}`;
+      card.id = `worker-${id}`;
+
+      const elapsed = w.startTime ? Math.floor((Date.now() - w.startTime) / 100) / 10 : 0;
+      const statusLabel = {
+        shared: '共享锁 · 读取中',
+        exclusive: '独占锁 · 写入中',
+        waiting: '等待中...',
+        idle: '已完成',
+      }[w.state];
+
+      const statusClass = {
+        shared: 'status-shared',
+        exclusive: 'status-exclusive',
+        waiting: 'status-waiting',
+        idle: 'status-idle',
+      }[w.state];
+
+      card.innerHTML = `
+        <div class="worker-avatar">${w.avatar}</div>
+        <div class="worker-name">${w.name}</div>
+        <span class="worker-status ${statusClass}">${statusLabel}</span>
+        <div class="worker-timer">${w.state !== 'idle' ? elapsed + 's' : '✓'}</div>
+      `;
+      grid.appendChild(card);
+    });
+  }
+
+  function updateWorker(id, state) {
+    const w = workers.get(id);
+    if (!w) return;
+    if (state === 'shared' || state === 'exclusive') {
+      w.startTime = Date.now();
+    }
+    w.state = state;
+    renderWorkers();
+  }
+
+  // 持续更新计时器
+  setInterval(() => {
+    if (workers.size > 0) renderWorkers();
+  }, 200);
+
+  async function addWorker(mode, duration) {
+    const id = ++workerCount;
+    const avatar = AVATARS[mode][Math.floor(Math.random() * AVATARS[mode].length)];
+    const name = mode === 'shared' ? `读者 ${id}` : `写者 ${id}`;
+
+    workers.set(id, { name, mode, state: 'waiting', avatar, startTime: null });
+    renderWorkers();
+
+    const modeLabel = mode === 'shared' ? '共享' : '独占';
+    log(`${avatar} ${name} 请求${modeLabel}锁...`, 'waiting');
+
+    const t0 = Date.now();
+
+    await navigator.locks.request('shared-resource', { mode }, async (lock) => {
+      const waitTime = Date.now() - t0;
+      updateWorker(id, mode);
+      log(`${avatar} ${name} 获得${modeLabel}锁（等待 ${waitTime}ms）`, mode);
+
+      await sleep(duration);
+
+      log(`${avatar} ${name} 完成，释放${modeLabel}锁`, 'release');
+    });
+
+    updateWorker(id, 'idle');
+    setTimeout(() => {
+      workers.delete(id);
+      renderWorkers();
+    }, 1500);
+  }
+
+  async function addThreeReaders() {
+    log('--- 同时添加 3 个读者 ---', 'info');
+    addWorker('shared', 3000);
+    addWorker('shared', 2500);
+    addWorker('shared', 3500);
+  }
+
+  async function addWriterAfterReaders() {
+    log('--- 先添加 2 个读者，再添加 1 个写者 ---', 'info');
+    addWorker('shared', 4000);
+    addWorker('shared', 3000);
+    setTimeout(() => addWorker('exclusive', 2000), 500);
+  }
+
+  function clearAll() {
+    workers.clear();
+    renderWorkers();
+    document.getElementById('logContainer').innerHTML = '';
+    log('已清空', 'info');
+  }
+
+  function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  renderWorkers();
+</script>
+
+</body>
+</html>

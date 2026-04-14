@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>03 · 竞态条件演示 — Web Locks API</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 32px 24px;
+    }
+
+    .page-header { max-width: 900px; margin: 0 auto 32px; }
+
+    .badge {
+      display: inline-block;
+      background: #7f1d1d;
+      color: #fca5a5;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 3px 10px;
+      border-radius: 4px;
+      margin-bottom: 12px;
+    }
+
+    h1 { font-size: 28px; font-weight: 700; color: #f1f5f9; margin-bottom: 8px; }
+    .subtitle { color: #94a3b8; font-size: 15px; line-height: 1.6; }
+
+    .container { max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; }
+
+    .card {
+      background: #1e2130;
+      border: 1px solid #2d3348;
+      border-radius: 12px;
+      padding: 24px;
+    }
+
+    .card-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 16px;
+    }
+
+    /* 双栏布局 */
+    .dual-panel {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .panel {
+      background: #141824;
+      border-radius: 10px;
+      padding: 20px;
+      border: 2px solid #2d3348;
+      transition: border-color 0.3s;
+    }
+
+    .panel.danger { border-color: #7f1d1d; }
+    .panel.safe { border-color: #14532d; }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .panel-icon { font-size: 20px; }
+
+    .panel-title {
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .panel-title.danger { color: #f87171; }
+    .panel-title.safe { color: #4ade80; }
+
+    .counter-display {
+      text-align: center;
+      padding: 20px;
+      background: #0d1117;
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+
+    .counter-label {
+      font-size: 11px;
+      color: #4b5563;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 4px;
+    }
+
+    .counter-value {
+      font-size: 48px;
+      font-weight: 800;
+      font-family: 'SF Mono', monospace;
+      line-height: 1;
+      transition: all 0.1s;
+    }
+
+    .counter-value.danger { color: #f87171; }
+    .counter-value.safe { color: #4ade80; }
+
+    .counter-value.flash-wrong {
+      animation: flashWrong 0.3s ease;
+    }
+
+    .counter-value.flash-right {
+      animation: flashRight 0.3s ease;
+    }
+
+    @keyframes flashWrong {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); color: #ef4444; }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes flashRight {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); color: #22c55e; }
+      100% { transform: scale(1); }
+    }
+
+    .counter-expected {
+      font-size: 12px;
+      color: #4b5563;
+      margin-top: 6px;
+    }
+
+    .counter-diff {
+      font-size: 13px;
+      font-weight: 600;
+      margin-top: 4px;
+    }
+
+    .diff-bad { color: #f87171; }
+    .diff-ok { color: #4ade80; }
+
+    .workers-bar {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+      min-height: 28px;
+    }
+
+    .worker-dot {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      transition: all 0.2s;
+    }
+
+    .dot-running { background: #1d4ed8; color: white; animation: pulse 1s infinite; }
+    .dot-waiting { background: #78350f; color: #fde68a; }
+    .dot-done { background: #14532d; color: #86efac; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    button {
+      padding: 10px 18px;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-run-race { background: #7f1d1d; color: #fca5a5; width: 100%; margin-bottom: 8px; }
+    .btn-run-race:hover { background: #991b1b; }
+    .btn-run-race:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .btn-run-safe { background: #14532d; color: #86efac; width: 100%; margin-bottom: 8px; }
+    .btn-run-safe:hover { background: #166534; }
+    .btn-run-safe:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .btn-reset { background: #1f2937; color: #9ca3af; width: 100%; }
+    .btn-reset:hover { background: #374151; }
+
+    /* 竞态可视化 */
+    .race-viz {
+      background: #0d1117;
+      border-radius: 8px;
+      padding: 16px;
+      font-family: 'SF Mono', monospace;
+      font-size: 12px;
+      line-height: 1.8;
+      min-height: 80px;
+    }
+
+    .race-step { color: #64748b; }
+    .race-read { color: #60a5fa; }
+    .race-write { color: #f87171; }
+    .race-conflict { color: #f59e0b; font-weight: 700; }
+    .race-ok { color: #4ade80; }
+
+    /* 代码对比 */
+    .code-compare {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .code-block {
+      background: #0d1117;
+      border-radius: 8px;
+      padding: 16px;
+      font-family: 'SF Mono', monospace;
+      font-size: 12px;
+      line-height: 1.8;
+      border: 1px solid #2d3348;
+    }
+
+    .code-block.bad { border-color: #7f1d1d; }
+    .code-block.good { border-color: #14532d; }
+
+    .code-header {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 10px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #2d3348;
+    }
+
+    .code-header.bad { color: #f87171; }
+    .code-header.good { color: #4ade80; }
+
+    .kw { color: #c792ea; }
+    .fn { color: #82aaff; }
+    .str { color: #c3e88d; }
+    .cm { color: #546e7a; font-style: italic; }
+    .num { color: #f78c6c; }
+    .hl { background: #1a1a2e; border-radius: 3px; padding: 1px 4px; }
+    .hl-bad { background: #3b0000; }
+    .hl-good { background: #003b00; }
+
+    .stats-row {
+      display: flex;
+      gap: 16px;
+      margin-top: 8px;
+    }
+
+    .stat {
+      flex: 1;
+      background: #0d1117;
+      border-radius: 6px;
+      padding: 10px;
+      text-align: center;
+    }
+
+    .stat-label { font-size: 10px; color: #4b5563; text-transform: uppercase; margin-bottom: 2px; }
+    .stat-value { font-size: 18px; font-weight: 700; font-family: monospace; }
+
+    .tip {
+      display: flex;
+      gap: 10px;
+      padding: 12px 16px;
+      background: #1a1a2e;
+      border: 1px solid #312e81;
+      border-radius: 8px;
+      font-size: 13px;
+      color: #a5b4fc;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+
+<div class="page-header">
+  <div class="badge">Demo 03</div>
+  <h1>竞态条件：有锁 vs 无锁</h1>
+  <p class="subtitle">
+    10 个并发工作者同时对同一个计数器执行"读取 → 加一 → 写入"。
+    观察<strong>无锁版本</strong>如何产生数据丢失，以及<strong>有锁版本</strong>如何保证结果正确。
+  </p>
+</div>
+
+<div class="container">
+
+  <!-- 代码对比 -->
+  <div class="card">
+    <div class="card-title">代码对比</div>
+    <div class="code-compare">
+      <div class="code-block bad">
+        <div class="code-header bad">❌ 无锁（有竞态风险）</div>
+        <span class="kw">async function</span> <span class="fn">increment</span>() {<br>
+        &nbsp;&nbsp;<span class="cm">// 读取当前值</span><br>
+        &nbsp;&nbsp;<span class="kw">const</span> val = <span class="kw">await</span> <span class="fn">readCounter</span>();<br>
+        &nbsp;&nbsp;<span class="cm">// ⚠️ 此时其他工作者</span><br>
+        &nbsp;&nbsp;<span class="cm">// 也可能读到同一个值！</span><br>
+        &nbsp;&nbsp;<span class="kw">await</span> <span class="fn">sleep</span>(<span class="num">10</span>);<br>
+        &nbsp;&nbsp;<span class="cm">// 写入（可能覆盖他人）</span><br>
+        &nbsp;&nbsp;<span class="kw">await</span> <span class="fn">writeCounter</span>(val + <span class="num">1</span>);<br>
+        }
+      </div>
+      <div class="code-block good">
+        <div class="code-header good">✅ 有锁（原子操作）</div>
+        <span class="kw">async function</span> <span class="fn">increment</span>() {<br>
+        &nbsp;&nbsp;<span class="kw">await</span> navigator.locks.<span class="fn">request</span>(<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="str">'counter'</span>, <span class="kw">async</span> () => {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">const</span> val = <span class="kw">await</span> <span class="fn">readCounter</span>();<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="cm">// 独占持有，无竞争</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">await</span> <span class="fn">sleep</span>(<span class="num">10</span>);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">await</span> <span class="fn">writeCounter</span>(val + <span class="num">1</span>);<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;});<br>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- 双面板 -->
+  <div class="dual-panel">
+
+    <!-- 无锁面板 -->
+    <div class="panel danger">
+      <div class="panel-header">
+        <span class="panel-icon">💥</span>
+        <span class="panel-title danger">无锁版本（竞态）</span>
+      </div>
+
+      <div class="counter-display">
+        <div class="counter-label">计数器当前值</div>
+        <div class="counter-value danger" id="raceCounter">0</div>
+        <div class="counter-expected" id="raceExpected">期望值：0</div>
+        <div class="counter-diff" id="raceDiff"></div>
+      </div>
+
+      <div class="workers-bar" id="raceWorkers"></div>
+
+      <div class="stats-row">
+        <div class="stat">
+          <div class="stat-label">完成</div>
+          <div class="stat-value" id="raceDone" style="color:#60a5fa">0</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">丢失</div>
+          <div class="stat-value" id="raceLost" style="color:#f87171">0</div>
+        </div>
+      </div>
+
+      <br>
+      <button class="btn-run-race" id="btnRace" onclick="runRace()">▶ 运行（10 个并发）</button>
+      <button class="btn-reset" onclick="resetRace()">↺ 重置</button>
+    </div>
+
+    <!-- 有锁面板 -->
+    <div class="panel safe">
+      <div class="panel-header">
+        <span class="panel-icon">🔒</span>
+        <span class="panel-title safe">有锁版本（安全）</span>
+      </div>
+
+      <div class="counter-display">
+        <div class="counter-label">计数器当前值</div>
+        <div class="counter-value safe" id="safeCounter">0</div>
+        <div class="counter-expected" id="safeExpected">期望值：0</div>
+        <div class="counter-diff" id="safeDiff"></div>
+      </div>
+
+      <div class="workers-bar" id="safeWorkers"></div>
+
+      <div class="stats-row">
+        <div class="stat">
+          <div class="stat-label">完成</div>
+          <div class="stat-value" id="safeDone" style="color:#60a5fa">0</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">丢失</div>
+          <div class="stat-value" id="safeLost" style="color:#4ade80">0</div>
+        </div>
+      </div>
+
+      <br>
+      <button class="btn-run-safe" id="btnSafe" onclick="runSafe()">▶ 运行（10 个并发）</button>
+      <button class="btn-reset" onclick="resetSafe()">↺ 重置</button>
+    </div>
+
+  </div>
+
+  <div class="tip">
+    <span>💡</span>
+    <span>
+      竞态条件发生在"读取-修改-写入"之间存在异步间隙时。多个工作者读到同一个旧值，
+      各自加一后写回，导致多次递增只产生一次效果。Web Locks 通过串行化这个操作序列来消除竞态。
+    </span>
+  </div>
+
+</div>
+
+<script>
+  // 模拟 IndexedDB 的异步存储
+  let raceStore = 0;
+  let safeStore = 0;
+  let raceExpected = 0;
+  let safeExpected = 0;
+
+  function sleep(ms) {
+    return new Promise(r => setTimeout(r, ms));
+  }
+
+  // ---- 无锁版本 ----
+
+  async function runRace() {
+    document.getElementById('btnRace').disabled = true;
+    raceExpected = 10;
+    document.getElementById('raceExpected').textContent = `期望值：${raceExpected}`;
+
+    const workers = Array.from({ length: 10 }, (_, i) => i + 1);
+    const dotsEl = document.getElementById('raceWorkers');
+    dotsEl.innerHTML = workers.map(i =>
+      `<div class="worker-dot dot-running" id="race-dot-${i}">${i}</div>`
+    ).join('');
+
+    let done = 0;
+
+    await Promise.all(workers.map(async (i) => {
+      // 无锁的读-改-写
+      const val = raceStore; // 读
+      await sleep(10 + Math.random() * 20); // 模拟异步延迟
+      raceStore = val + 1; // 写（可能覆盖他人的写入）
+
+      done++;
+      document.getElementById('raceDone').textContent = done;
+      updateRaceDisplay();
+
+      const dot = document.getElementById(`race-dot-${i}`);
+      if (dot) dot.className = 'worker-dot dot-done';
+    }));
+
+    updateRaceDisplay(true);
+    document.getElementById('btnRace').disabled = false;
+  }
+
+  function updateRaceDisplay(final = false) {
+    const el = document.getElementById('raceCounter');
+    el.textContent = raceStore;
+
+    const lost = raceExpected - raceStore;
+    document.getElementById('raceLost').textContent = Math.max(0, lost);
+
+    const diffEl = document.getElementById('raceDiff');
+    if (raceExpected > 0) {
+      if (raceStore < raceExpected) {
+        diffEl.textContent = `丢失了 ${lost} 次递增！`;
+        diffEl.className = 'counter-diff diff-bad';
+        if (final) el.classList.add('flash-wrong');
+      } else {
+        diffEl.textContent = '✓ 结果正确（运气好）';
+        diffEl.className = 'counter-diff diff-ok';
+      }
+    }
+  }
+
+  function resetRace() {
+    raceStore = 0;
+    raceExpected = 0;
+    document.getElementById('raceCounter').textContent = '0';
+    document.getElementById('raceExpected').textContent = '期望值：0';
+    document.getElementById('raceDiff').textContent = '';
+    document.getElementById('raceWorkers').innerHTML = '';
+    document.getElementById('raceDone').textContent = '0';
+    document.getElementById('raceLost').textContent = '0';
+    document.getElementById('btnRace').disabled = false;
+  }
+
+  // ---- 有锁版本 ----
+
+  async function runSafe() {
+    document.getElementById('btnSafe').disabled = true;
+    safeExpected = 10;
+    document.getElementById('safeExpected').textContent = `期望值：${safeExpected}`;
+
+    const workers = Array.from({ length: 10 }, (_, i) => i + 1);
+    const dotsEl = document.getElementById('safeWorkers');
+    dotsEl.innerHTML = workers.map(i =>
+      `<div class="worker-dot dot-waiting" id="safe-dot-${i}">${i}</div>`
+    ).join('');
+
+    let done = 0;
+
+    await Promise.all(workers.map(async (i) => {
+      // 更新为等待状态
+      const dot = document.getElementById(`safe-dot-${i}`);
+
+      await navigator.locks.request('safe-counter', async () => {
+        if (dot) dot.className = 'worker-dot dot-running';
+
+        // 有锁的读-改-写（原子操作）
+        const val = safeStore; // 读
+        await sleep(10 + Math.random() * 20); // 模拟异步延迟
+        safeStore = val + 1; // 写（此时独占，无竞争）
+
+        done++;
+        document.getElementById('safeDone').textContent = done;
+        updateSafeDisplay();
+      });
+
+      if (dot) dot.className = 'worker-dot dot-done';
+    }));
+
+    updateSafeDisplay(true);
+    document.getElementById('btnSafe').disabled = false;
+  }
+
+  function updateSafeDisplay(final = false) {
+    const el = document.getElementById('safeCounter');
+    el.textContent = safeStore;
+
+    const lost = safeExpected - safeStore;
+    document.getElementById('safeLost').textContent = Math.max(0, lost);
+
+    const diffEl = document.getElementById('safeDiff');
+    if (safeExpected > 0) {
+      if (safeStore === safeExpected) {
+        diffEl.textContent = '✓ 结果完全正确！';
+        diffEl.className = 'counter-diff diff-ok';
+        if (final) el.classList.add('flash-right');
+      }
+    }
+  }
+
+  function resetSafe() {
+    safeStore = 0;
+    safeExpected = 0;
+    document.getElementById('safeCounter').textContent = '0';
+    document.getElementById('safeExpected').textContent = '期望值：0';
+    document.getElementById('safeDiff').textContent = '';
+    document.getElementById('safeWorkers').innerHTML = '';
+    document.getElementById('safeDone').textContent = '0';
+    document.getElementById('safeLost').textContent = '0';
+    document.getElementById('btnSafe').disabled = false;
+  }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>06 · 跨标签页同步 — Web Locks API</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 32px 24px;
+    }
+
+    .page-header { max-width: 900px; margin: 0 auto 32px; }
+
+    .badge {
+      display: inline-block;
+      background: #0c4a6e;
+      color: #7dd3fc;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 3px 10px;
+      border-radius: 4px;
+      margin-bottom: 12px;
+    }
+
+    h1 { font-size: 28px; font-weight: 700; color: #f1f5f9; margin-bottom: 8px; }
+    .subtitle { color: #94a3b8; font-size: 15px; line-height: 1.6; }
+
+    .container { max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; }
+
+    .card {
+      background: #1e2130;
+      border: 1px solid #2d3348;
+      border-radius: 12px;
+      padding: 24px;
+    }
+
+    .card-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 16px;
+    }
+
+    /* 当前标签页身份 */
+    .identity-bar {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px 20px;
+      background: #141824;
+      border-radius: 10px;
+      border: 2px solid #2d3348;
+      transition: border-color 0.3s;
+    }
+
+    .identity-bar.is-leader { border-color: #f59e0b; }
+    .identity-bar.is-follower { border-color: #3b82f6; }
+
+    .tab-avatar {
+      font-size: 36px;
+    }
+
+    .tab-info { flex: 1; }
+
+    .tab-id {
+      font-size: 14px;
+      font-weight: 700;
+      color: #f1f5f9;
+      margin-bottom: 4px;
+    }
+
+    .tab-role {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .role-leader { color: #fbbf24; }
+    .role-follower { color: #60a5fa; }
+    .role-unknown { color: #4b5563; }
+
+    .tab-uptime {
+      font-size: 12px;
+      color: #4b5563;
+      font-family: monospace;
+    }
+
+    /* 功能区 */
+    .features-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .feature-card {
+      background: #141824;
+      border: 1px solid #2d3348;
+      border-radius: 10px;
+      padding: 18px;
+    }
+
+    .feature-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #f1f5f9;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .feature-desc {
+      font-size: 12px;
+      color: #64748b;
+      margin-bottom: 14px;
+      line-height: 1.6;
+    }
+
+    button {
+      padding: 9px 16px;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-primary { background: #1e40af; color: #93c5fd; }
+    .btn-primary:hover { background: #1d4ed8; }
+    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .btn-success { background: #14532d; color: #86efac; }
+    .btn-success:hover { background: #166534; }
+
+    .btn-warning { background: #78350f; color: #fde68a; }
+    .btn-warning:hover { background: #92400e; }
+
+    .btn-danger { background: #7f1d1d; color: #fca5a5; }
+    .btn-danger:hover { background: #991b1b; }
+
+    /* 共享状态显示 */
+    .shared-state {
+      background: #0d1117;
+      border: 1px solid #2d3348;
+      border-radius: 8px;
+      padding: 16px;
+    }
+
+    .state-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid #1f2937;
+    }
+
+    .state-row:last-child { border-bottom: none; }
+
+    .state-key {
+      font-size: 12px;
+      color: #64748b;
+      font-family: monospace;
+    }
+
+    .state-value {
+      font-size: 13px;
+      font-weight: 600;
+      font-family: monospace;
+      color: #f1f5f9;
+    }
+
+    .state-value.updated {
+      animation: valueFlash 0.5s ease;
+    }
+
+    @keyframes valueFlash {
+      0% { color: #f1f5f9; }
+      50% { color: #4ade80; }
+      100% { color: #f1f5f9; }
+    }
+
+    /* 标签页列表 */
+    .tabs-list {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .tab-chip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      border: 2px solid transparent;
+      transition: all 0.3s;
+    }
+
+    .chip-self { background: #1c2e4a; border-color: #3b82f6; color: #93c5fd; }
+    .chip-leader { background: #2d1f00; border-color: #f59e0b; color: #fbbf24; }
+    .chip-other { background: #1f2937; border-color: #374151; color: #9ca3af; }
+
+    .chip-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+      animation: blink 2s infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    /* 互斥写入演示 */
+    .write-demo {
+      background: #0d1117;
+      border-radius: 8px;
+      padding: 16px;
+    }
+
+    .write-counter {
+      text-align: center;
+      margin-bottom: 12px;
+    }
+
+    .write-counter-label { font-size: 11px; color: #4b5563; text-transform: uppercase; margin-bottom: 4px; }
+    .write-counter-value {
+      font-size: 40px;
+      font-weight: 800;
+      font-family: monospace;
+      color: #7dd3fc;
+    }
+
+    .write-counter-value.updating {
+      animation: counterUpdate 0.3s ease;
+    }
+
+    @keyframes counterUpdate {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.15); color: #4ade80; }
+      100% { transform: scale(1); }
+    }
+
+    .write-history {
+      font-family: monospace;
+      font-size: 11px;
+      color: #4b5563;
+      max-height: 80px;
+      overflow-y: auto;
+    }
+
+    .write-history-entry { padding: 1px 0; }
+    .write-by-self { color: #7dd3fc; }
+    .write-by-other { color: #94a3b8; }
+
+    /* 主标签页选举 */
+    .election-display {
+      text-align: center;
+      padding: 20px;
+      background: #0d1117;
+      border-radius: 8px;
+      margin-bottom: 12px;
+    }
+
+    .election-crown { font-size: 32px; margin-bottom: 8px; }
+    .election-status { font-size: 14px; font-weight: 600; }
+    .election-hint { font-size: 12px; color: #4b5563; margin-top: 4px; }
+
+    /* 日志 */
+    .log-container {
+      background: #0d1117;
+      border: 1px solid #2d3348;
+      border-radius: 8px;
+      padding: 16px;
+      height: 220px;
+      overflow-y: auto;
+      font-family: 'SF Mono', monospace;
+      font-size: 12px;
+      line-height: 1.7;
+    }
+
+    .log-entry { display: flex; gap: 12px; animation: fadeIn 0.2s; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .log-time { color: #4b5563; min-width: 80px; flex-shrink: 0; }
+    .log-leader { color: #fbbf24; }
+    .log-sync { color: #4ade80; }
+    .log-write { color: #7dd3fc; }
+    .log-info { color: #64748b; }
+    .log-warn { color: #fb923c; }
+
+    .tip {
+      display: flex;
+      gap: 10px;
+      padding: 12px 16px;
+      background: #0c2a3e;
+      border: 1px solid #0c4a6e;
+      border-radius: 8px;
+      font-size: 13px;
+      color: #7dd3fc;
+      line-height: 1.6;
+    }
+
+    .open-tab-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      background: #0c4a6e;
+      color: #7dd3fc;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+      text-decoration: none;
+    }
+
+    .open-tab-btn:hover { background: #075985; }
+  </style>
+</head>
+<body>
+
+<div class="page-header">
+  <div class="badge">Demo 06</div>
+  <h1>跨标签页同步</h1>
+  <p class="subtitle">
+    同一源下的所有标签页共享同一个锁空间。本演示展示两个核心跨标签页模式：
+    <strong>主标签页选举</strong>（Leader Election）和<strong>互斥写入</strong>（Mutex Write）。
+  </p>
+</div>
+
+<div class="container">
+
+  <!-- 打开新标签页提示 -->
+  <div class="tip">
+    <span>🔑</span>
+    <span>
+      <strong>多标签页演示：</strong>在多个标签页中打开此页面，观察跨标签页的锁协调行为。
+      第一个打开的标签页会成为"主标签页"，其他标签页为"从标签页"。
+      <br><br>
+      <a class="open-tab-btn" href="06-cross-tab-sync.html" target="_blank">
+        🪟 在新标签页中打开
+      </a>
+    </span>
+  </div>
+
+  <!-- 当前标签页身份 -->
+  <div class="card">
+    <div class="card-title">当前标签页</div>
+    <div class="identity-bar" id="identityBar">
+      <div class="tab-avatar" id="tabAvatar">🌀</div>
+      <div class="tab-info">
+        <div class="tab-id" id="tabId">标签页 ID: 初始化中...</div>
+        <div class="tab-role role-unknown" id="tabRole">正在进行主标签页选举...</div>
+      </div>
+      <div class="tab-uptime" id="tabUptime">0s</div>
+    </div>
+  </div>
+
+  <div class="features-grid">
+
+    <!-- 主标签页选举 -->
+    <div class="feature-card">
+      <div class="feature-title">👑 主标签页选举</div>
+      <div class="feature-desc">
+        利用 <code>ifAvailable: true</code> 实现选举：第一个成功获得锁的标签页成为主标签页，
+        其余标签页为从标签页。主标签页关闭后，从标签页会重新选举。
+      </div>
+
+      <div class="election-display">
+        <div class="election-crown" id="electionCrown">🌀</div>
+        <div class="election-status" id="electionStatus">选举中...</div>
+        <div class="election-hint" id="electionHint">使用 ifAvailable 模式</div>
+      </div>
+
+      <button class="btn-warning" onclick="rerunElection()" style="width:100%">
+        🔄 重新参与选举
+      </button>
+    </div>
+
+    <!-- 互斥写入 -->
+    <div class="feature-card">
+      <div class="feature-title">✏️ 互斥写入（共享计数器）</div>
+      <div class="feature-desc">
+        多个标签页同时点击"递增"，通过独占锁保证每次递增都是原子的读-改-写操作。
+      </div>
+
+      <div class="write-demo">
+        <div class="write-counter">
+          <div class="write-counter-label">共享计数器（localStorage）</div>
+          <div class="write-counter-value" id="sharedCounter">0</div>
+        </div>
+        <div class="write-history" id="writeHistory">
+          <div style="color:#374151">// 写入历史</div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-top:12px;">
+        <button class="btn-success" onclick="incrementCounter()" style="flex:1">
+          ➕ 递增（有锁）
+        </button>
+        <button class="btn-danger" onclick="resetCounter()" style="flex:1">
+          ↺ 重置
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 活跃标签页 -->
+  <div class="card">
+    <div class="card-title">活跃标签页（通过 BroadcastChannel 检测）</div>
+    <div class="tabs-list" id="tabsList">
+      <div style="color:#4b5563;font-size:13px">检测中...</div>
+    </div>
+  </div>
+
+  <!-- 日志 -->
+  <div class="card">
+    <div class="card-title">事件日志</div>
+    <div class="log-container" id="logContainer"></div>
+  </div>
+
+</div>
+
+<script>
+  // 生成唯一标签页 ID
+  const TAB_ID = 'tab-' + Math.random().toString(36).slice(2, 7).toUpperCase();
+  const TAB_EMOJI = ['🟦', '🟩', '🟧', '🟪', '🟥', '⬛', '🟨', '🟫'][Math.floor(Math.random() * 8)];
+  const startTime = Date.now();
+
+  let isLeader = false;
+  let leaderRelease = null;
+  const knownTabs = new Map(); // tabId -> { emoji, lastSeen, isLeader }
+
+  // BroadcastChannel 用于标签页间通信
+  const bc = new BroadcastChannel('web-locks-demo-06');
+
+  // ---- 初始化 ----
+
+  document.getElementById('tabId').textContent = `标签页 ID: ${TAB_ID}`;
+  document.getElementById('tabAvatar').textContent = TAB_EMOJI;
+
+  // 注册自己
+  knownTabs.set(TAB_ID, { emoji: TAB_EMOJI, lastSeen: Date.now(), isLeader: false });
+
+  // 广播自己的存在
+  function broadcast(type, data = {}) {
+    bc.postMessage({ type, tabId: TAB_ID, emoji: TAB_EMOJI, ...data });
+  }
+
+  bc.onmessage = (event) => {
+    const { type, tabId, emoji } = event.data;
+
+    if (tabId === TAB_ID) return;
+
+    knownTabs.set(tabId, {
+      emoji,
+      lastSeen: Date.now(),
+      isLeader: event.data.isLeader || false,
+    });
+
+    if (type === 'hello') {
+      broadcast('hello-reply', { isLeader });
+      renderTabsList();
+    } else if (type === 'hello-reply') {
+      renderTabsList();
+    } else if (type === 'leader-elected') {
+      knownTabs.get(tabId).isLeader = true;
+      log(`👑 ${emoji} ${tabId} 成为主标签页`, 'leader');
+      renderTabsList();
+    } else if (type === 'counter-updated') {
+      updateCounterDisplay(event.data.value, tabId, emoji);
+    } else if (type === 'bye') {
+      knownTabs.delete(tabId);
+      renderTabsList();
+      log(`👋 ${emoji} ${tabId} 离开`, 'info');
+    }
+  };
+
+  // 广播加入
+  broadcast('hello', { isLeader: false });
+
+  // 页面卸载时广播离开
+  window.addEventListener('beforeunload', () => {
+    broadcast('bye');
+    bc.close();
+  });
+
+  // ---- 主标签页选举 ----
+
+  async function runElection() {
+    log(`${TAB_EMOJI} ${TAB_ID} 参与主标签页选举...`, 'leader');
+
+    await navigator.locks.request(
+      'leader-election-lock',
+      { ifAvailable: true },
+      async (lock) => {
+        if (lock === null) {
+          // 已有主标签页
+          isLeader = false;
+          setFollowerUI();
+          log(`${TAB_EMOJI} ${TAB_ID} 成为从标签页（主标签页已存在）`, 'info');
+          return;
+        }
+
+        // 我是主标签页，持有锁直到标签页关闭
+        isLeader = true;
+        leaderRelease = null;
+        setLeaderUI();
+        broadcast('leader-elected', { isLeader: true });
+        log(`${TAB_EMOJI} ${TAB_ID} 成为主标签页 🎉`, 'leader');
+
+        // 持有锁直到页面卸载
+        await new Promise(resolve => {
+          leaderRelease = resolve;
+          window.addEventListener('beforeunload', resolve, { once: true });
+        });
+
+        log(`${TAB_EMOJI} ${TAB_ID} 主标签页锁释放`, 'info');
+      }
+    );
+
+    // 如果主标签页锁释放了（主标签页关闭），重新选举
+    if (isLeader) {
+      isLeader = false;
+    } else {
+      // 作为从标签页，监听主标签页锁的释放
+      watchForLeaderChange();
+    }
+  }
+
+  async function watchForLeaderChange() {
+    // 等待主标签页锁变为可用（主标签页关闭时）
+    await navigator.locks.request(
+      'leader-election-lock',
+      { ifAvailable: true },
+      async (lock) => {
+        if (lock === null) {
+          // 主标签页仍在，继续等待
+          setTimeout(watchForLeaderChange, 2000);
+          return;
+        }
+
+        // 主标签页已离开，我来接任
+        isLeader = true;
+        setLeaderUI();
+        broadcast('leader-elected', { isLeader: true });
+        log(`${TAB_EMOJI} ${TAB_ID} 接任成为新的主标签页 👑`, 'leader');
+
+        await new Promise(resolve => {
+          leaderRelease = resolve;
+          window.addEventListener('beforeunload', resolve, { once: true });
+        });
+      }
+    );
+  }
+
+  async function rerunElection() {
+    log(`${TAB_EMOJI} 重新参与选举...`, 'info');
+    await runElection();
+  }
+
+  function setLeaderUI() {
+    const bar = document.getElementById('identityBar');
+    bar.className = 'identity-bar is-leader';
+    document.getElementById('tabRole').textContent = '主标签页（Leader）';
+    document.getElementById('tabRole').className = 'tab-role role-leader';
+    document.getElementById('electionCrown').textContent = '👑';
+    document.getElementById('electionStatus').textContent = '我是主标签页！';
+    document.getElementById('electionHint').textContent = `持有 leader-election-lock`;
+    knownTabs.get(TAB_ID).isLeader = true;
+    renderTabsList();
+  }
+
+  function setFollowerUI() {
+    const bar = document.getElementById('identityBar');
+    bar.className = 'identity-bar is-follower';
+    document.getElementById('tabRole').textContent = '从标签页（Follower）';
+    document.getElementById('tabRole').className = 'tab-role role-follower';
+    document.getElementById('electionCrown').textContent = '🔵';
+    document.getElementById('electionStatus').textContent = '我是从标签页';
+    document.getElementById('electionHint').textContent = '等待主标签页关闭后重新选举';
+    knownTabs.get(TAB_ID).isLeader = false;
+    renderTabsList();
+  }
+
+  // ---- 互斥写入 ----
+
+  const COUNTER_KEY = 'web-locks-demo-counter';
+
+  function getCounter() {
+    return parseInt(localStorage.getItem(COUNTER_KEY) || '0');
+  }
+
+  function setCounter(val) {
+    localStorage.setItem(COUNTER_KEY, String(val));
+  }
+
+  async function incrementCounter() {
+    log(`${TAB_EMOJI} 请求写入锁，准备递增计数器...`, 'write');
+
+    await navigator.locks.request('shared-counter-lock', async () => {
+      const current = getCounter();
+      // 模拟异步读写延迟
+      await sleep(100);
+      const newVal = current + 1;
+      setCounter(newVal);
+
+      log(`${TAB_EMOJI} 计数器：${current} → ${newVal}（原子写入完成）`, 'sync');
+      updateCounterDisplay(newVal, TAB_ID, TAB_EMOJI, true);
+      broadcast('counter-updated', { value: newVal });
+    });
+  }
+
+  function resetCounter() {
+    setCounter(0);
+    updateCounterDisplay(0, TAB_ID, TAB_EMOJI, true);
+    broadcast('counter-updated', { value: 0 });
+    log(`${TAB_EMOJI} 计数器已重置`, 'info');
+  }
+
+  function updateCounterDisplay(value, fromTabId, fromEmoji, isSelf = false) {
+    const el = document.getElementById('sharedCounter');
+    el.textContent = value;
+    el.classList.remove('updating');
+    void el.offsetWidth;
+    el.classList.add('updating');
+
+    const history = document.getElementById('writeHistory');
+    const entry = document.createElement('div');
+    entry.className = `write-history-entry ${isSelf ? 'write-by-self' : 'write-by-other'}`;
+    entry.textContent = `${fromEmoji} ${fromTabId}: → ${value}`;
+    history.appendChild(entry);
+    history.scrollTop = history.scrollHeight;
+  }
+
+  // 监听 localStorage 变化（其他标签页写入）
+  window.addEventListener('storage', (e) => {
+    if (e.key === COUNTER_KEY) {
+      const newVal = parseInt(e.newValue || '0');
+      document.getElementById('sharedCounter').textContent = newVal;
+    }
+  });
+
+  // ---- 标签页列表 ----
+
+  function renderTabsList() {
+    const list = document.getElementById('tabsList');
+    list.innerHTML = '';
+
+    knownTabs.forEach((info, id) => {
+      const isSelf = id === TAB_ID;
+      const isLdr = info.isLeader;
+
+      const chip = document.createElement('div');
+      chip.className = `tab-chip ${isSelf ? 'chip-self' : (isLdr ? 'chip-leader' : 'chip-other')}`;
+      chip.innerHTML = `
+        <div class="chip-dot"></div>
+        ${info.emoji} ${id}
+        ${isSelf ? '（本页）' : ''}
+        ${isLdr ? '👑' : ''}
+      `;
+      list.appendChild(chip);
+    });
+  }
+
+  // ---- 运行时更新 ----
+
+  setInterval(() => {
+    const elapsed = Math.floor((Date.now() - startTime) / 1000);
+    document.getElementById('tabUptime').textContent = `运行 ${elapsed}s`;
+    document.getElementById('sharedCounter').textContent = getCounter();
+  }, 1000);
+
+  // 清理长时间未响应的标签页
+  setInterval(() => {
+    const now = Date.now();
+    knownTabs.forEach((info, id) => {
+      if (id !== TAB_ID && now - info.lastSeen > 10000) {
+        knownTabs.delete(id);
+      }
+    });
+    renderTabsList();
+    broadcast('ping');
+  }, 5000);
+
+  bc.addEventListener('message', (e) => {
+    if (e.data.type === 'ping' && e.data.tabId !== TAB_ID) {
+      broadcast('pong');
+    }
+    if (e.data.type === 'pong') {
+      const info = knownTabs.get(e.data.tabId);
+      if (info) info.lastSeen = Date.now();
+    }
+  });
+
+  function log(msg, type = 'info') {
+    const container = document.getElementById('logContainer');
+    const time = new Date().toTimeString().slice(0, 8);
+    const entry = document.createElement('div');
+    entry.className = 'log-entry';
+    entry.innerHTML = `<span class="log-time">${time}</span><span class="log-${type}">${msg}</span>`;
+    container.appendChild(entry);
+    container.scrollTop = container.scrollHeight;
+  }
+
+  function sleep(ms) {
+    return new Promise(r => setTimeout(r, ms));
+  }
+
+  // ---- 启动 ----
+  updateCounterDisplay(getCounter(), TAB_ID, TAB_EMOJI, false);
+  renderTabsList();
+  runElection();
+</script>
+
+</body>
+</html>

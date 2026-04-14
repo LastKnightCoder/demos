@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>01 · 基础锁获取与释放 — Web Locks API</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 32px 24px;
+    }
+
+    .page-header {
+      max-width: 800px;
+      margin: 0 auto 32px;
+    }
+
+    .badge {
+      display: inline-block;
+      background: #1e40af;
+      color: #93c5fd;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 3px 10px;
+      border-radius: 4px;
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: #f1f5f9;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      color: #94a3b8;
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .card {
+      background: #1e2130;
+      border: 1px solid #2d3348;
+      border-radius: 12px;
+      padding: 24px;
+    }
+
+    .card-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 16px;
+    }
+
+    .controls {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-primary {
+      background: #3b82f6;
+      color: white;
+    }
+    .btn-primary:hover { background: #2563eb; }
+    .btn-primary:disabled { background: #1e3a5f; color: #4b6a9b; cursor: not-allowed; }
+
+    .btn-secondary {
+      background: #374151;
+      color: #d1d5db;
+    }
+    .btn-secondary:hover { background: #4b5563; }
+
+    .btn-danger {
+      background: #dc2626;
+      color: white;
+    }
+    .btn-danger:hover { background: #b91c1c; }
+
+    .lock-status {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px 20px;
+      background: #141824;
+      border-radius: 8px;
+      border: 1px solid #2d3348;
+    }
+
+    .lock-icon {
+      font-size: 32px;
+      transition: all 0.3s;
+    }
+
+    .lock-info {
+      flex: 1;
+    }
+
+    .lock-name {
+      font-size: 16px;
+      font-weight: 600;
+      color: #f1f5f9;
+      margin-bottom: 4px;
+    }
+
+    .lock-state {
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .state-free { color: #4ade80; }
+    .state-held { color: #fb923c; }
+    .state-waiting { color: #facc15; }
+
+    .progress-bar {
+      height: 4px;
+      background: #2d3348;
+      border-radius: 2px;
+      margin-top: 12px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: #3b82f6;
+      border-radius: 2px;
+      width: 0%;
+      transition: width 0.1s linear;
+    }
+
+    .log-container {
+      background: #0d1117;
+      border: 1px solid #2d3348;
+      border-radius: 8px;
+      padding: 16px;
+      height: 280px;
+      overflow-y: auto;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    .log-entry {
+      display: flex;
+      gap: 12px;
+      padding: 2px 0;
+      animation: fadeIn 0.2s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .log-time {
+      color: #4b5563;
+      min-width: 80px;
+      flex-shrink: 0;
+    }
+
+    .log-msg { flex: 1; }
+    .log-acquire { color: #60a5fa; }
+    .log-release { color: #4ade80; }
+    .log-waiting { color: #facc15; }
+    .log-error { color: #f87171; }
+    .log-info { color: #94a3b8; }
+
+    .code-block {
+      background: #0d1117;
+      border: 1px solid #2d3348;
+      border-radius: 8px;
+      padding: 20px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 13px;
+      line-height: 1.8;
+      overflow-x: auto;
+    }
+
+    .code-block .kw { color: #c792ea; }
+    .code-block .fn { color: #82aaff; }
+    .code-block .str { color: #c3e88d; }
+    .code-block .cm { color: #546e7a; font-style: italic; }
+    .code-block .num { color: #f78c6c; }
+
+    .tip {
+      display: flex;
+      gap: 10px;
+      padding: 12px 16px;
+      background: #1a2744;
+      border: 1px solid #1e3a5f;
+      border-radius: 8px;
+      font-size: 13px;
+      color: #93c5fd;
+      line-height: 1.6;
+    }
+
+    .tip-icon { flex-shrink: 0; }
+
+    .duration-slider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .duration-slider label {
+      font-size: 13px;
+      color: #94a3b8;
+      min-width: 80px;
+    }
+
+    input[type="range"] {
+      flex: 1;
+      accent-color: #3b82f6;
+    }
+
+    .duration-value {
+      font-size: 13px;
+      color: #f1f5f9;
+      font-weight: 600;
+      min-width: 50px;
+      text-align: right;
+    }
+  </style>
+</head>
+<body>
+
+<div class="page-header">
+  <div class="badge">Demo 01</div>
+  <h1>基础锁获取与释放</h1>
+  <p class="subtitle">
+    观察 <code>navigator.locks.request()</code> 的基本行为：锁的获取、持有期间的状态、以及回调结束后的自动释放。
+  </p>
+</div>
+
+<div class="container">
+
+  <!-- 锁状态可视化 -->
+  <div class="card">
+    <div class="card-title">锁状态</div>
+    <div class="lock-status">
+      <div class="lock-icon" id="lockIcon">🔓</div>
+      <div class="lock-info">
+        <div class="lock-name">"my-resource"</div>
+        <div class="lock-state state-free" id="lockState">空闲（未持有）</div>
+      </div>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+  </div>
+
+  <!-- 控制面板 -->
+  <div class="card">
+    <div class="card-title">控制</div>
+    <div class="duration-slider">
+      <label>持有时长</label>
+      <input type="range" id="durationSlider" min="500" max="5000" step="500" value="2000">
+      <span class="duration-value" id="durationValue">2000ms</span>
+    </div>
+    <div class="controls" style="margin-top: 16px;">
+      <button class="btn-primary" id="btnAcquire" onclick="acquireLock()">
+        🔒 获取锁
+      </button>
+      <button class="btn-secondary" onclick="clearLog()">
+        🗑 清空日志
+      </button>
+    </div>
+  </div>
+
+  <!-- 代码展示 -->
+  <div class="card">
+    <div class="card-title">等效代码</div>
+    <div class="code-block">
+      <span class="cm">// 获取名为 "my-resource" 的独占锁</span><br>
+      <span class="kw">const</span> result = <span class="kw">await</span> navigator.locks.<span class="fn">request</span>(<span class="str">'my-resource'</span>, <span class="kw">async</span> (lock) => {<br>
+      &nbsp;&nbsp;<span class="cm">// 此时独占持有该锁，其他请求必须等待</span><br>
+      &nbsp;&nbsp;console.<span class="fn">log</span>(<span class="str">'持有锁：'</span>, lock.name, lock.mode);<br>
+      <br>
+      &nbsp;&nbsp;<span class="kw">await</span> <span class="fn">sleep</span>(<span class="num">2000</span>); <span class="cm">// 模拟异步操作</span><br>
+      <br>
+      &nbsp;&nbsp;<span class="kw">return</span> <span class="str">'操作完成'</span>; <span class="cm">// resolve → 锁自动释放</span><br>
+      });<br>
+      <br>
+      <span class="cm">// 锁已释放，result === '操作完成'</span>
+    </div>
+  </div>
+
+  <!-- 提示 -->
+  <div class="tip">
+    <span class="tip-icon">💡</span>
+    <span>
+      锁的持有时间由回调返回的 Promise 决定。Promise resolve 或 reject 时，锁<strong>立即自动释放</strong>，无需手动操作。
+      如果持有锁的标签页被关闭，锁也会自动释放，不会造成死锁。
+    </span>
+  </div>
+
+  <!-- 日志 -->
+  <div class="card">
+    <div class="card-title">事件日志</div>
+    <div class="log-container" id="logContainer">
+      <div class="log-entry">
+        <span class="log-time">--:--:--</span>
+        <span class="log-msg log-info">点击「获取锁」开始演示...</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  let isHeld = false;
+  let progressInterval = null;
+
+  const durationSlider = document.getElementById('durationSlider');
+  const durationValue = document.getElementById('durationValue');
+
+  durationSlider.addEventListener('input', () => {
+    durationValue.textContent = durationSlider.value + 'ms';
+  });
+
+  function log(msg, type = 'info') {
+    const container = document.getElementById('logContainer');
+    const now = new Date();
+    const time = now.toTimeString().slice(0, 8);
+
+    const entry = document.createElement('div');
+    entry.className = 'log-entry';
+    entry.innerHTML = `
+      <span class="log-time">${time}</span>
+      <span class="log-msg log-${type}">${msg}</span>
+    `;
+    container.appendChild(entry);
+    container.scrollTop = container.scrollHeight;
+  }
+
+  function clearLog() {
+    document.getElementById('logContainer').innerHTML = '';
+    log('日志已清空', 'info');
+  }
+
+  function setLockState(state) {
+    const icon = document.getElementById('lockIcon');
+    const stateEl = document.getElementById('lockState');
+    const fill = document.getElementById('progressFill');
+
+    if (state === 'held') {
+      icon.textContent = '🔒';
+      stateEl.textContent = '已持有（独占模式）';
+      stateEl.className = 'lock-state state-held';
+    } else {
+      icon.textContent = '🔓';
+      stateEl.textContent = '空闲（未持有）';
+      stateEl.className = 'lock-state state-free';
+      fill.style.width = '0%';
+    }
+  }
+
+  function startProgress(duration) {
+    const fill = document.getElementById('progressFill');
+    const start = Date.now();
+
+    progressInterval = setInterval(() => {
+      const elapsed = Date.now() - start;
+      const pct = Math.min((elapsed / duration) * 100, 100);
+      fill.style.width = pct + '%';
+      if (pct >= 100) clearInterval(progressInterval);
+    }, 50);
+  }
+
+  async function acquireLock() {
+    const btn = document.getElementById('btnAcquire');
+    const duration = parseInt(durationSlider.value);
+
+    btn.disabled = true;
+    log(`请求独占锁 "my-resource"...`, 'waiting');
+
+    const t0 = Date.now();
+
+    await navigator.locks.request('my-resource', async (lock) => {
+      const waitTime = Date.now() - t0;
+      log(`✅ 获得锁！等待了 ${waitTime}ms | mode: ${lock.mode}`, 'acquire');
+
+      isHeld = true;
+      setLockState('held');
+      startProgress(duration);
+
+      // 模拟持有锁期间的异步工作
+      await sleep(duration);
+
+      log(`🔓 回调结束，锁即将自动释放`, 'release');
+    });
+
+    // 锁已释放
+    isHeld = false;
+    setLockState('free');
+    clearInterval(progressInterval);
+    log(`✨ 锁已释放，总耗时 ${Date.now() - t0}ms`, 'release');
+
+    btn.disabled = false;
+  }
+
+  function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+</script>
+
+</body>
+</html>
