@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>@property Demo 4 - 类型安全与初始值</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 40px;
+      background: #f8fafc;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      padding: 40px;
+    }
+
+    h1 {
+      font-size: 24px;
+      color: #1e293b;
+    }
+
+    .description {
+      color: #64748b;
+      text-align: center;
+      max-width: 650px;
+      line-height: 1.6;
+    }
+
+    .demo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+      max-width: 900px;
+      width: 100%;
+    }
+
+    .demo-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 24px;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .demo-card h3 {
+      color: #334155;
+      font-size: 16px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .demo-card h3 .badge {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+
+    .badge.registered { background: #d1fae5; color: #065f46; }
+    .badge.unregistered { background: #fee2e2; color: #991b1b; }
+
+    /* ========== 示例 1：类型安全回退 ========== */
+    @property --safe-color {
+      syntax: "<color>";
+      inherits: false;
+      initial-value: #6366f1;
+    }
+
+    .type-safe-demo {
+      display: flex;
+      gap: 16px;
+      margin-top: 12px;
+    }
+
+    .color-box {
+      width: 80px;
+      height: 80px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: white;
+      font-weight: 600;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
+
+    .box-valid {
+      --safe-color: #10b981;
+      background: var(--safe-color);
+    }
+
+    .box-invalid {
+      --safe-color: not-a-color;
+      background: var(--safe-color);
+    }
+
+    .box-unregistered {
+      --unsafe-color: not-a-color;
+      background: var(--unsafe-color, #ef4444);
+    }
+
+    .box-label {
+      text-align: center;
+      font-size: 11px;
+      color: #64748b;
+      margin-top: 6px;
+    }
+
+    /* ========== 示例 2：长度类型安全 ========== */
+    @property --safe-size {
+      syntax: "<length>";
+      inherits: false;
+      initial-value: 100px;
+    }
+
+    .size-demo {
+      display: flex;
+      align-items: flex-end;
+      gap: 16px;
+      margin-top: 12px;
+    }
+
+    .size-box {
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      border-radius: 8px;
+      height: 60px;
+    }
+
+    .size-valid {
+      --safe-size: 150px;
+      width: var(--safe-size);
+    }
+
+    .size-invalid {
+      --safe-size: red;
+      width: var(--safe-size);
+    }
+
+    /* ========== 示例 3：设计令牌 ========== */
+    @property --spacing-unit {
+      syntax: "<length>";
+      inherits: true;
+      initial-value: 8px;
+    }
+
+    @property --radius {
+      syntax: "<length>";
+      inherits: true;
+      initial-value: 8px;
+    }
+
+    @property --primary {
+      syntax: "<color>";
+      inherits: true;
+      initial-value: #6366f1;
+    }
+
+    .token-demo {
+      margin-top: 12px;
+    }
+
+    .token-component {
+      padding: calc(var(--spacing-unit) * 2);
+      border-radius: var(--radius);
+      background: var(--primary);
+      color: white;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .token-sm {
+      --spacing-unit: 4px;
+      --radius: 4px;
+    }
+
+    .token-lg {
+      --spacing-unit: 16px;
+      --radius: 16px;
+    }
+
+    /* ========== 示例 4：交互式测试 ========== */
+    @property --test-color {
+      syntax: "<color>";
+      inherits: false;
+      initial-value: #6366f1;
+    }
+
+    @property --test-size {
+      syntax: "<length>";
+      inherits: false;
+      initial-value: 100px;
+    }
+
+    .interactive-demo {
+      margin-top: 12px;
+    }
+
+    .test-box {
+      width: var(--test-size);
+      height: 60px;
+      background: var(--test-color);
+      border-radius: 8px;
+      transition: --test-color 0.3s, --test-size 0.3s;
+      margin-bottom: 12px;
+    }
+
+    .controls {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .control-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .control-row label {
+      font-size: 12px;
+      color: #64748b;
+      width: 40px;
+    }
+
+    .control-row input[type="text"] {
+      flex: 1;
+      padding: 6px 10px;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      font-size: 13px;
+      font-family: "Fira Code", monospace;
+    }
+
+    .control-row button {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 6px;
+      background: #6366f1;
+      color: white;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .control-row button:hover {
+      background: #4f46e5;
+    }
+
+    .result-text {
+      font-size: 12px;
+      color: #64748b;
+      margin-top: 8px;
+      min-height: 20px;
+    }
+
+    .note-box {
+      margin-top: 40px;
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      border-radius: 12px;
+      padding: 20px;
+      max-width: 900px;
+      width: 100%;
+    }
+
+    .note-box h4 {
+      color: #92400e;
+      margin-bottom: 8px;
+    }
+
+    .note-box p {
+      color: #78350f;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .note-box code {
+      background: #fef3c7;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <h1>@property 类型安全与初始值回退</h1>
+  <p class="description">
+    @property 注册的属性具有类型检查能力——当赋予无效值时，浏览器会自动回退到 initial-value，
+    而不是像普通自定义属性那样让整个声明失效。
+  </p>
+
+  <div class="demo-grid">
+    <div class="demo-card">
+      <h3>颜色类型安全 <span class="badge registered">@property</span></h3>
+      <p style="font-size: 13px; color: #64748b;">设置无效颜色值时，自动回退到 initial-value</p>
+      <div class="type-safe-demo">
+        <div>
+          <div class="color-box box-valid">有效值</div>
+          <div class="box-label">--safe-color: #10b981</div>
+        </div>
+        <div>
+          <div class="color-box box-invalid">无效值</div>
+          <div class="box-label">--safe-color: not-a-color<br>→ 回退到 #6366f1</div>
+        </div>
+        <div>
+          <div class="color-box box-unregistered">未注册</div>
+          <div class="box-label">var() 回退生效<br>→ #ef4444</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="demo-card">
+      <h3>长度类型安全 <span class="badge registered">@property</span></h3>
+      <p style="font-size: 13px; color: #64748b;">将颜色值赋给长度属性时，回退到 initial-value</p>
+      <div class="size-demo">
+        <div style="flex:1">
+          <div class="size-box size-valid"></div>
+          <div class="box-label">--safe-size: 150px (有效)</div>
+        </div>
+        <div style="flex:1">
+          <div class="size-box size-invalid"></div>
+          <div class="box-label">--safe-size: red (无效) → 100px</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="demo-card">
+      <h3>设计令牌 (Design Tokens) <span class="badge registered">@property</span></h3>
+      <p style="font-size: 13px; color: #64748b;">为设计系统变量提供类型约束和默认值</p>
+      <div class="token-demo">
+        <div class="token-component token-sm">Small: spacing=4px, radius=4px</div>
+        <div class="token-component">Default: spacing=8px, radius=8px</div>
+        <div class="token-component token-lg">Large: spacing=16px, radius=16px</div>
+      </div>
+    </div>
+
+    <div class="demo-card">
+      <h3>交互式测试</h3>
+      <p style="font-size: 13px; color: #64748b;">尝试输入无效值，观察回退行为</p>
+      <div class="interactive-demo">
+        <div class="test-box" id="testBox"></div>
+        <div class="controls">
+          <div class="control-row">
+            <label>颜色</label>
+            <input type="text" id="colorInput" placeholder="e.g. red, #ff0, invalid">
+            <button onclick="applyColor()">应用</button>
+          </div>
+          <div class="control-row">
+            <label>宽度</label>
+            <input type="text" id="sizeInput" placeholder="e.g. 200px, blue, 50%">
+            <button onclick="applySize()">应用</button>
+          </div>
+        </div>
+        <div class="result-text" id="resultText"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="note-box">
+    <h4>关键区别：@property 回退 vs var() 回退</h4>
+    <p>
+      <code>var(--x, fallback)</code> 的回退只在变量<strong>完全未定义</strong>时触发。如果变量有值但值无效（如把 <code>42px</code> 赋给需要颜色的地方），var() 回退<strong>不会</strong>触发，属性声明将直接失效。<br><br>
+      而 <code>@property</code> 的 <code>initial-value</code> 在赋予的值<strong>类型不匹配</strong>时就会触发回退，这是真正的类型安全机制。
+    </p>
+  </div>
+
+  <script>
+    function applyColor() {
+      const value = document.getElementById('colorInput').value;
+      const box = document.getElementById('testBox');
+      box.style.setProperty('--test-color', value);
+      const computed = getComputedStyle(box).getPropertyValue('--test-color').trim();
+      document.getElementById('resultText').textContent =
+        `输入: "${value}" → 计算值: "${computed}"`;
+    }
+
+    function applySize() {
+      const value = document.getElementById('sizeInput').value;
+      const box = document.getElementById('testBox');
+      box.style.setProperty('--test-size', value);
+      const computed = getComputedStyle(box).getPropertyValue('--test-size').trim();
+      document.getElementById('resultText').textContent =
+        `输入: "${value}" → 计算值: "${computed}"`;
+    }
+  </script>
+</body>
+</html>

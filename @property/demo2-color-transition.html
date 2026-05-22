@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>@property Demo 2 - 颜色平滑过渡</title>
+  <style>
+    @property --btn-bg {
+      syntax: "<color>";
+      inherits: false;
+      initial-value: #6366f1;
+    }
+
+    @property --btn-shadow {
+      syntax: "<color>";
+      inherits: false;
+      initial-value: rgba(99, 102, 241, 0.4);
+    }
+
+    @property --card-border {
+      syntax: "<color>";
+      inherits: false;
+      initial-value: #e2e8f0;
+    }
+
+    @property --card-bg {
+      syntax: "<color>";
+      inherits: false;
+      initial-value: #ffffff;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 40px;
+      background: #f8fafc;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      padding: 40px;
+    }
+
+    h1 {
+      font-size: 24px;
+      color: #1e293b;
+    }
+
+    .description {
+      color: #64748b;
+      text-align: center;
+      max-width: 600px;
+      line-height: 1.6;
+    }
+
+    .demo-section {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 30px;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    /* 按钮演示 */
+    .button-group {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .btn {
+      padding: 14px 32px;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      color: white;
+      cursor: pointer;
+      background: var(--btn-bg);
+      box-shadow: 0 4px 14px var(--btn-shadow);
+      transition: --btn-bg 0.4s ease, --btn-shadow 0.4s ease, transform 0.2s;
+    }
+
+    .btn:hover {
+      --btn-bg: #4f46e5;
+      --btn-shadow: rgba(79, 70, 229, 0.6);
+      transform: translateY(-2px);
+    }
+
+    .btn:active {
+      --btn-bg: #3730a3;
+      transform: translateY(0);
+    }
+
+    .btn.success {
+      --btn-bg: #10b981;
+      --btn-shadow: rgba(16, 185, 129, 0.4);
+    }
+
+    .btn.success:hover {
+      --btn-bg: #059669;
+      --btn-shadow: rgba(5, 150, 105, 0.6);
+    }
+
+    .btn.danger {
+      --btn-bg: #ef4444;
+      --btn-shadow: rgba(239, 68, 68, 0.4);
+    }
+
+    .btn.danger:hover {
+      --btn-bg: #dc2626;
+      --btn-shadow: rgba(220, 38, 38, 0.6);
+    }
+
+    /* 卡片演示 */
+    .card {
+      width: 280px;
+      padding: 24px;
+      border-radius: 16px;
+      background: var(--card-bg);
+      border: 2px solid var(--card-border);
+      transition: --card-border 0.3s ease, --card-bg 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+      cursor: pointer;
+    }
+
+    .card:hover {
+      --card-border: #6366f1;
+      --card-bg: #fefffe;
+      transform: translateY(-4px);
+      box-shadow: 0 12px 32px rgba(99, 102, 241, 0.15);
+    }
+
+    .card h3 {
+      color: #1e293b;
+      margin-bottom: 8px;
+    }
+
+    .card p {
+      color: #64748b;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .card .tag {
+      display: inline-block;
+      margin-top: 12px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      background: #eef2ff;
+      color: #6366f1;
+    }
+
+    /* 对比演示 */
+    .comparison {
+      display: flex;
+      gap: 30px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
+    .comparison-item {
+      text-align: center;
+    }
+
+    .comparison-item p {
+      margin-top: 8px;
+      font-size: 13px;
+      color: #64748b;
+    }
+
+    .box-no-property {
+      width: 120px;
+      height: 120px;
+      border-radius: 12px;
+      background: var(--demo-color, #6366f1);
+      transition: --demo-color 0.5s;
+      cursor: pointer;
+    }
+
+    .box-no-property:hover {
+      --demo-color: #ec4899;
+    }
+
+    @property --demo-color-registered {
+      syntax: "<color>";
+      inherits: false;
+      initial-value: #6366f1;
+    }
+
+    .box-with-property {
+      width: 120px;
+      height: 120px;
+      border-radius: 12px;
+      background: var(--demo-color-registered);
+      transition: --demo-color-registered 0.5s;
+      cursor: pointer;
+    }
+
+    .box-with-property:hover {
+      --demo-color-registered: #ec4899;
+    }
+
+    .label {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-top: 6px;
+    }
+
+    .label.bad { background: #fee2e2; color: #dc2626; }
+    .label.good { background: #d1fae5; color: #059669; }
+  </style>
+</head>
+<body>
+  <h1>@property 实现颜色平滑过渡</h1>
+  <p class="description">
+    通过 @property 注册颜色类型的自定义属性，可以让组件的颜色在状态变化时平滑过渡，
+    而不是像普通自定义属性那样直接跳变。
+  </p>
+
+  <h2 style="color: #475569; font-size: 18px;">按钮悬停效果</h2>
+  <div class="demo-section">
+    <div class="button-group">
+      <button class="btn">Primary Button</button>
+      <button class="btn success">Success Button</button>
+      <button class="btn danger">Danger Button</button>
+    </div>
+  </div>
+
+  <h2 style="color: #475569; font-size: 18px; margin-top: 20px;">卡片悬停效果</h2>
+  <div class="demo-section">
+    <div class="card">
+      <h3>设计系统</h3>
+      <p>使用 @property 为 UI 组件定义可动画的主题变量。</p>
+      <span class="tag">CSS Houdini</span>
+    </div>
+    <div class="card">
+      <h3>动态主题</h3>
+      <p>通过改变注册属性的值，实现整体主题的平滑切换。</p>
+      <span class="tag">Theme</span>
+    </div>
+  </div>
+
+  <h2 style="color: #475569; font-size: 18px; margin-top: 20px;">效果对比：注册 vs 未注册</h2>
+  <div class="comparison">
+    <div class="comparison-item">
+      <div class="box-no-property"></div>
+      <p>未注册 (直接跳变)</p>
+      <span class="label bad">无过渡</span>
+    </div>
+    <div class="comparison-item">
+      <div class="box-with-property"></div>
+      <p>已注册 @property</p>
+      <span class="label good">平滑过渡</span>
+    </div>
+  </div>
+</body>
+</html>

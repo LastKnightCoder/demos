@@ -101,7 +101,7 @@ Service Worker：收到推送 → 读取服务器笔记（旧版本）→ 写入
 
 前端通常用一个变量来防重复：
 
-```JS
+```JavaScript
 let isSubmitting = false;
 
 async function submitOrder() {
@@ -138,9 +138,9 @@ async function submitOrder() {
 
 开发者只能用一些"土方法"来应对：
 
-​**`方法一：用 `​**​**​**​**`localStorage`​**​**​**​**` 设置标志位`**
+​**`方法一：用 ``localStorage`` 设置标志位`**
 
-```JS
+```JavaScript
 // 标签页 A
 localStorage.setItem('syncing', 'true');
 await doSync();
@@ -152,11 +152,11 @@ if (localStorage.getItem('syncing') === 'true') return; // 跳过
 
 `问题：setItem` 和后续的检查不是原子操作。两个标签页可能同时读到 `null`，同时认为"没有在同步"，于是都设置了标志位，都开始同步。而且 `localStorage` 在 Worker 里根本无法访问。
 
-​**方法二：用 ​**​**`​BroadcastChannel`**​**​​ 协商**
+​**方法二：用 ​**​**`​BroadcastChannel`​​ 协商**
 
 `BroadcastChannel` 允许同源的标签页和 Worker 互相发消息。可以用它来实现一个"谁先喊谁做"的协议：
 
-```JS
+```JavaScript
 const bc = new BroadcastChannel('sync-channel');
 
 bc.postMessage({ type: 'want-to-sync', tabId: myId });
@@ -174,7 +174,7 @@ bc.onmessage = (e) => {
 
 IndexedDB 的事务本身是有隔离性的，可以用它来保护数据库操作的原子性。
 
-```JS
+```JavaScript
 const tx = db.transaction('notes', 'readwrite');
 const note = await tx.objectStore('notes').get(id);
 note.content = newContent;
@@ -196,7 +196,7 @@ await tx.objectStore('notes').put(note);
 
 回到场景一的购物车问题，有了 Web Locks，解法变得非常直接：
 
-```JS
+```JavaScript
 async function updateCart(operation) {
   await navigator.locks.request('shopping-cart', async () => {
     // 在锁的保护下，读取-修改-写入是原子的
@@ -239,7 +239,7 @@ lock mode: "exclusive"         ← 访问模式
 
 ### API 签名
 
-```JS
+```JavaScript
 navigator.locks.request(name, [options], callback)
 ```
 
@@ -250,7 +250,7 @@ navigator.locks.request(name, [options], callback)
 
 ### 最简示例
 
-```JS
+```JavaScript
 // 获取名为 "my-resource" 的独占锁
 const result = await navigator.locks.request('my-resource', async (lock) => {
   // 此时我们独占持有该锁
@@ -269,7 +269,7 @@ console.log(result); // '操作完成'
 
 锁的持有时间由 Promise 的生命周期决定。如果回调是同步的，锁会在回调返回后立即释放——这通常不是你想要的。
 
-```JS
+```JavaScript
 // ❌ 错误：锁在 fetch 发出后就释放了
 navigator.locks.request('data', (lock) => {
   fetch('/api/data').then(save); // 没有 await，没有返回 Promise
@@ -286,13 +286,13 @@ navigator.locks.request('data', async (lock) => {
 
 ## 4. 锁的模式：独占锁与共享锁
 
-`mode`​** 只有两个值：​**`'exclusive'`**​**​**（默认）和 ​**`'shared'`**​**。它们描述的是​**同一个锁名称**上的两种请求方式，浏览器根据当前持有情况决定新请求是立即获得还是排队等待。
+`mode`​** 只有两个值：​**`'exclusive'`​**（默认）和 ​**`'shared'`。它们描述的是​**同一个锁名称**上的两种请求方式，浏览器根据当前持有情况决定新请求是立即获得还是排队等待。
 
 ### 独占锁（exclusive）
 
 同一时刻只有​**一个**持有者，其他任何请求（无论 `shared` 还是 `exclusive`）都必须等待。不指定 `mode` 时默认就是独占锁。
 
-```JS
+```JavaScript
 await navigator.locks.request('my-resource', async () => {
   // 此时没有任何其他代码能同时持有 'my-resource'
   const value = await readCounter();
@@ -304,7 +304,7 @@ await navigator.locks.request('my-resource', async () => {
 
 多个 `shared` 请求可以​**同时**持有同一个锁，互不阻塞。但只要有任何一个 `exclusive` 请求存在（无论是正在持有还是在等待），`shared` 就必须等待。
 
-```JS
+```JavaScript
 // 这两个调用会同时运行，互不等待
 navigator.locks.request('my-resource', { mode: 'shared' }, async () => {
   console.log('读者 A 开始');
@@ -321,9 +321,9 @@ navigator.locks.request('my-resource', { mode: 'shared' }, async () => {
 
 ### 两种模式针对的是同一个锁名
 
-这是最容易混淆的地方：​**`shared`​**​** 和 ​**​**`exclusive`​**​** 不是两把不同的锁，而是对同一个锁名的两种请求方式**。
+这是最容易混淆的地方：​**`shared` 和 ​`exclusive` 不是两把不同的锁，而是对同一个锁名的两种请求方式**。
 
-```JS
+```JavaScript
 // 以下三个请求，操作的都是同一个叫 'my-resource' 的锁
 navigator.locks.request('my-resource', { mode: 'shared' },    callback); // 请求 A
 navigator.locks.request('my-resource', { mode: 'shared' },    callback); // 请求 B
@@ -345,7 +345,7 @@ navigator.locks.request('my-resource', { mode: 'exclusive' }, callback); // 请�
 
 如果你的业务里，读操作远多于写操作，而且多个读操作同时进行不会有问题（读不改变数据），那么就可以利用这个特性提升并发性能：
 
-```JS
+```JavaScript
 // 约定：读操作用 shared，写操作用 exclusive，请求同一个锁名
 async function readNote(id) {
   return navigator.locks.request(`note-${id}`, { mode: 'shared' }, async () => {
@@ -395,7 +395,7 @@ t=5  B 的回调完成 → 释放锁 → C 获得锁
 
 同一上下文可以请求自己已持有的锁，但要注意​**死锁风险**：
 
-```JS
+```JavaScript
 // ✅ 安全：不同名称的锁可以嵌套
 await navigator.locks.request('lock-A', async () => {
   await navigator.locks.request('lock-B', async () => {
@@ -416,9 +416,9 @@ await navigator.locks.request('lock-A', async () => {
 
 ### 6.1 ifAvailable：非阻塞尝试
 
-​**`ifAvailable: true`** 时，如果锁当前不可用，​**立即以 ​**​**`​null`**​**​​ 调用回调**，而不是等待。
+​**`ifAvailable: true`** 时，如果锁当前不可用，​**立即以 ​**​**`​null`​​ 调用回调**，而不是等待。
 
-```JS
+```JavaScript
 await navigator.locks.request('resource', { ifAvailable: true }, async (lock) => {
   if (lock === null) {
     // 锁不可用，跳过或稍后重试
@@ -437,7 +437,7 @@ await navigator.locks.request('resource', { ifAvailable: true }, async (lock) =>
 
 假设你的应用每 30 秒自动把本地数据同步到服务器。如果上一次同步还没完成，这次就跳过，等下次再试——重复同步没有意义，还会浪费带宽。
 
-```JS
+```JavaScript
 setInterval(async () => {
   await navigator.locks.request('background-sync', { ifAvailable: true }, async (lock) => {
     if (lock === null) {
@@ -455,7 +455,7 @@ setInterval(async () => {
 
 "乐观更新"是指：用户点击点赞按钮，界面立刻显示已点赞，同时在后台发请求给服务器。这种操作不需要精确串行——如果当前已经有一个点赞请求在处理，新的点击直接跳过即可（或者用最新状态覆盖），不需要排队。
 
-```JS
+```JavaScript
 async function toggleLike(postId) {
   await navigator.locks.request(`like-${postId}`, { ifAvailable: true }, async (lock) => {
     if (lock === null) {
@@ -473,7 +473,7 @@ async function toggleLike(postId) {
 
 有些操作（比如导出大文件、批量处理）持有锁的时间很长。如果用户触发了另一个需要同一把锁的操作，与其让用户界面一直转圈等待，不如立刻告知"当前有任务在进行，请稍后再试"。
 
-```JS
+```JavaScript
 async function exportData() {
   await navigator.locks.request('export', { ifAvailable: true }, async (lock) => {
     if (lock === null) {
@@ -497,7 +497,7 @@ async function exportData() {
 2. ​**清空等待队列**——所有正在排队等待该锁的请求，同样收到 `AbortError`，全部作废
 3. ​**立刻把锁交给你**——不管之前有多少人在持有或等待
 
-```JS
+```JavaScript
 // 紧急情况：强制获取锁
 await navigator.locks.request('critical-resource', { steal: true }, async (lock) => {
   await emergencyCleanup();
@@ -525,7 +525,7 @@ await navigator.locks.request('critical-resource', { steal: true }, async (lock)
 
 ​**`A、B、C 的代码需要自己捕获这个错误：`**
 
-```JS
+```JavaScript
 // 请求 A 的代码（被 steal 中断）
 try {
   await navigator.locks.request('critical-resource', async () => {
@@ -540,17 +540,17 @@ try {
 }
 ```
 
-​**​****​**`steal`​**​**​** 对等待队列的影响**
+​**​****​**`steal`​** 对等待队列的影响**
 
 `等待队列里的请求（B 和 C）会被​`​**全部清空**，而不是让 D 插队到队列头部。这意味着 D 执行完之后，B 和 C 不会自动恢复——它们已经以 `AbortError` 结束了，如果还需要执行，调用方必须自己重试。
 
-​**什么时候才应该用 ​**​**`​steal`**​**​​？**
+​**什么时候才应该用 ​**​**`​steal`​​？**
 
 `steal` 的破坏性很大，只有在"不得不强行恢复控制权"的极端场景下才应该使用：
 
-- ​**​**​**`页面卸载前的紧急清理`**：用户关闭标签页，`beforeunload` 事件触发，你需要立刻把某个标志位写入存储，但锁正被一个长时间操作持有，等不了
+- ​**`页面卸载前的紧急清理`**：用户关闭标签页，`beforeunload` 事件触发，你需要立刻把某个标志位写入存储，但锁正被一个长时间操作持有，等不了
 
-```JS
+```JavaScript
 window.addEventListener('beforeunload', () => {
   // 同步的 beforeunload 里无法 await，但可以发起 steal 请求
   navigator.locks.request('session', { steal: true }, async () => {
@@ -563,13 +563,13 @@ window.addEventListener('beforeunload', () => {
 
 > ⚠️ ​**谨慎使用**：`steal` 会把正在进行的操作强行中断，被中断的代码如果没有妥善处理 `AbortError`，很容易留下不一致的数据状态。在绝大多数业务场景里，你都不需要它——老老实实排队等待是更安全的选择。
 
-`steal`​** 与 ​**`ifAvailable`**​**​** ​不能同时使用**`，会抛出 NotSupportedError`。
+`steal`​** 与 ​**`ifAvailable`​** ​不能同时使用**`，会抛出 NotSupportedError`。
 
 ### 6.3 AbortSignal：超时与取消
 
-​**通过 ​**​**`AbortController`**​**​ 可以取消​等待中**的锁请求（不能取消已持有的锁）。
+​**通过 ​**​**`AbortController`​ 可以取消​等待中**的锁请求（不能取消已持有的锁）。
 
-```JS
+```JavaScript
 // 5 秒超时
 const controller = new AbortController();
 const timeoutId = setTimeout(() => controller.abort(), 5000);
@@ -591,9 +591,9 @@ try {
 }
 ```
 
-​**​**​**`使用 `​**​**​**​**`AbortSignal.timeout()`​**​**​（更简洁）：**
+​**`使用 ``AbortSignal.timeout()`​（更简洁）：**
 
-```JS
+```JavaScript
 try {
   await navigator.locks.request(
     'resource',
@@ -623,7 +623,7 @@ t=5   回调执行完毕，锁释放
 
 如果你需要在回调执行过程中也能响应取消信号，必须在回调内部​**`手动检查`** `signal.aborted`：
 
-```JS
+```JavaScript
 const controller = new AbortController();
 const { signal } = controller;
 
@@ -657,7 +657,7 @@ await navigator.locks.request('resource', { signal }, async () => {
 
 `navigator.locks.query()` 返回当前锁空间的快照，用于​**调试和监控**：
 
-```JS
+```JavaScript
 const state = await navigator.locks.query();
 
 console.log('持有中的锁：', state.held);
@@ -673,13 +673,13 @@ console.log('等待中的锁：', state.pending);
 - `mode`：`'exclusive'` 或 `'shared'`
 - `clientId`：持有/等待该锁的浏览上下文 ID
 
-​**`关于 `​**​**​**​**`clientId`**
+​**`关于 ``clientId`**
 
 "浏览上下文"是浏览器对"一个独立 JS 运行环境"的统一称呼。每一个标签页、iframe、Service Worker、Web Worker 在创建时都会被分配一个唯一的 UUID，这就是 `clientId`。
 
 它的主要用途是调试——当你看到某把锁被持有时，可以通过 `clientId` 判断是哪个上下文在持有它：
 
-```JS
+```JavaScript
 const state = await navigator.locks.query();
 
 for (const lock of state.held) {
@@ -704,7 +704,7 @@ for (const lock of state.held) {
 
 ​**解法：** 用锁保证同一时刻只有一个标签页在执行同步，其他标签页发现"已有人在同步"就跳过，等同步完成后直接读取已更新的本地数据即可。
 
-```JS
+```JavaScript
 // 三个标签页都运行这段代码，但只有一个能同时执行
 async function syncWithServer() {
   await navigator.locks.request('server-sync', { ifAvailable: true }, async (lock) => {
@@ -729,7 +729,7 @@ async function syncWithServer() {
 
 ​**解法：** 利用 `ifAvailable` 做选举——第一个成功拿到锁的标签页成为"主标签页"，负责维护 WebSocket；其他标签页成为"从标签页"，通过 `BroadcastChannel` 接收主标签页转发的消息。主标签页关闭时，锁自动释放，其他标签页重新竞争，产生新的主标签页。
 
-```JS
+```JavaScript
 async function electLeader() {
   await navigator.locks.request(
     'leader-lock',
@@ -777,7 +777,7 @@ function listenForBroadcast() {
 
 ​**解法：** 标签页和 Service Worker 约定使用同一把锁来保护写入操作。因为它们共享同一个锁空间，这个约定天然有效。
 
-```JS
+```JavaScript
 // 标签页里的保存操作
 async function saveNote(id, content) {
   await navigator.locks.request(`note-write-${id}`, async () => {
@@ -808,7 +808,7 @@ self.addEventListener('push', (event) => {
 
 ​**解法：** Worker 和主线程都通过同一把锁来保护写入，无论谁先完成，都能安全地串行写入。
 
-```JS
+```JavaScript
 // 主线程
 async function saveUserInput(data) {
   await navigator.locks.request('db-write', async () => {
@@ -837,7 +837,7 @@ self.onmessage = async (e) => {
 
 ### 模式一：防重复提交
 
-```JS
+```JavaScript
 let isSubmitting = false; // ❌ 仅在单标签页有效
 
 // ✅ 跨标签页防重复
@@ -855,7 +855,7 @@ async function submitForm(data) {
 
 ### 模式二：原子性读-改-写
 
-```JS
+```JavaScript
 async function incrementCounter(key) {
   return navigator.locks.request(`counter:${key}`, async () => {
     const current = await idb.get(key) ?? 0;
@@ -867,7 +867,7 @@ async function incrementCounter(key) {
 
 ### 模式三：带超时的锁请求
 
-```JS
+```JavaScript
 async function withTimeout(lockName, timeout, callback) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeout);
@@ -896,7 +896,7 @@ await withTimeout('slow-resource', 3000, async (lock) => {
 
 ### 模式四：锁包装器（装饰器模式）
 
-```JS
+```JavaScript
 function withLock(lockName, options = {}) {
   return function decorator(fn) {
     return async function (...args) {
@@ -926,7 +926,7 @@ const syncData = withLock('data-sync')(async function () {
 
 ## 10. 错误处理
 
-```JS
+```JavaScript
 try {
   await navigator.locks.request('resource', { signal }, async (lock) => {
     await riskyOperation();
@@ -971,7 +971,7 @@ try {
 
 ### 特性检测
 
-```JS
+```JavaScript
 if ('locks' in navigator) {
   // 使用 Web Locks API
   await navigator.locks.request('resource', callback);

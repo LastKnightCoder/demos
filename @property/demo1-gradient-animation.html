@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>@property Demo 1 - 渐变动画</title>
+  <style>
+    @property --gradient-angle {
+      syntax: "<angle>";
+      inherits: false;
+      initial-value: 0deg;
+    }
+
+    @property --color-1 {
+      syntax: "<color>";
+      inherits: false;
+      initial-value: #ff6b6b;
+    }
+
+    @property --color-2 {
+      syntax: "<color>";
+      inherits: false;
+      initial-value: #4ecdc4;
+    }
+
+    @property --color-3 {
+      syntax: "<color>";
+      inherits: false;
+      initial-value: #45b7d1;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 40px;
+      background: #1a1a2e;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      padding: 40px;
+    }
+
+    h1 {
+      color: #fff;
+      font-size: 24px;
+      text-align: center;
+    }
+
+    .demo-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 40px;
+      justify-content: center;
+    }
+
+    .demo-item {
+      text-align: center;
+    }
+
+    .demo-item p {
+      color: #aaa;
+      margin-top: 12px;
+      font-size: 14px;
+    }
+
+    /* 示例1：旋转渐变 */
+    .rotating-gradient {
+      width: 200px;
+      height: 200px;
+      border-radius: 16px;
+      background: linear-gradient(var(--gradient-angle), var(--color-1), var(--color-2), var(--color-3));
+      animation: rotate-gradient 3s linear infinite;
+    }
+
+    @keyframes rotate-gradient {
+      to {
+        --gradient-angle: 360deg;
+      }
+    }
+
+    /* 示例2：颜色流动渐变 */
+    .flowing-gradient {
+      width: 200px;
+      height: 200px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, var(--color-1), var(--color-2));
+      animation: flow-colors 4s ease-in-out infinite alternate;
+    }
+
+    @keyframes flow-colors {
+      0% {
+        --color-1: #ff6b6b;
+        --color-2: #4ecdc4;
+      }
+      33% {
+        --color-1: #a855f7;
+        --color-2: #ec4899;
+      }
+      66% {
+        --color-1: #3b82f6;
+        --color-2: #10b981;
+      }
+      100% {
+        --color-1: #f59e0b;
+        --color-2: #ef4444;
+      }
+    }
+
+    /* 示例3：径向渐变动画 */
+    @property --radial-size {
+      syntax: "<percentage>";
+      inherits: false;
+      initial-value: 0%;
+    }
+
+    .radial-gradient {
+      width: 200px;
+      height: 200px;
+      border-radius: 16px;
+      background: radial-gradient(circle at center, #ff6b6b var(--radial-size), #4ecdc4 100%);
+      animation: pulse-radial 2s ease-in-out infinite alternate;
+    }
+
+    @keyframes pulse-radial {
+      to {
+        --radial-size: 80%;
+      }
+    }
+
+    /* 示例4：锥形渐变 */
+    .conic-gradient {
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      background: conic-gradient(from var(--gradient-angle), #ff6b6b, #4ecdc4, #45b7d1, #a855f7, #ff6b6b);
+      animation: rotate-gradient 4s linear infinite;
+    }
+
+    .code-block {
+      margin-top: 40px;
+      background: #16213e;
+      border-radius: 12px;
+      padding: 24px;
+      max-width: 600px;
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    .code-block code {
+      color: #e2e8f0;
+      font-family: "Fira Code", monospace;
+      font-size: 13px;
+      white-space: pre;
+      line-height: 1.6;
+    }
+
+    .keyword { color: #c792ea; }
+    .property { color: #82aaff; }
+    .value { color: #c3e88d; }
+    .comment { color: #546e7a; }
+  </style>
+</head>
+<body>
+  <h1>@property 实现渐变动画</h1>
+  <p style="color: #888; margin-top: -20px; text-align: center; max-width: 600px;">
+    普通 CSS 无法对 gradient 进行过渡动画，但通过 @property 注册渐变中的各个参数，可以分别对角度、颜色进行平滑动画。
+  </p>
+
+  <div class="demo-container">
+    <div class="demo-item">
+      <div class="rotating-gradient"></div>
+      <p>旋转渐变角度</p>
+    </div>
+    <div class="demo-item">
+      <div class="flowing-gradient"></div>
+      <p>颜色流动</p>
+    </div>
+    <div class="demo-item">
+      <div class="radial-gradient"></div>
+      <p>径向渐变脉冲</p>
+    </div>
+    <div class="demo-item">
+      <div class="conic-gradient"></div>
+      <p>锥形渐变旋转</p>
+    </div>
+  </div>
+
+  <div class="code-block">
+    <code><span class="comment">/* 关键：注册角度属性 */</span>
+<span class="keyword">@property</span> <span class="property">--gradient-angle</span> {
+  <span class="property">syntax</span>: <span class="value">"&lt;angle&gt;"</span>;
+  <span class="property">inherits</span>: <span class="value">false</span>;
+  <span class="property">initial-value</span>: <span class="value">0deg</span>;
+}
+
+<span class="comment">/* 在渐变中使用注册的属性 */</span>
+<span class="keyword">.box</span> {
+  <span class="property">background</span>: <span class="value">linear-gradient(var(--gradient-angle), red, blue)</span>;
+  <span class="property">animation</span>: <span class="value">rotate 3s linear infinite</span>;
+}
+
+<span class="keyword">@keyframes</span> rotate {
+  <span class="keyword">to</span> { <span class="property">--gradient-angle</span>: <span class="value">360deg</span>; }
+}</code>
+  </div>
+</body>
+</html>

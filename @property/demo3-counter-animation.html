@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>@property Demo 3 - 数字计数器动画</title>
+  <style>
+    @property --num {
+      syntax: "<integer>";
+      inherits: false;
+      initial-value: 0;
+    }
+
+    @property --percent {
+      syntax: "<integer>";
+      inherits: false;
+      initial-value: 0;
+    }
+
+    @property --revenue {
+      syntax: "<integer>";
+      inherits: false;
+      initial-value: 0;
+    }
+
+    @property --users {
+      syntax: "<integer>";
+      inherits: false;
+      initial-value: 0;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 40px;
+      background: #0f172a;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      padding: 40px;
+    }
+
+    h1 {
+      color: #f1f5f9;
+      font-size: 24px;
+    }
+
+    .description {
+      color: #94a3b8;
+      text-align: center;
+      max-width: 600px;
+      line-height: 1.6;
+    }
+
+    /* 仪表盘样式 */
+    .dashboard {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 24px;
+      max-width: 900px;
+      width: 100%;
+    }
+
+    .stat-card {
+      background: #1e293b;
+      border-radius: 16px;
+      padding: 28px;
+      text-align: center;
+      border: 1px solid #334155;
+    }
+
+    .stat-card .icon {
+      font-size: 32px;
+      margin-bottom: 12px;
+    }
+
+    .stat-card .label {
+      color: #94a3b8;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+
+    .stat-card .value {
+      font-size: 48px;
+      font-weight: 700;
+      color: #f1f5f9;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* 计数器动画 - 使用 counter-reset 技巧 */
+    .counter-visitors {
+      animation: count-visitors 2s ease-out forwards;
+      counter-reset: num var(--num);
+    }
+
+    .counter-visitors::after {
+      content: counter(num);
+    }
+
+    @keyframes count-visitors {
+      to { --num: 12847; }
+    }
+
+    .counter-percent {
+      animation: count-percent 1.5s ease-out forwards;
+      counter-reset: percent var(--percent);
+    }
+
+    .counter-percent::after {
+      content: counter(percent) "%";
+    }
+
+    @keyframes count-percent {
+      to { --percent: 94; }
+    }
+
+    .counter-revenue {
+      animation: count-revenue 2.5s ease-out forwards;
+      counter-reset: revenue var(--revenue);
+    }
+
+    .counter-revenue::before {
+      content: "$";
+    }
+
+    .counter-revenue::after {
+      content: counter(revenue);
+    }
+
+    @keyframes count-revenue {
+      to { --revenue: 58420; }
+    }
+
+    .counter-users {
+      animation: count-users 2s ease-out forwards;
+      counter-reset: users var(--users);
+    }
+
+    .counter-users::after {
+      content: counter(users);
+    }
+
+    @keyframes count-users {
+      to { --users: 3256; }
+    }
+
+    /* 进度条 */
+    .progress-section {
+      width: 100%;
+      max-width: 500px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .progress-item {
+      background: #1e293b;
+      border-radius: 12px;
+      padding: 20px;
+      border: 1px solid #334155;
+    }
+
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .progress-header span {
+      color: #e2e8f0;
+      font-size: 14px;
+    }
+
+    @property --progress-1 {
+      syntax: "<percentage>";
+      inherits: false;
+      initial-value: 0%;
+    }
+
+    @property --progress-2 {
+      syntax: "<percentage>";
+      inherits: false;
+      initial-value: 0%;
+    }
+
+    @property --progress-3 {
+      syntax: "<percentage>";
+      inherits: false;
+      initial-value: 0%;
+    }
+
+    .progress-bar {
+      height: 8px;
+      border-radius: 4px;
+      background: #334155;
+      overflow: hidden;
+    }
+
+    .progress-bar .fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 2s ease-out;
+    }
+
+    .progress-1 .fill {
+      width: var(--progress-1);
+      background: linear-gradient(90deg, #6366f1, #a855f7);
+      animation: fill-1 2s ease-out forwards;
+    }
+
+    @keyframes fill-1 {
+      to { --progress-1: 87%; }
+    }
+
+    .progress-2 .fill {
+      width: var(--progress-2);
+      background: linear-gradient(90deg, #10b981, #34d399);
+      animation: fill-2 2s ease-out 0.3s forwards;
+    }
+
+    @keyframes fill-2 {
+      to { --progress-2: 64%; }
+    }
+
+    .progress-3 .fill {
+      width: var(--progress-3);
+      background: linear-gradient(90deg, #f59e0b, #fbbf24);
+      animation: fill-3 2s ease-out 0.6s forwards;
+    }
+
+    @keyframes fill-3 {
+      to { --progress-3: 45%; }
+    }
+
+    .btn-replay {
+      padding: 12px 24px;
+      border: 1px solid #475569;
+      border-radius: 8px;
+      background: transparent;
+      color: #e2e8f0;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-replay:hover {
+      background: #334155;
+      border-color: #6366f1;
+    }
+  </style>
+</head>
+<body>
+  <h1>@property 实现数字计数器动画</h1>
+  <p class="description">
+    利用 @property 的 &lt;integer&gt; 类型，配合 counter-reset 和 CSS 伪元素，
+    可以实现纯 CSS 的数字递增动画效果，无需 JavaScript。
+  </p>
+
+  <div class="dashboard">
+    <div class="stat-card">
+      <div class="icon">👁️</div>
+      <div class="label">页面访问</div>
+      <div class="value counter-visitors"></div>
+    </div>
+    <div class="stat-card">
+      <div class="icon">✅</div>
+      <div class="label">满意度</div>
+      <div class="value counter-percent"></div>
+    </div>
+    <div class="stat-card">
+      <div class="icon">💰</div>
+      <div class="label">营收</div>
+      <div class="value counter-revenue"></div>
+    </div>
+    <div class="stat-card">
+      <div class="icon">👥</div>
+      <div class="label">活跃用户</div>
+      <div class="value counter-users"></div>
+    </div>
+  </div>
+
+  <div class="progress-section">
+    <div class="progress-item">
+      <div class="progress-header">
+        <span>项目进度</span>
+        <span>87%</span>
+      </div>
+      <div class="progress-bar progress-1">
+        <div class="fill"></div>
+      </div>
+    </div>
+    <div class="progress-item">
+      <div class="progress-header">
+        <span>测试覆盖</span>
+        <span>64%</span>
+      </div>
+      <div class="progress-bar progress-2">
+        <div class="fill"></div>
+      </div>
+    </div>
+    <div class="progress-item">
+      <div class="progress-header">
+        <span>文档完成</span>
+        <span>45%</span>
+      </div>
+      <div class="progress-bar progress-3">
+        <div class="fill"></div>
+      </div>
+    </div>
+  </div>
+
+  <button class="btn-replay" onclick="replay()">重新播放动画</button>
+
+  <script>
+    function replay() {
+      const animated = document.querySelectorAll('[class*="counter-"], .fill');
+      animated.forEach(el => {
+        el.style.animation = 'none';
+        el.offsetHeight; // 触发 reflow
+        el.style.animation = '';
+      });
+    }
+  </script>
+</body>
+</html>

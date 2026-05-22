@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>@property Demo 5 - 复杂组合动画</title>
+  <style>
+    @property --glow-opacity {
+      syntax: "<number>";
+      inherits: false;
+      initial-value: 0.4;
+    }
+
+    @property --glow-size {
+      syntax: "<length>";
+      inherits: false;
+      initial-value: 20px;
+    }
+
+    @property --glow-color {
+      syntax: "<color>";
+      inherits: false;
+      initial-value: #6366f1;
+    }
+
+    @property --ripple-size {
+      syntax: "<percentage>";
+      inherits: false;
+      initial-value: 0%;
+    }
+
+    @property --ripple-opacity {
+      syntax: "<number>";
+      inherits: false;
+      initial-value: 1;
+    }
+
+    @property --orbit-angle {
+      syntax: "<angle>";
+      inherits: false;
+      initial-value: 0deg;
+    }
+
+    @property --orbit-distance {
+      syntax: "<length>";
+      inherits: false;
+      initial-value: 60px;
+    }
+
+    @property --wave-offset {
+      syntax: "<length>";
+      inherits: false;
+      initial-value: 0px;
+    }
+
+    @property --hue {
+      syntax: "<number>";
+      inherits: false;
+      initial-value: 0;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 50px;
+      background: #0f172a;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      padding: 50px 20px;
+    }
+
+    h1 {
+      color: #f1f5f9;
+      font-size: 24px;
+    }
+
+    .description {
+      color: #94a3b8;
+      text-align: center;
+      max-width: 600px;
+      line-height: 1.6;
+    }
+
+    .demo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 40px;
+      max-width: 1000px;
+      width: 100%;
+    }
+
+    .demo-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .demo-item h3 {
+      color: #e2e8f0;
+      font-size: 15px;
+    }
+
+    .demo-item p {
+      color: #64748b;
+      font-size: 13px;
+      text-align: center;
+    }
+
+    .demo-stage {
+      width: 200px;
+      height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    /* ========== 1. 呼吸灯 ========== */
+    .breathing-light {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: var(--glow-color);
+      box-shadow: 0 0 var(--glow-size) rgba(99, 102, 241, var(--glow-opacity)),
+                  0 0 calc(var(--glow-size) * 2) rgba(99, 102, 241, calc(var(--glow-opacity) * 0.5));
+      animation: breathe 3s ease-in-out infinite;
+    }
+
+    @keyframes breathe {
+      0%, 100% {
+        --glow-opacity: 0.4;
+        --glow-size: 20px;
+        --glow-color: #6366f1;
+      }
+      50% {
+        --glow-opacity: 0.9;
+        --glow-size: 50px;
+        --glow-color: #a855f7;
+      }
+    }
+
+    /* ========== 2. 波纹扩散 ========== */
+    .ripple-container {
+      position: relative;
+      width: 60px;
+      height: 60px;
+    }
+
+    .ripple-center {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: #10b981;
+      position: relative;
+      z-index: 1;
+    }
+
+    .ripple-ring {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      border: 2px solid rgba(16, 185, 129, var(--ripple-opacity));
+      scale: calc(1 + var(--ripple-size) / 100%);
+      animation: ripple 2s ease-out infinite;
+    }
+
+    .ripple-ring:nth-child(2) { animation-delay: 0.5s; }
+    .ripple-ring:nth-child(3) { animation-delay: 1s; }
+    .ripple-ring:nth-child(4) { animation-delay: 1.5s; }
+
+    @keyframes ripple {
+      0% {
+        --ripple-size: 0%;
+        --ripple-opacity: 1;
+      }
+      100% {
+        --ripple-size: 200%;
+        --ripple-opacity: 0;
+      }
+    }
+
+    /* ========== 3. 轨道运动 ========== */
+    .orbit-system {
+      position: relative;
+      width: 160px;
+      height: 160px;
+    }
+
+    .orbit-center {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: #f59e0b;
+      box-shadow: 0 0 20px rgba(245, 158, 11, 0.5);
+    }
+
+    .orbit-track {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      border: 1px dashed #334155;
+    }
+
+    .orbit-planet {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 16px;
+      height: 16px;
+      margin: -8px;
+      border-radius: 50%;
+      background: #3b82f6;
+      transform: rotate(var(--orbit-angle)) translateX(var(--orbit-distance));
+      animation: orbit 4s linear infinite;
+    }
+
+    .orbit-planet:nth-child(3) {
+      --orbit-distance: 45px;
+      background: #ec4899;
+      width: 12px;
+      height: 12px;
+      margin: -6px;
+      animation: orbit-inner 2.5s linear infinite;
+    }
+
+    @keyframes orbit {
+      to { --orbit-angle: 360deg; }
+    }
+
+    @keyframes orbit-inner {
+      from { --orbit-angle: 0deg; }
+      to { --orbit-angle: 360deg; }
+    }
+
+    /* ========== 4. 波浪文字 ========== */
+    .wave-text {
+      display: flex;
+      font-size: 32px;
+      font-weight: 700;
+      color: #e2e8f0;
+    }
+
+    .wave-text span {
+      display: inline-block;
+      animation: wave-letter 1.5s ease-in-out infinite;
+      --wave-offset: 0px;
+      transform: translateY(var(--wave-offset));
+    }
+
+    .wave-text span:nth-child(1) { animation-delay: 0s; }
+    .wave-text span:nth-child(2) { animation-delay: 0.1s; }
+    .wave-text span:nth-child(3) { animation-delay: 0.2s; }
+    .wave-text span:nth-child(4) { animation-delay: 0.3s; }
+    .wave-text span:nth-child(5) { animation-delay: 0.4s; }
+    .wave-text span:nth-child(6) { animation-delay: 0.5s; }
+    .wave-text span:nth-child(7) { animation-delay: 0.6s; }
+
+    @keyframes wave-letter {
+      0%, 100% { --wave-offset: 0px; }
+      50% { --wave-offset: -20px; }
+    }
+
+    /* ========== 5. 色相旋转光环 ========== */
+    .hue-ring {
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      border: 6px solid hsl(calc(var(--hue)) 80% 60%);
+      animation: hue-rotate 4s linear infinite;
+      box-shadow: 0 0 20px hsl(calc(var(--hue)) 80% 60% / 0.4),
+                  inset 0 0 20px hsl(calc(var(--hue)) 80% 60% / 0.2);
+    }
+
+    @keyframes hue-rotate {
+      to { --hue: 360; }
+    }
+
+    /* ========== 6. 弹跳加载 ========== */
+    @property --bounce-y {
+      syntax: "<length>";
+      inherits: false;
+      initial-value: 0px;
+    }
+
+    @property --bounce-scale-x {
+      syntax: "<number>";
+      inherits: false;
+      initial-value: 1;
+    }
+
+    @property --bounce-scale-y {
+      syntax: "<number>";
+      inherits: false;
+      initial-value: 1;
+    }
+
+    .bounce-dots {
+      display: flex;
+      gap: 12px;
+    }
+
+    .bounce-dot {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #ec4899;
+      transform: translateY(var(--bounce-y)) scaleX(var(--bounce-scale-x)) scaleY(var(--bounce-scale-y));
+      animation: bounce-ball 1.2s ease-in-out infinite;
+    }
+
+    .bounce-dot:nth-child(2) {
+      animation-delay: 0.15s;
+      background: #a855f7;
+    }
+    .bounce-dot:nth-child(3) {
+      animation-delay: 0.3s;
+      background: #6366f1;
+    }
+
+    @keyframes bounce-ball {
+      0%, 100% {
+        --bounce-y: 0px;
+        --bounce-scale-x: 1;
+        --bounce-scale-y: 1;
+      }
+      30% {
+        --bounce-y: -40px;
+        --bounce-scale-x: 0.9;
+        --bounce-scale-y: 1.1;
+      }
+      50% {
+        --bounce-y: 0px;
+        --bounce-scale-x: 1.2;
+        --bounce-scale-y: 0.8;
+      }
+      70% {
+        --bounce-y: -15px;
+        --bounce-scale-x: 1;
+        --bounce-scale-y: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>@property 复杂组合动画</h1>
+  <p class="description">
+    通过组合多个 @property 注册属性，可以实现精细控制的复杂动画效果——
+    每个属性独立插值，效果远超传统 CSS 动画。
+  </p>
+
+  <div class="demo-grid">
+    <div class="demo-item">
+      <h3>呼吸灯</h3>
+      <div class="demo-stage">
+        <div class="breathing-light"></div>
+      </div>
+      <p>同时动画化 opacity、size、color 三个属性</p>
+    </div>
+
+    <div class="demo-item">
+      <h3>波纹扩散</h3>
+      <div class="demo-stage">
+        <div class="ripple-container">
+          <div class="ripple-ring"></div>
+          <div class="ripple-ring"></div>
+          <div class="ripple-ring"></div>
+          <div class="ripple-ring"></div>
+          <div class="ripple-center"></div>
+        </div>
+      </div>
+      <p>用 percentage + number 控制扩散和透明度</p>
+    </div>
+
+    <div class="demo-item">
+      <h3>轨道运动</h3>
+      <div class="demo-stage">
+        <div class="orbit-system">
+          <div class="orbit-track"></div>
+          <div class="orbit-center"></div>
+          <div class="orbit-planet"></div>
+          <div class="orbit-planet"></div>
+        </div>
+      </div>
+      <p>用 angle + length 控制旋转和半径</p>
+    </div>
+
+    <div class="demo-item">
+      <h3>波浪文字</h3>
+      <div class="demo-stage">
+        <div class="wave-text">
+          <span>C</span><span>S</span><span>S</span><span>&nbsp;</span><span>F</span><span>u</span><span>n</span>
+        </div>
+      </div>
+      <p>用 length 属性控制逐字偏移</p>
+    </div>
+
+    <div class="demo-item">
+      <h3>色相旋转光环</h3>
+      <div class="demo-stage">
+        <div class="hue-ring"></div>
+      </div>
+      <p>用 number 驱动 hsl() 实现彩虹效果</p>
+    </div>
+
+    <div class="demo-item">
+      <h3>弹跳加载</h3>
+      <div class="demo-stage">
+        <div class="bounce-dots">
+          <div class="bounce-dot"></div>
+          <div class="bounce-dot"></div>
+          <div class="bounce-dot"></div>
+        </div>
+      </div>
+      <p>用 length + number 组合实现弹性形变</p>
+    </div>
+  </div>
+</body>
+</html>
