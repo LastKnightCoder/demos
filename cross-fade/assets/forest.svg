@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" role="img" aria-labelledby="title desc">
+  <title id="title">Forest path</title>
+  <desc id="desc">A stylized forest path used as a CSS image asset.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#a7f3d0"/>
+      <stop offset=".5" stop-color="#34d399"/>
+      <stop offset="1" stop-color="#14532d"/>
+    </linearGradient>
+    <linearGradient id="path" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#fef3c7"/>
+      <stop offset="1" stop-color="#92400e"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="800" fill="url(#bg)"/>
+  <circle cx="210" cy="125" r="70" fill="#fef08a" opacity=".85"/>
+  <g fill="#166534">
+    <path d="M75 555 190 245l115 310Z"/>
+    <path d="M250 565 390 185l140 380Z"/>
+    <path d="M735 560 865 200l130 360Z"/>
+    <path d="M930 555 1060 210l130 345Z"/>
+  </g>
+  <g fill="#14532d">
+    <path d="M-20 610 115 300l135 310Z"/>
+    <path d="M490 605 640 230l150 375Z"/>
+    <path d="M1010 620 1160 270l150 350Z"/>
+  </g>
+  <g fill="#713f12">
+    <rect x="172" y="520" width="36" height="160"/>
+    <rect x="372" y="535" width="36" height="145"/>
+    <rect x="848" y="532" width="36" height="148"/>
+    <rect x="1042" y="530" width="36" height="150"/>
+  </g>
+  <path d="M485 800 C535 630 570 545 600 480 C635 555 680 640 735 800Z" fill="url(#path)"/>
+  <path d="M0 675 C180 640 260 720 430 670 C535 640 650 650 760 680 C920 725 1050 650 1200 680 L1200 800 L0 800Z" fill="#052e16" opacity=".5"/>
+</svg>

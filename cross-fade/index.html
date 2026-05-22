@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CSS cross-fade() 示例集</title>
+  <link rel="stylesheet" href="shared.css">
+  <style>
+    .cover {
+      min-height: 420px;
+      background-image: url("assets/city.svg");
+      background-image: cross-fade(url("assets/mountain.svg") 58%, url("assets/city.svg"));
+      background-image: -webkit-cross-fade(url("assets/mountain.svg"), url("assets/city.svg"), 58%);
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      margin-top: 24px;
+    }
+
+    .card {
+      min-height: 170px;
+      border: 1px solid #d6dde8;
+      border-radius: 8px;
+      padding: 16px;
+      background: #fff;
+    }
+
+    .card a {
+      font-weight: 800;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <div class="topbar">
+      <p class="brand">CSS cross-fade()</p>
+      <nav class="nav" aria-label="示例导航">
+        <a href="README.md">README</a>
+        <a href="01-basic-slider.html">基础滑块</a>
+        <a href="02-percentages.html">百分比</a>
+        <a href="03-tint-and-highlight.html">调色</a>
+        <a href="04-standard-syntax.html">标准语法</a>
+        <a href="05-progressive-enhancement.html">渐进增强</a>
+      </nav>
+    </div>
+
+    <section class="hero">
+      <div>
+        <h1>CSS cross-fade() 示例集</h1>
+        <p>这个目录包含一份详细 README 和多个可以直接打开的 HTML 示例，用来观察 CSS 图像混合、百分比权重、旧语法、标准语法和兼容性处理。</p>
+        <div class="button-row">
+          <a href="01-basic-slider.html">开始查看示例</a>
+          <a href="README.md">阅读说明</a>
+        </div>
+      </div>
+      <div class="demo-frame cover" role="img" aria-label="山景和城市插画通过 cross-fade 混合"></div>
+    </section>
+
+    <div class="status" id="support"></div>
+
+    <section class="cards" aria-label="示例列表">
+      <article class="card">
+        <h2><a href="01-basic-slider.html">01 基础滑块</a></h2>
+        <p>用滑块动态改变混合百分比，直观看到第一张图从 0% 到 100% 的变化。</p>
+      </article>
+      <article class="card">
+        <h2><a href="02-percentages.html">02 百分比规则</a></h2>
+        <p>并排展示 0%、25%、50%、75%、100% 五种常见权重。</p>
+      </article>
+      <article class="card">
+        <h2><a href="03-tint-and-highlight.html">03 调色和强调</a></h2>
+        <p>把图片和色彩图层混合，模拟暖色、冷色、聚光效果。</p>
+      </article>
+      <article class="card">
+        <h2><a href="04-standard-syntax.html">04 标准语法</a></h2>
+        <p>展示 Level 4 标准语法中的多图像和省略百分比规则。</p>
+      </article>
+      <article class="card">
+        <h2><a href="05-progressive-enhancement.html">05 渐进增强</a></h2>
+        <p>把 fallback、旧语法和标准语法按层次写到同一个组件中。</p>
+      </article>
+    </section>
+  </main>
+
+  <script>
+    const legacy = CSS.supports("background-image", "-webkit-cross-fade(url('assets/mountain.svg'), url('assets/city.svg'), 50%)");
+    const standard = CSS.supports("background-image", "cross-fade(url('assets/mountain.svg') 50%, url('assets/city.svg') 50%)");
+    document.querySelector("#support").innerHTML = `
+      <div><strong>当前浏览器检测</strong></div>
+      <div>-webkit-cross-fade() 旧语法：${legacy ? "支持" : "不支持"}</div>
+      <div>cross-fade() 标准语法：${standard ? "支持" : "不支持"}</div>
+      <div class="note">如果示例只显示 fallback 图片，说明当前浏览器没有实现对应语法。</div>
+    `;
+  </script>
+</body>
+</html>

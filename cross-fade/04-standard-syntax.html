@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>04 标准语法 - CSS cross-fade()</title>
+  <link rel="stylesheet" href="shared.css">
+  <style>
+    .standard-two {
+      background-image: url("assets/city.svg");
+      background-image: cross-fade(url("assets/mountain.svg") 65%, url("assets/city.svg"));
+    }
+
+    .standard-three {
+      background-image: url("assets/forest.svg");
+      background-image: cross-fade(
+        url("assets/mountain.svg") 34%,
+        url("assets/city.svg") 33%,
+        url("assets/forest.svg") 33%
+      );
+    }
+
+    .standard-over {
+      background-image: url("assets/mountain.svg");
+      background-image: cross-fade(
+        url("assets/mountain.svg") 75%,
+        url("assets/warm-overlay.svg") 75%
+      );
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <div class="topbar">
+      <p class="brand">04 标准语法</p>
+      <nav class="nav" aria-label="示例导航">
+        <a href="03-tint-and-highlight.html">上一页</a>
+        <a href="index.html">首页</a>
+        <a href="05-progressive-enhancement.html">下一页</a>
+      </nav>
+    </div>
+
+    <h1>CSS Images Level 4 的标准语法</h1>
+    <p>标准语法把百分比放在每个图像参数后面，并允许两个以上的图像。当前浏览器支持可能有限，本页用于学习规范写法。</p>
+
+    <div class="status" id="support"></div>
+
+    <section class="grid" aria-label="标准语法示例">
+      <article class="tile">
+        <div class="thumb standard-two"></div>
+        <h2>省略第二个百分比</h2>
+        <p class="note"><code>cross-fade(A 65%, B)</code> 会把剩余 35% 分配给 B。</p>
+      </article>
+      <article class="tile">
+        <div class="thumb standard-three"></div>
+        <h2>三个图像</h2>
+        <p class="note">标准语法允许多个图像参与混合。</p>
+      </article>
+      <article class="tile">
+        <div class="thumb standard-over"></div>
+        <h2>总和超过 100%</h2>
+        <p class="note">规范定义了归一化处理，实际绘制会按比例重新缩放。</p>
+      </article>
+    </section>
+
+    <section class="panel" style="margin-top: 24px">
+      <h2>示例代码</h2>
+      <pre><code>background-image: cross-fade(
+  url("assets/mountain.svg") 34%,
+  url("assets/city.svg") 33%,
+  url("assets/forest.svg") 33%
+);</code></pre>
+      <p class="note">如果上面的缩略图只显示 fallback 图片，说明当前浏览器尚未支持这个标准语法。</p>
+    </section>
+  </main>
+
+  <script>
+    const standard = CSS.supports("background-image", "cross-fade(url('assets/mountain.svg') 50%, url('assets/city.svg') 50%)");
+    document.querySelector("#support").innerHTML = standard
+      ? "<strong>当前浏览器支持标准语法。</strong>"
+      : "<div class='fallback-warning'>当前浏览器未检测到标准语法支持。页面中的标准语法示例会退回到普通背景图。</div>";
+  </script>
+</body>
+</html>

@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>05 渐进增强 - CSS cross-fade()</title>
+  <link rel="stylesheet" href="shared.css">
+  <style>
+    .enhanced {
+      --mix: 55%;
+      background-image: url("assets/city.svg");
+    }
+
+    @supports (background-image: cross-fade(url("assets/mountain.svg") 50%, url("assets/city.svg") 50%)) {
+      .enhanced {
+        background-image: cross-fade(url("assets/mountain.svg") var(--mix), url("assets/city.svg"));
+      }
+    }
+
+    @supports (background-image: -webkit-cross-fade(url("assets/mountain.svg"), url("assets/city.svg"), 50%)) {
+      .enhanced {
+        background-image: -webkit-cross-fade(url("assets/mountain.svg"), url("assets/city.svg"), var(--mix));
+      }
+    }
+
+    .pattern {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <div class="topbar">
+      <p class="brand">05 渐进增强</p>
+      <nav class="nav" aria-label="示例导航">
+        <a href="04-standard-syntax.html">上一页</a>
+        <a href="index.html">首页</a>
+        <a href="README.md">README</a>
+      </nav>
+    </div>
+
+    <section class="hero">
+      <div>
+        <h1>推荐的兼容写法</h1>
+        <p>把普通图片、旧语法和标准语法分层写清楚，可以让不支持的浏览器保持可用，让支持的浏览器获得混合效果。</p>
+        <div class="controls">
+          <input id="mix" type="range" min="0" max="100" value="55" aria-label="第一张图的混合百分比">
+          <output class="readout" id="readout" for="mix">55%</output>
+        </div>
+      </div>
+      <div class="demo-frame enhanced" id="demo" role="img" aria-label="渐进增强后的 cross-fade 示例"></div>
+    </section>
+
+    <section class="pattern">
+      <div class="panel">
+        <h2>完整模式</h2>
+        <pre><code>.enhanced {
+  --mix: 55%;
+  background-image: url("assets/city.svg");
+}
+
+@supports (background-image: cross-fade(url("a.svg") 50%, url("b.svg") 50%)) {
+  .enhanced {
+    background-image: cross-fade(url("a.svg") var(--mix), url("b.svg"));
+  }
+}
+
+@supports (background-image: -webkit-cross-fade(url("a.svg"), url("b.svg"), 50%)) {
+  .enhanced {
+    background-image: -webkit-cross-fade(url("a.svg"), url("b.svg"), var(--mix));
+  }
+}</code></pre>
+      </div>
+
+      <div class="panel">
+        <h2>为什么这样写</h2>
+        <p>普通 <code>url()</code> 是兜底层；标准 <code>cross-fade()</code> 用来表达规范写法；<code>-webkit-cross-fade()</code> 放在后面，优先照顾当前 Chromium 和 Safari 中更常见、能实际绘制的旧实现。</p>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const input = document.querySelector("#mix");
+    const readout = document.querySelector("#readout");
+    const demo = document.querySelector("#demo");
+
+    input.addEventListener("input", () => {
+      const value = `${input.value}%`;
+      demo.style.setProperty("--mix", value);
+      readout.value = value;
+      readout.textContent = value;
+    });
+  </script>
+</body>
+</html>

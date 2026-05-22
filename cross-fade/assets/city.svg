@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" role="img" aria-labelledby="title desc">
+  <title id="title">Evening city</title>
+  <desc id="desc">A stylized city skyline used as a CSS image asset.</desc>
+  <defs>
+    <linearGradient id="sky" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#312e81"/>
+      <stop offset=".55" stop-color="#be185d"/>
+      <stop offset="1" stop-color="#f97316"/>
+    </linearGradient>
+    <linearGradient id="street" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#1f2937"/>
+      <stop offset="1" stop-color="#030712"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="800" fill="url(#sky)"/>
+  <circle cx="930" cy="180" r="86" fill="#fed7aa" opacity=".9"/>
+  <path d="M0 482h70V328h105v154h65V225h130v257h60V300h95v182h75V185h140v297h45V270h115v212h65V340h95v142h140v318H0Z" fill="#111827"/>
+  <g fill="#fde68a">
+    <path d="M105 366h36v42h-36zM105 444h36v42h-36zM278 266h38v45h-38zM278 355h38v45h-38zM465 335h32v36h-32zM465 412h32v36h-32zM642 234h40v48h-40zM642 340h40v48h-40zM818 312h34v42h-34zM818 402h34v42h-34zM1018 382h38v44h-38zM1080 382h38v44h-38z"/>
+  </g>
+  <rect y="570" width="1200" height="230" fill="url(#street)"/>
+  <path d="M0 636h1200" stroke="#f8fafc" stroke-width="8" stroke-dasharray="70 45" opacity=".8"/>
+  <path d="M170 565h170l68 82H95Z" fill="#ef4444"/>
+  <circle cx="155" cy="650" r="32" fill="#020617"/>
+  <circle cx="340" cy="650" r="32" fill="#020617"/>
+  <path d="M735 560h210l92 92H660Z" fill="#22c55e"/>
+  <circle cx="730" cy="656" r="34" fill="#020617"/>
+  <circle cx="965" cy="656" r="34" fill="#020617"/>
+</svg>

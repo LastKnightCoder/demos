@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" role="img" aria-labelledby="title desc">
+  <title id="title">Mountain lake</title>
+  <desc id="desc">A stylized mountain lake scene used as a CSS image asset.</desc>
+  <defs>
+    <linearGradient id="sky" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#7dd3fc"/>
+      <stop offset="0.52" stop-color="#bae6fd"/>
+      <stop offset="1" stop-color="#f8fafc"/>
+    </linearGradient>
+    <linearGradient id="water" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#38bdf8"/>
+      <stop offset="1" stop-color="#0f766e"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="800" fill="url(#sky)"/>
+  <circle cx="960" cy="150" r="70" fill="#fde68a"/>
+  <path d="M0 510 245 205 440 510Z" fill="#475569"/>
+  <path d="M195 510 520 135 850 510Z" fill="#334155"/>
+  <path d="M620 510 900 215 1200 510Z" fill="#475569"/>
+  <path d="M520 135 610 300 548 270 500 355 450 285Z" fill="#f8fafc"/>
+  <path d="M245 205 315 335 260 310 210 385 170 320Z" fill="#f8fafc"/>
+  <path d="M900 215 975 350 912 325 875 390 835 330Z" fill="#f8fafc"/>
+  <rect y="500" width="1200" height="300" fill="url(#water)"/>
+  <path d="M0 575 C180 535 320 630 500 585 C680 540 820 600 990 565 C1080 547 1145 555 1200 575 L1200 800 L0 800Z" fill="#0f766e" opacity=".45"/>
+  <path d="M70 640 C210 610 300 680 455 650 C610 620 725 665 870 640 C980 620 1080 630 1160 655" fill="none" stroke="#cffafe" stroke-width="14" stroke-linecap="round" opacity=".65"/>
+  <path d="M80 725 C220 705 345 748 480 724 C650 694 790 742 965 708 C1050 692 1120 705 1180 724" fill="none" stroke="#ccfbf1" stroke-width="9" stroke-linecap="round" opacity=".55"/>
+</svg>

@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>03 调色和强调 - CSS cross-fade()</title>
+  <link rel="stylesheet" href="shared.css">
+  <style>
+    .tint-demo {
+      --photo: 72%;
+      background-image: url("assets/forest.svg");
+      background-image: cross-fade(url("assets/forest.svg") var(--photo), var(--overlay));
+      background-image: -webkit-cross-fade(url("assets/forest.svg"), var(--overlay), var(--photo));
+    }
+
+    .warm {
+      --overlay: url("assets/warm-overlay.svg");
+    }
+
+    .cool {
+      --overlay: url("assets/cool-overlay.svg");
+    }
+
+    .spotlight {
+      --overlay: url("assets/spotlight.svg");
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <div class="topbar">
+      <p class="brand">03 调色和强调</p>
+      <nav class="nav" aria-label="示例导航">
+        <a href="02-percentages.html">上一页</a>
+        <a href="index.html">首页</a>
+        <a href="04-standard-syntax.html">下一页</a>
+      </nav>
+    </div>
+
+    <h1>把图片和色彩图层混合</h1>
+    <p>标准语法允许 <code>&lt;image&gt;</code> 或 <code>&lt;color&gt;</code> 作为参数。为了兼容旧实现，这里把颜色效果做成本地 SVG 图像，再与原图混合。</p>
+
+    <div class="controls" style="margin-bottom: 22px">
+      <input id="photo" type="range" min="45" max="95" value="72" aria-label="原图保留百分比">
+      <output class="readout" id="readout" for="photo">72%</output>
+    </div>
+
+    <section class="grid" aria-label="调色示例">
+      <article class="tile">
+        <div class="thumb tint-demo warm" style="--photo: 72%"></div>
+        <h2>暖色调</h2>
+        <p class="note">原图保留较高比例，另一个图像提供暖色覆盖。</p>
+      </article>
+      <article class="tile">
+        <div class="thumb tint-demo cool" style="--photo: 72%"></div>
+        <h2>冷色调</h2>
+        <p class="note">用径向蓝色图层营造冷色中心和暗角。</p>
+      </article>
+      <article class="tile">
+        <div class="thumb tint-demo spotlight" style="--photo: 72%"></div>
+        <h2>聚光效果</h2>
+        <p class="note">和明暗图像混合，强调画面中心区域。</p>
+      </article>
+    </section>
+
+    <section class="panel" style="margin-top: 24px">
+      <h2>核心 CSS</h2>
+      <pre><code>.tint-demo {
+  --photo: 72%;
+  --overlay: url("assets/warm-overlay.svg");
+  background-image: url("assets/forest.svg");
+  background-image: -webkit-cross-fade(
+    url("assets/forest.svg"),
+    var(--overlay),
+    var(--photo)
+  );
+  background-image: cross-fade(
+    url("assets/forest.svg") var(--photo),
+    var(--overlay)
+  );
+}</code></pre>
+    </section>
+  </main>
+
+  <script>
+    const input = document.querySelector("#photo");
+    const readout = document.querySelector("#readout");
+    const demos = document.querySelectorAll(".tint-demo");
+
+    input.addEventListener("input", () => {
+      const value = `${input.value}%`;
+      demos.forEach((demo) => demo.style.setProperty("--photo", value));
+      readout.value = value;
+      readout.textContent = value;
+    });
+  </script>
+</body>
+</html>

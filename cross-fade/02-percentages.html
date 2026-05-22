@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>02 百分比规则 - CSS cross-fade()</title>
+  <link rel="stylesheet" href="shared.css">
+  <style>
+    .fade-tile {
+      position: relative;
+      background-image: url("assets/city.svg");
+      overflow: hidden;
+    }
+
+    .fallback-layer,
+    .crossfade-layer {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+    }
+
+    .fallback-a {
+      background-image: url("assets/mountain.svg");
+      opacity: var(--fallback-a);
+    }
+
+    .fallback-b {
+      background-image: url("assets/city.svg");
+      opacity: var(--fallback-b);
+    }
+
+    .crossfade-layer {
+      background-image: -webkit-cross-fade(url("assets/mountain.svg"), url("assets/city.svg"), var(--mix));
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <div class="topbar">
+      <p class="brand">02 百分比规则</p>
+      <nav class="nav" aria-label="示例导航">
+        <a href="01-basic-slider.html">上一页</a>
+        <a href="index.html">首页</a>
+        <a href="03-tint-and-highlight.html">下一页</a>
+      </nav>
+    </div>
+
+    <h1>同一组图片的不同权重</h1>
+    <p>下面每个卡片都使用相同的两张图，只改变第一张图的保留百分比。0% 时只剩第二张图，100% 时只剩第一张图。</p>
+
+    <section class="grid" aria-label="百分比示例">
+      <article class="tile">
+        <div class="thumb fade-tile" style="--mix: 0%; --fallback-a: 0; --fallback-b: 1">
+          <span class="fallback-layer fallback-a" aria-hidden="true"></span>
+          <span class="fallback-layer fallback-b" aria-hidden="true"></span>
+          <span class="crossfade-layer" aria-hidden="true"></span>
+        </div>
+        <h2>0%</h2>
+        <p class="note">第一张完全透明，显示第二张。</p>
+      </article>
+      <article class="tile">
+        <div class="thumb fade-tile" style="--mix: 25%; --fallback-a: .25; --fallback-b: .75">
+          <span class="fallback-layer fallback-a" aria-hidden="true"></span>
+          <span class="fallback-layer fallback-b" aria-hidden="true"></span>
+          <span class="crossfade-layer" aria-hidden="true"></span>
+        </div>
+        <h2>25%</h2>
+        <p class="note">第一张较弱，第二张占主导。</p>
+      </article>
+      <article class="tile">
+        <div class="thumb fade-tile" style="--mix: 50%; --fallback-a: .5; --fallback-b: .5">
+          <span class="fallback-layer fallback-a" aria-hidden="true"></span>
+          <span class="fallback-layer fallback-b" aria-hidden="true"></span>
+          <span class="crossfade-layer" aria-hidden="true"></span>
+        </div>
+        <h2>50%</h2>
+        <p class="note">两张图均匀混合。</p>
+      </article>
+      <article class="tile">
+        <div class="thumb fade-tile" style="--mix: 75%; --fallback-a: .75; --fallback-b: .25">
+          <span class="fallback-layer fallback-a" aria-hidden="true"></span>
+          <span class="fallback-layer fallback-b" aria-hidden="true"></span>
+          <span class="crossfade-layer" aria-hidden="true"></span>
+        </div>
+        <h2>75%</h2>
+        <p class="note">第一张占主导，第二张较弱。</p>
+      </article>
+      <article class="tile">
+        <div class="thumb fade-tile" style="--mix: 100%; --fallback-a: 1; --fallback-b: 0">
+          <span class="fallback-layer fallback-a" aria-hidden="true"></span>
+          <span class="fallback-layer fallback-b" aria-hidden="true"></span>
+          <span class="crossfade-layer" aria-hidden="true"></span>
+        </div>
+        <h2>100%</h2>
+        <p class="note">第一张完全不透明，显示第一张。</p>
+      </article>
+    </section>
+
+    <section class="panel" style="margin-top: 24px">
+      <h2>百分比的含义</h2>
+      <p>在旧语法 <code>-webkit-cross-fade(imageA, imageB, 75%)</code> 中，<code>75%</code> 是 <code>imageA</code> 的透明度权重，<code>imageB</code> 使用剩余的 <code>25%</code>。</p>
+      <p>在标准语法 <code>cross-fade(imageA 75%, imageB)</code> 中，如果第二个百分比省略，规范会把剩余比例分配给省略百分比的图像。</p>
+    </section>
+  </main>
+</body>
+</html>

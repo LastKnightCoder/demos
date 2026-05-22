@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>01 基础滑块 - CSS cross-fade()</title>
+  <link rel="stylesheet" href="shared.css">
+  <style>
+    .basic-demo {
+      --mix: 50%;
+      --fallback-a: .5;
+      --fallback-b: .5;
+      position: relative;
+      background-image: url("assets/city.svg");
+    }
+
+    .fallback-layer,
+    .crossfade-layer {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+    }
+
+    .fallback-a {
+      background-image: url("assets/mountain.svg");
+      opacity: var(--fallback-a);
+    }
+
+    .fallback-b {
+      background-image: url("assets/city.svg");
+      opacity: var(--fallback-b);
+    }
+
+    .crossfade-layer {
+      background-image: -webkit-cross-fade(url("assets/mountain.svg"), url("assets/city.svg"), var(--mix));
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <div class="topbar">
+      <p class="brand">01 基础滑块</p>
+      <nav class="nav" aria-label="示例导航">
+        <a href="index.html">首页</a>
+        <a href="02-percentages.html">下一页</a>
+        <a href="README.md">README</a>
+      </nav>
+    </div>
+
+    <section class="hero">
+      <div>
+        <h1>用百分比控制两张图的混合</h1>
+        <p>滑块的值会写入 CSS 自定义属性 <code>--mix</code>。在旧语法里，这个百分比表示第一张图的保留量；第二张图自动使用剩余比例。</p>
+        <div class="controls">
+          <input id="mix" type="range" min="0" max="100" value="50" aria-label="第一张图的混合百分比">
+          <output class="readout" id="readout" for="mix">50%</output>
+        </div>
+      </div>
+      <div class="demo-frame basic-demo" id="demo" role="img" aria-label="山景和城市插画的混合结果">
+        <span class="fallback-layer fallback-a" aria-hidden="true"></span>
+        <span class="fallback-layer fallback-b" aria-hidden="true"></span>
+        <span class="crossfade-layer" aria-hidden="true"></span>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>核心 CSS</h2>
+<pre><code>.basic-demo {
+  --mix: 50%;
+  --fallback-a: .5;
+  --fallback-b: .5;
+  position: relative;
+  background-image: url("assets/city.svg");
+}
+
+.fallback-a {
+  background-image: url("assets/mountain.svg");
+  opacity: var(--fallback-a);
+}
+
+.fallback-b {
+  background-image: url("assets/city.svg");
+  opacity: var(--fallback-b);
+}
+
+.crossfade-layer {
+  background-image: -webkit-cross-fade(
+    url("assets/mountain.svg"),
+    url("assets/city.svg"),
+    var(--mix)
+  );
+}</code></pre>
+      <p class="note">这个交互 demo 使用当前 Chromium/Safari 更常见的旧语法，并用两层普通背景图兜底。标准语法放到第 4 个示例单独讲。</p>
+    </section>
+  </main>
+
+  <script>
+    const input = document.querySelector("#mix");
+    const readout = document.querySelector("#readout");
+    const demo = document.querySelector("#demo");
+
+    input.addEventListener("input", () => {
+      const value = `${input.value}%`;
+      const ratio = Number(input.value) / 100;
+      demo.style.setProperty("--mix", value);
+      demo.style.setProperty("--fallback-a", ratio);
+      demo.style.setProperty("--fallback-b", 1 - ratio);
+      readout.value = value;
+      readout.textContent = value;
+    });
+  </script>
+</body>
+</html>
