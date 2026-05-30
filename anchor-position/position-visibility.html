@@ -130,9 +130,6 @@
     border-radius: 16px;
     border: 1px solid var(--border);
     background: var(--demo-bg);
-    display: flex;
-    align-items: center;
-    justify-content: center;
     transition: height 0.15s ease;
   }
 
@@ -174,7 +171,13 @@
   #anchor-vis-btn { anchor-name: --vis-anchor; }
   #anchor-vis-tip { position-anchor: --vis-anchor; position-visibility: anchors-visible; }
 
-  #no-overflow-btn { anchor-name: --no-overflow-anchor; }
+  #no-overflow-btn {
+    position: absolute;
+    left: 50%;
+    bottom: 38px;
+    transform: translateX(-50%);
+    anchor-name: --no-overflow-anchor;
+  }
   #no-overflow-tip { position-anchor: --no-overflow-anchor; position-visibility: no-overflow; }
 
   #always-btn { anchor-name: --always-anchor; }
@@ -341,6 +344,9 @@
       document.querySelectorAll('.demo-panel').forEach(p => p.classList.remove('active'));
       btn.classList.add('active');
       document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+      document.dispatchEvent(new CustomEvent('demo-panel-change', {
+        detail: { tab: btn.dataset.tab }
+      }));
     });
   });
 
@@ -374,6 +380,7 @@
     const clipBox   = document.getElementById('clip-box');
     const slider    = document.getElementById('height-slider');
     const heightVal = document.getElementById('height-val');
+    const anchorBtn = document.getElementById('no-overflow-btn');
     const tooltip   = document.getElementById('no-overflow-tip');
     const tag       = document.getElementById('overflow-status-tag');
     const desc      = document.getElementById('overflow-status-desc');
@@ -384,13 +391,29 @@
       heightVal.textContent = h + 'px';
 
       requestAnimationFrame(() => {
-        const boxRect = clipBox.getBoundingClientRect();
-        const tipRect = tooltip.getBoundingClientRect();
+        const tipStyle   = getComputedStyle(tooltip);
+        const gap        = parseFloat(tipStyle.marginBottom) || 0;
+        const boxStyle   = getComputedStyle(clipBox);
+        const borderY    =
+          (parseFloat(boxStyle.borderTopWidth) || 0) +
+          (parseFloat(boxStyle.borderBottomWidth) || 0);
+        const boxWidth   = clipBox.clientWidth;
+        const boxHeight  = h - borderY;
+        const anchorLeft = (boxWidth - anchorBtn.offsetWidth) / 2;
+        const anchorTop  = boxHeight - 38 - anchorBtn.offsetHeight;
+        const tipWidth   = tooltip.offsetWidth;
+        const tipHeight  = tooltip.offsetHeight;
+        const tipRect = {
+          left: anchorLeft + anchorBtn.offsetWidth / 2 - tipWidth / 2,
+          right: anchorLeft + anchorBtn.offsetWidth / 2 + tipWidth / 2,
+          top: anchorTop - gap - tipHeight,
+          bottom: anchorTop - gap
+        };
         const overflow =
-          tipRect.top    < boxRect.top    - 1 ||
-          tipRect.bottom > boxRect.bottom + 1 ||
-          tipRect.left   < boxRect.left   - 1 ||
-          tipRect.right  > boxRect.right  + 1;
+          tipRect.top    < -1 ||
+          tipRect.bottom > boxHeight + 1 ||
+          tipRect.left   < -1 ||
+          tipRect.right  > boxWidth + 1;
 
         tag.textContent  = overflow ? '已隐藏' : '显示中';
         tag.className    = 'vis-tag ' + (overflow ? 'hidden' : 'shown');
@@ -399,6 +422,9 @@
     }
 
     slider.addEventListener('input', update);
+    document.addEventListener('demo-panel-change', event => {
+      if (event.detail.tab === 'no-overflow') update();
+    });
     update();
   })();
 
