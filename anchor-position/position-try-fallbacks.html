@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>position-try-fallbacks 示例</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --text-muted: #64748b;
+    --border:     #e2e8f0;
+    --code-bg:    #f1f5f9;
+    --code-text:  #475569;
+    --code-prop:  #3b82f6;
+    --code-val:   #f97316;
+    --code-cmt:   #94a3b8;
+    --demo-bg:    #f9fafb;
+  }
+
+  :root.dark {
+    --text-muted: #94a3b8;
+    --border:     #334155;
+    --code-bg:    #1e293b;
+    --code-text:  #94a3b8;
+    --code-prop:  #60a5fa;
+    --code-val:   #fb923c;
+    --code-cmt:   #475569;
+    --demo-bg:    #18181b;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: transparent;
+    padding: 24px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  p.desc {
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  /* 可双向拖拽容器 */
+  .resize-wrap {
+    overflow: hidden;
+    resize: both;
+    min-width: 160px;
+    min-height: 100px;
+    max-width: 100%;
+    width: 100%;
+    height: 240px;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .demo-area {
+    position: relative;
+    flex: 1;
+    background: var(--demo-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    min-height: 0;
+  }
+
+  /* 拖拽提示条 */
+  .resize-hint {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 5px 0;
+    background: var(--demo-bg);
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--text-muted);
+    user-select: none;
+    flex-shrink: 0;
+  }
+
+  /* 锚点按钮 */
+  .anchor-btn {
+    anchor-name: --fb-anchor;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    background: #3b82f6;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 500;
+    border: none;
+    cursor: default;
+    box-shadow: 0 1px 3px rgba(0,0,0,.15);
+    white-space: nowrap;
+  }
+
+  /* tooltip */
+  .tooltip {
+    position: absolute;
+    position-anchor: --fb-anchor;
+    position-area: top;
+    margin-bottom: 8px;
+    position-try-fallbacks:
+      --fb-below,
+      --fb-right,
+      --fb-left;
+
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    white-space: nowrap;
+    box-shadow: 0 4px 12px rgba(0,0,0,.2);
+    pointer-events: none;
+    transition: background 0.15s;
+  }
+
+  .tooltip[data-pos="top"]    { background: #1e293b; color: #f8fafc; }
+  .tooltip[data-pos="bottom"] { background: #7c3aed; color: #f8fafc; }
+  .tooltip[data-pos="right"]  { background: #059669; color: #f8fafc; }
+  .tooltip[data-pos="left"]   { background: #dc2626; color: #f8fafc; }
+
+  @position-try --fb-below {
+    position-area: bottom;
+    margin-top: 8px;
+    margin-bottom: 0;
+  }
+
+  @position-try --fb-right {
+    position-area: right;
+    margin-left: 8px;
+    margin-bottom: 0;
+  }
+
+  @position-try --fb-left {
+    position-area: left;
+    margin-right: 8px;
+    margin-bottom: 0;
+  }
+
+  /* 图例 */
+  .legend {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* 当前生效标签 */
+  .status-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .active-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-family: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, Consolas, monospace;
+    transition: background 0.15s, color 0.15s;
+  }
+  .active-tag.pos-top    { background: #1e293b; color: #f8fafc; }
+  .active-tag.pos-bottom { background: #7c3aed; color: #f8fafc; }
+  .active-tag.pos-right  { background: #059669; color: #f8fafc; }
+  .active-tag.pos-left   { background: #dc2626; color: #f8fafc; }
+
+  /* 代码块 */
+  .code-block {
+    background: var(--code-bg);
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-family: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, Consolas, monospace;
+    font-size: 12px;
+    color: var(--code-text);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .code-block .prop { color: var(--code-prop); }
+  .code-block .val  { color: var(--code-val); }
+  .code-block .cmt  { color: var(--code-cmt); }
+  .code-block .at   { color: #a855f7; }
+</style>
+</head>
+<body>
+
+<p class="desc">拖拽右下角同时调整宽度和高度，观察 tooltip 随可用空间自动切换方向</p>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#1e293b;"></div>首选：上方</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#7c3aed;"></div>回退1：下方</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#059669;"></div>回退2：右侧</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#dc2626;"></div>回退3：左侧</div>
+</div>
+
+<div class="resize-wrap" id="resize-wrap">
+  <div class="demo-area" id="demo-area">
+    <button class="anchor-btn">悬停提示</button>
+    <div class="tooltip" id="tooltip">这是一条提示信息 ✦</div>
+  </div>
+  <div class="resize-hint">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M21 3L3 21M21 9V3h-6M3 15v6h6"/>
+    </svg>
+    拖拽右下角调整宽高
+  </div>
+</div>
+
+<div class="status-row">
+  当前生效位置：<span class="active-tag pos-top" id="active-tag">top</span>
+</div>
+
+<div class="code-block">
+  <div><span class="prop">position-area</span><span class="cmt">: </span><span class="val">top</span><span class="cmt">;</span></div>
+  <div><span class="prop">position-try-fallbacks</span><span class="cmt">:</span></div>
+  <div>&nbsp;&nbsp;<span class="val">--fb-below</span><span class="cmt">,</span></div>
+  <div>&nbsp;&nbsp;<span class="val">--fb-right</span><span class="cmt">,</span></div>
+  <div>&nbsp;&nbsp;<span class="val">--fb-left</span><span class="cmt">;</span></div>
+  <div style="margin-top:6px;"><span class="at">@position-try</span> <span class="val">--fb-below</span> <span class="cmt">{ position-area: bottom; }</span></div>
+  <div><span class="at">@position-try</span> <span class="val">--fb-right</span> <span class="cmt">{ position-area: right; }</span></div>
+  <div><span class="at">@position-try</span> <span class="val">--fb-left</span>  <span class="cmt">{ position-area: left; }</span></div>
+</div>
+
+<script>
+  const params = new URLSearchParams(location.search);
+  if (params.get('dark') === '1') {
+    document.documentElement.classList.add('dark');
+  }
+
+  const tooltip   = document.getElementById('tooltip');
+  const activeTag = document.getElementById('active-tag');
+
+  function detectPos() {
+    const anchorEl = document.querySelector('.anchor-btn');
+    const tRect = tooltip.getBoundingClientRect();
+    const aRect = anchorEl.getBoundingClientRect();
+
+    const dy = (tRect.top + tRect.height / 2) - (aRect.top + aRect.height / 2);
+    const dx = (tRect.left + tRect.width / 2) - (aRect.left + aRect.width / 2);
+
+    let pos;
+    if (Math.abs(dy) >= Math.abs(dx)) {
+      pos = dy < 0 ? 'top' : 'bottom';
+    } else {
+      pos = dx > 0 ? 'right' : 'left';
+    }
+
+    tooltip.dataset.pos = pos;
+    activeTag.textContent = pos;
+    activeTag.className = `active-tag pos-${pos}`;
+  }
+
+  const ro = new ResizeObserver(() => requestAnimationFrame(detectPos));
+  ro.observe(document.getElementById('resize-wrap'));
+
+  detectPos();
+</script>
+</body>
+</html>
