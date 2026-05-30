@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CSS Anchor Position - anchor-size()</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #18212f;
+      background: #f0f6ff;
+    }
+
+    main {
+      width: min(820px, calc(100vw - 32px));
+      padding: 32px;
+      border: 1px solid #c9d7ee;
+      background: #ffffff;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: 28px;
+      letter-spacing: 0;
+    }
+
+    p {
+      margin: 0 0 26px;
+      color: #56657a;
+      line-height: 1.7;
+    }
+
+    .demo {
+      min-height: 320px;
+      display: grid;
+      place-items: center;
+      border: 1px dashed #9fb3d0;
+      background: #f8fbff;
+    }
+
+    .select-button {
+      anchor-name: --select-button;
+      width: clamp(220px, 48vw, 430px);
+      padding: 14px 16px;
+      border: 1px solid #1d4ed8;
+      color: #0f2f70;
+      background: #dbeafe;
+      font: inherit;
+      font-weight: 750;
+      text-align: left;
+    }
+
+    .menu {
+      position: absolute;
+      position-anchor: --select-button;
+      position-area: bottom;
+      width: anchor-size(--select-button width);
+      margin-top: 8px;
+      padding: 8px;
+      border: 1px solid #a8bce0;
+      background: #ffffff;
+      box-shadow: 0 18px 40px rgb(23 37 84 / 16%);
+    }
+
+    .item {
+      padding: 11px 12px;
+      color: #24324a;
+    }
+
+    .item + .item {
+      border-top: 1px solid #e5edf9;
+    }
+
+    .measure {
+      position: absolute;
+      position-anchor: --select-button;
+      position-area: right;
+      width: 14px;
+      height: anchor-size(--select-button height);
+      margin-left: 12px;
+      background: #ef4444;
+    }
+
+    .measure::after {
+      content: "height";
+      position: absolute;
+      left: 20px;
+      top: 50%;
+      translate: 0 -50%;
+      color: #b91c1c;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    }
+
+    @supports not (width: anchor-size(--x width)) {
+      .menu,
+      .measure {
+        position: static;
+        width: min(430px, 100%);
+        height: auto;
+        margin-top: 12px;
+      }
+
+      .measure::after {
+        content: "当前浏览器不支持 anchor-size()";
+        position: static;
+        display: block;
+        padding: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1><code>anchor-size()</code> 尺寸联动</h1>
+    <p>下拉菜单的宽度来自按钮宽度，右侧红条的高度来自按钮高度。改变窗口宽度时，菜单会跟着按钮一起变化。</p>
+
+    <section class="demo">
+      <button class="select-button">选择一个 CSS 新能力</button>
+      <div class="menu">
+        <div class="item">CSS Anchor Positioning</div>
+        <div class="item">HTML Popover API</div>
+        <div class="item">Container Queries</div>
+      </div>
+      <div class="measure"></div>
+    </section>
+  </main>
+</body>
+</html>
+

@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CSS Anchor Position - position-area</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #172033;
+      background: #f6f1f8;
+    }
+
+    main {
+      width: min(980px, calc(100vw - 32px));
+      margin: 32px auto;
+      padding: 28px;
+      background: #ffffff;
+      border: 1px solid #dfcfe6;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: 28px;
+      letter-spacing: 0;
+    }
+
+    p {
+      margin: 0 0 24px;
+      color: #5f5066;
+      line-height: 1.7;
+    }
+
+    .stage {
+      position: relative;
+      min-height: 560px;
+      overflow: auto;
+      border: 1px solid #ceb9d8;
+      background:
+        linear-gradient(90deg, rgb(88 28 135 / 7%) 1px, transparent 1px),
+        linear-gradient(rgb(88 28 135 / 7%) 1px, transparent 1px);
+      background-size: 36px 36px;
+    }
+
+    .anchor {
+      anchor-name: --area-anchor;
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      translate: -50% -50%;
+      width: 150px;
+      height: 100px;
+      display: grid;
+      place-items: center;
+      color: #ffffff;
+      background: #6d28d9;
+      font-weight: 800;
+    }
+
+    .tag {
+      position: absolute;
+      position-anchor: --area-anchor;
+      width: 112px;
+      padding: 8px 9px;
+      background: #ffffff;
+      border: 1px solid #a78bfa;
+      color: #3b0764;
+      font-size: 13px;
+      font-weight: 750;
+      text-align: center;
+      box-shadow: 0 10px 24px rgb(76 29 149 / 14%);
+    }
+
+    .top-left {
+      position-area: top left;
+      margin-right: 8px;
+      margin-bottom: 8px;
+    }
+
+    .top {
+      position-area: top;
+      margin-bottom: 8px;
+    }
+
+    .top-right {
+      position-area: top right;
+      margin-left: 8px;
+      margin-bottom: 8px;
+    }
+
+    .left {
+      position-area: left;
+      margin-right: 8px;
+    }
+
+    .center {
+      position-area: center;
+      color: #ffffff;
+      background: #111827;
+      border-color: #111827;
+    }
+
+    .right {
+      position-area: right;
+      margin-left: 8px;
+    }
+
+    .bottom-left {
+      position-area: bottom left;
+      margin-right: 8px;
+      margin-top: 8px;
+    }
+
+    .bottom {
+      position-area: bottom;
+      margin-top: 8px;
+    }
+
+    .bottom-right {
+      position-area: bottom right;
+      margin-left: 8px;
+      margin-top: 8px;
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    }
+
+    @supports not (position-area: top) {
+      .tag {
+        position: static;
+        display: inline-block;
+        margin: 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1><code>position-area</code> 方位直觉</h1>
+    <p>同一个锚点周围放置九个标签。对 tooltip、菜单、提示气泡来说，<code>position-area</code> 通常比手写 <code>top/left</code> 更直观。</p>
+
+    <section class="stage">
+      <div class="anchor">锚点</div>
+      <div class="tag top-left">top left</div>
+      <div class="tag top">top</div>
+      <div class="tag top-right">top right</div>
+      <div class="tag left">left</div>
+      <div class="tag center">center</div>
+      <div class="tag right">right</div>
+      <div class="tag bottom-left">bottom left</div>
+      <div class="tag bottom">bottom</div>
+      <div class="tag bottom-right">bottom right</div>
+    </section>
+  </main>
+</body>
+</html>
+

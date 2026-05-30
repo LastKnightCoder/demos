@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CSS Anchor Position - Fallbacks</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #1f2937;
+      background: #f5f7f2;
+    }
+
+    main {
+      width: min(960px, calc(100vw - 32px));
+      margin: 32px auto;
+      padding: 28px;
+      background: #ffffff;
+      border: 1px solid #d6dfc8;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: 28px;
+      letter-spacing: 0;
+    }
+
+    p {
+      margin: 0 0 22px;
+      color: #566151;
+      line-height: 1.7;
+    }
+
+    .stage {
+      position: relative;
+      min-height: 500px;
+      overflow: hidden;
+      border: 1px solid #c5d4b6;
+      background: #fbfff6;
+    }
+
+    .edge-button {
+      anchor-name: --edge-button;
+      position: absolute;
+      right: 24px;
+      top: 24px;
+      border: 0;
+      padding: 12px 16px;
+      color: #ffffff;
+      background: #4d7c0f;
+      font: inherit;
+      font-weight: 800;
+    }
+
+    @position-try --place-below {
+      position-area: bottom;
+      margin-top: 10px;
+      margin-right: 0;
+      margin-bottom: 0;
+    }
+
+    @position-try --place-left {
+      position-area: left;
+      margin-right: 10px;
+      margin-bottom: 0;
+      margin-top: 0;
+    }
+
+    @position-try --place-bottom-left {
+      position-area: bottom left;
+      margin-top: 10px;
+      margin-right: 0;
+      margin-bottom: 0;
+    }
+
+    .bubble {
+      position: absolute;
+      position-anchor: --edge-button;
+      position-area: top;
+      width: 260px;
+      margin-bottom: 10px;
+      padding: 14px;
+      color: #ffffff;
+      background: #263238;
+      line-height: 1.55;
+      box-shadow: 0 18px 40px rgb(15 23 42 / 18%);
+      position-try-fallbacks: --place-below, --place-left, --place-bottom-left;
+      position-try-order: most-height;
+    }
+
+    .explain {
+      position: absolute;
+      left: 24px;
+      bottom: 24px;
+      max-width: 520px;
+      padding: 14px 16px;
+      border: 1px solid #d6dfc8;
+      background: #ffffff;
+      color: #4b5563;
+      line-height: 1.65;
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    }
+
+    @supports not (position-try-fallbacks: flip-block) {
+      .bubble {
+        position: static;
+        margin: 100px 24px 0 auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>边缘避让与回退定位</h1>
+    <p>按钮故意放在右上角。气泡首选上方，但上方和右侧空间都不够时，会尝试自定义的 fallback。</p>
+
+    <section class="stage">
+      <button class="edge-button">右上角按钮</button>
+      <div class="bubble">首选 <code>position-area: top</code>。如果放不下，会根据 <code>position-try-fallbacks</code> 尝试 bottom、left、bottom left。</div>
+      <div class="explain">缩小浏览器窗口观察气泡位置变化。过去这类边界检测通常需要 JavaScript 计算视口剩余空间，现在可以声明式交给 CSS。</div>
+    </section>
+  </main>
+</body>
+</html>
+

@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>anchor() 示例</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #f8fafc;
+    color: #1e293b;
+    padding: 24px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  p.desc {
+    text-align: center;
+    font-size: 13px;
+    color: #64748b;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .tab-btn {
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-family: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, Consolas, monospace;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .tab-btn:hover { border-color: #93c5fd; }
+  .tab-btn.active {
+    background: #3b82f6;
+    color: #fff;
+    border-color: #3b82f6;
+  }
+
+  .control-row {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .control-row.visible { display: flex; }
+  .control-row label { font-size: 12px; color: #64748b; }
+
+  .dir-btn {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-family: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, Consolas, monospace;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .dir-btn.active {
+    background: #8b5cf6;
+    color: #fff;
+    border-color: #8b5cf6;
+  }
+
+  input[type=range] {
+    flex: 1;
+    accent-color: #3b82f6;
+    min-width: 0;
+  }
+  .pct-label {
+    font-size: 12px;
+    font-family: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, Consolas, monospace;
+    color: #f97316;
+    width: 32px;
+    text-align: right;
+  }
+  .range-edge {
+    font-size: 12px;
+    font-family: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, Consolas, monospace;
+    color: #94a3b8;
+  }
+
+  .demo-area {
+    position: relative;
+    height: 180px;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    background: #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: visible;
+  }
+
+  .anchor-btn {
+    anchor-name: --a2;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    background: #3b82f6;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 500;
+    border: none;
+    cursor: default;
+    box-shadow: 0 1px 3px rgba(0,0,0,.15);
+  }
+
+  .tooltip {
+    position: absolute;
+    position-anchor: --a2;
+    padding: 6px 10px;
+    border-radius: 6px;
+    background: #1e293b;
+    color: #f8fafc;
+    font-size: 12px;
+    white-space: nowrap;
+    box-shadow: 0 4px 12px rgba(0,0,0,.2);
+    pointer-events: none;
+  }
+
+  .code-block {
+    background: #f1f5f9;
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-family: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, Consolas, monospace;
+    font-size: 12px;
+    color: #475569;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .code-block .prop { color: #3b82f6; }
+  .code-block .val  { color: #f97316; }
+  .code-block .cmt  { color: #94a3b8; }
+</style>
+</head>
+<body>
+
+<p class="desc">选择 anchor-side 类型，观察浮层对齐位置的变化</p>
+
+<div class="tabs">
+  <button class="tab-btn active" data-mode="left">left</button>
+  <button class="tab-btn" data-mode="start">start</button>
+  <button class="tab-btn" data-mode="self-start">self-start</button>
+  <button class="tab-btn" data-mode="percent">百分比</button>
+</div>
+
+<div class="control-row" id="row-percent">
+  <span class="range-edge">0%</span>
+  <input type="range" id="pct-slider" min="0" max="100" value="50">
+  <span class="range-edge">100%</span>
+  <span class="pct-label" id="pct-display">50%</span>
+</div>
+
+<div class="control-row" id="row-cb-dir">
+  <label>包含块方向：</label>
+  <button class="dir-btn active" data-dir="ltr" data-target="cb">ltr（从左到右）</button>
+  <button class="dir-btn" data-dir="rtl" data-target="cb">rtl（从右到左）</button>
+</div>
+
+<div class="control-row" id="row-self-dir">
+  <label>浮层方向：</label>
+  <button class="dir-btn active" data-dir="ltr" data-target="self">ltr（从左到右）</button>
+  <button class="dir-btn" data-dir="rtl" data-target="self">rtl（从右到左）</button>
+</div>
+
+<div class="demo-area" id="demo-area">
+  <button class="anchor-btn">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <circle cx="12" cy="12" r="10"/>
+      <path d="M12 16v-4M12 8h.01"/>
+    </svg>
+    悬停提示
+  </button>
+  <div class="tooltip" id="tooltip">这是一条提示信息 ✦</div>
+</div>
+
+<div class="code-block" id="code-block"></div>
+
+<script>
+  const demoArea   = document.getElementById('demo-area');
+  const codeBlock  = document.getElementById('code-block');
+  const pctSlider  = document.getElementById('pct-slider');
+  const pctDisplay = document.getElementById('pct-display');
+
+  let mode    = 'left';
+  let percent = 50;
+  let cbDir   = 'ltr';
+  let selfDir = 'ltr';
+
+  function applyStyles() {
+    let dynStyle = document.getElementById('dyn');
+    if (!dynStyle) {
+      dynStyle = document.createElement('style');
+      dynStyle.id = 'dyn';
+      document.head.appendChild(dynStyle);
+    }
+
+    let rule = '';
+    let codeLines = [];
+
+    if (mode === 'left') {
+      rule = `
+        #tooltip {
+          bottom: anchor(--a2 top);
+          left: anchor(--a2 left);
+          margin-bottom: 8px;
+        }
+      `;
+      codeLines = [
+        ['bottom', 'anchor(--a2 top)'],
+        ['left',   'anchor(--a2 left)'],
+      ];
+      demoArea.style.direction = '';
+
+    } else if (mode === 'start') {
+      rule = `
+        #tooltip {
+          bottom: anchor(--a2 top);
+          left: anchor(--a2 start);
+          margin-bottom: 8px;
+        }
+      `;
+      codeLines = [
+        ['bottom', 'anchor(--a2 top)'],
+        ['left',   'anchor(--a2 start)'],
+        [null, `/* 包含块 direction: ${cbDir} */`],
+      ];
+      demoArea.style.direction = cbDir;
+
+    } else if (mode === 'self-start') {
+      rule = `
+        #tooltip {
+          bottom: anchor(--a2 top);
+          left: anchor(--a2 self-start);
+          direction: ${selfDir};
+          margin-bottom: 8px;
+        }
+      `;
+      codeLines = [
+        ['bottom', 'anchor(--a2 top)'],
+        ['left',   'anchor(--a2 self-start)'],
+        [null, `/* 浮层自身 direction: ${selfDir} */`],
+      ];
+      demoArea.style.direction = '';
+
+    } else if (mode === 'percent') {
+      rule = `
+        #tooltip {
+          bottom: anchor(--a2 top);
+          left: anchor(--a2 ${percent}%);
+          margin-bottom: 8px;
+        }
+      `;
+      codeLines = [
+        ['bottom', 'anchor(--a2 top)'],
+        ['left',   `anchor(--a2 ${percent}%)`],
+      ];
+      demoArea.style.direction = '';
+    }
+
+    dynStyle.textContent = rule;
+
+    codeBlock.innerHTML = codeLines.map(([prop, val]) => {
+      if (prop === null) return `<div><span class="cmt">${val}</span></div>`;
+      return `<div><span class="prop">${prop}</span><span class="cmt">: </span><span class="val">${val}</span><span class="cmt">;</span></div>`;
+    }).join('');
+  }
+
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      mode = btn.dataset.mode;
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('row-percent').classList.toggle('visible', mode === 'percent');
+      document.getElementById('row-cb-dir').classList.toggle('visible', mode === 'start');
+      document.getElementById('row-self-dir').classList.toggle('visible', mode === 'self-start');
+      applyStyles();
+    });
+  });
+
+  pctSlider.addEventListener('input', () => {
+    percent = Number(pctSlider.value);
+    pctDisplay.textContent = percent + '%';
+    applyStyles();
+  });
+
+  document.querySelectorAll('.dir-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.dataset.target;
+      const dir    = btn.dataset.dir;
+      if (target === 'cb')   cbDir   = dir;
+      if (target === 'self') selfDir = dir;
+      document.querySelectorAll(`.dir-btn[data-target="${target}"]`)
+        .forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      applyStyles();
+    });
+  });
+
+  applyStyles();
+</script>
+</body>
+</html>

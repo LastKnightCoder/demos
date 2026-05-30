@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CSS Anchor Position - anchor() Function</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #172033;
+      background: #eef6f4;
+    }
+
+    main {
+      width: min(900px, calc(100vw - 32px));
+      margin: 40px auto;
+      padding: 28px;
+      background: #ffffff;
+      border: 1px solid #c9ded8;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: 28px;
+      letter-spacing: 0;
+    }
+
+    p {
+      margin: 0 0 24px;
+      color: #526170;
+      line-height: 1.7;
+    }
+
+    .stage {
+      position: relative;
+      min-height: 420px;
+      border: 1px solid #bcd5cf;
+      background:
+        linear-gradient(90deg, rgb(15 118 110 / 8%) 1px, transparent 1px),
+        linear-gradient(rgb(15 118 110 / 8%) 1px, transparent 1px);
+      background-size: 32px 32px;
+    }
+
+    .target {
+      anchor-name: --target-card;
+      position: absolute;
+      left: 42%;
+      top: 46%;
+      width: 180px;
+      padding: 18px;
+      color: #ffffff;
+      background: #15616d;
+      font-weight: 750;
+      text-align: center;
+    }
+
+    .line {
+      position: absolute;
+      background: #d97706;
+    }
+
+    .line.horizontal {
+      left: anchor(--target-card left);
+      top: anchor(--target-card center);
+      width: anchor-size(--target-card width);
+      height: 3px;
+    }
+
+    .line.vertical {
+      left: anchor(--target-card center);
+      top: anchor(--target-card top);
+      width: 3px;
+      height: anchor-size(--target-card height);
+    }
+
+    .label {
+      position: absolute;
+      width: max-content;
+      max-width: 210px;
+      padding: 9px 11px;
+      color: #ffffff;
+      background: #1f2937;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .label-top {
+      left: anchor(--target-card center);
+      top: calc(anchor(--target-card top) - 12px);
+      translate: -50% -100%;
+    }
+
+    .label-right {
+      left: calc(anchor(--target-card right) + 12px);
+      top: anchor(--target-card center);
+      translate: 0 -50%;
+    }
+
+    .label-bottom-left {
+      right: anchor(--target-card left);
+      top: calc(anchor(--target-card bottom) + 12px);
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    }
+
+    @supports not (left: anchor(--x left)) {
+      .line,
+      .label {
+        display: none;
+      }
+
+      .stage::after {
+        content: "当前浏览器不支持 anchor()";
+        position: absolute;
+        left: 16px;
+        bottom: 16px;
+        padding: 10px 12px;
+        background: #fff4cc;
+        border: 1px solid #e5bc4f;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1><code>anchor()</code> 精确边线对齐</h1>
+    <p>这些标注直接读取锚点的 <code>top</code>、<code>right</code>、<code>bottom</code>、<code>left</code>、<code>center</code>，再用 <code>calc()</code> 和 <code>translate</code> 做偏移。</p>
+
+    <section class="stage">
+      <div class="target">锚点卡片</div>
+      <div class="line horizontal"></div>
+      <div class="line vertical"></div>
+      <div class="label label-top">top = anchor(top)，水平中心 = anchor(center)</div>
+      <div class="label label-right">left = anchor(right) + 12px</div>
+      <div class="label label-bottom-left">right = anchor(left)</div>
+    </section>
+  </main>
+</body>
+</html>
+

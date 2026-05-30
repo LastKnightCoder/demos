@@ -7,7 +7,7 @@ URLPattern 是一个用于匹配 URL 的 Web API，提供声明式的方式来�
 ### 浏览器
 
 | 浏览器 | 版本 | 备注 |
-|--------|------|------|
+| --- | --- | --- |
 | Chrome | 95+ | 完全支持，全局可用 |
 | Edge | 95+ | 完全支持，全局可用 |
 | Safari | 17+ | 部分支持 |
@@ -16,11 +16,11 @@ URLPattern 是一个用于匹配 URL 的 Web API，提供声明式的方式来�
 ### Node.js
 
 | 版本 | 支持情况 |
-|------|----------|
+| --- | --- |
 | 18.17.0+ | 需要从 `url` 模块导入 |
 | 20.0.0+ | 需要从 `url` 模块导入 |
 
-```javascript
+```JavaScript
 // Node.js 中使用 URLPattern
 const { URLPattern } = require('url');
 
@@ -34,7 +34,7 @@ import { URLPattern } from 'url';
 
 ### 语法
 
-```JAVASCRIPT
+```JavaScript
 new URLPattern(input)
 new URLPattern(input, baseURL)
 new URLPattern(input, options)
@@ -51,7 +51,7 @@ new URLPattern(input, baseURL, options)
 
 完整的 URL 模式字符串，或相对路径（需配合 baseURL 使用）。
 
-```JAVASCRIPT
+```JavaScript
 // 完整 URL 模式
 new URLPattern('https://example.com/users/:id')
 
@@ -63,7 +63,7 @@ new URLPattern('/users/:id', 'https://example.com')
 
 一个包含 URL 各组件模式的对象：
 
-```TYPESCRIPT
+```TypeScript
 interface URLPatternInit {
   protocol?: string;    // 协议模式，如 'https'、'http*'
   username?: string;    // 用户名模式
@@ -77,7 +77,7 @@ interface URLPatternInit {
 }
 ```
 
-```JAVASCRIPT
+```JavaScript
 // 使用对象定义模式
 new URLPattern({
   protocol: 'https',
@@ -96,7 +96,7 @@ new URLPattern({
 
 当 `input` 是相对路径时必须提供：
 
-```JAVASCRIPT
+```JavaScript
 // ✓ 正确：提供 baseURL
 new URLPattern('/users/:id', 'https://example.com')
 
@@ -110,13 +110,13 @@ new URLPattern('/users/:id')  // TypeError
 | --- | --- | --- |
 | `URLPatternOptions` | 否 | 配置选项对象 |
 
-```TYPESCRIPT
+```TypeScript
 interface URLPatternOptions {
   ignoreCase?: boolean;  // 是否忽略大小写，默认 false
 }
 ```
 
-```JAVASCRIPT
+```JavaScript
 // 忽略大小写匹配
 new URLPattern('/users/:id', 'https://example.com', { ignoreCase: true })
 ```
@@ -142,7 +142,7 @@ new URLPattern('/users/:id', 'https://example.com', { ignoreCase: true })
 
 #### 语法
 
-```JAVASCRIPT
+```JavaScript
 pattern.test(input)
 pattern.test(input, baseURL)
 ```
@@ -151,7 +151,7 @@ pattern.test(input, baseURL)
 
 | 参数 | 类型 | 必需 | 说明 |
 | --- | --- | --- | --- |
-| `input` | `string | URLPatternInit` | 是 | 要测试的 URL 字符串或 URL 组件对象 |
+| `input` | `string or URLPatternInit` | 是 | 要测试的 URL 字符串或 URL 组件对象 |
 | `baseURL` | `string` | 否 | 用于解析相对 URL 的基础 URL |
 
 #### 返回值
@@ -162,7 +162,7 @@ pattern.test(input, baseURL)
 
 #### 示例
 
-```JAVASCRIPT
+```JavaScript
 const pattern = new URLPattern('/users/:id', 'https://example.com');
 
 // 使用字符串测试
@@ -186,7 +186,7 @@ pattern.test('/users/789', 'https://example.com'); // true
 
 #### 语法
 
-```JAVASCRIPT
+```JavaScript
 pattern.exec(input)
 pattern.exec(input, baseURL)
 ```
@@ -206,7 +206,7 @@ pattern.exec(input, baseURL)
 
 #### URLPatternResult 结构
 
-```TYPESCRIPT
+```TypeScript
 interface URLPatternResult {
   // 原始输入（数组形式，包含传入的 input 和可选的 baseURL）
   inputs: (string | URLPatternInit)[];
@@ -230,7 +230,7 @@ interface URLPatternComponentResult {
 
 #### 完整示例
 
-```JAVASCRIPT
+```JavaScript
 const pattern = new URLPattern(
   '/users/:userId/posts/:postId',
   'https://example.com'
@@ -240,49 +240,51 @@ const result = pattern.exec('https://example.com/users/123/posts/456');
 
 // result 完整结构：
 {
-  inputs: ['https://example.com/users/123/posts/456'],
-
-  protocol: {
-    input: 'https',
-    groups: {}
+  "inputs": [
+    "https://example.com/users/123/posts/456"
+  ],
+  "hash": {
+    "groups": {
+      "0": ""
+    },
+    "input": ""
   },
-
-  username: {
-    input: '',
-    groups: {}
+  "hostname": {
+    "groups": {},
+    "input": "example.com"
   },
-
-  password: {
-    input: '',
-    groups: {}
+  "password": {
+    "groups": {
+      "0": ""
+    },
+    "input": ""
   },
-
-  hostname: {
-    input: 'example.com',
-    groups: {}
+  "pathname": {
+    "groups": {
+      "userId": "123",
+      "postId": "456"
+    },
+    "input": "/users/123/posts/456"
   },
-
-  port: {
-    input: '',
-    groups: {}
+  "port": {
+    "groups": {},
+    "input": ""
   },
-
-  pathname: {
-    input: '/users/123/posts/456',
-    groups: {
-      userId: '123',    // ← 捕获的参数
-      postId: '456'     // ← 捕获的参数
-    }
+  "protocol": {
+    "groups": {},
+    "input": "https"
   },
-
-  search: {
-    input: '',
-    groups: {}
+  "search": {
+    "groups": {
+      "0": ""
+    },
+    "input": ""
   },
-
-  hash: {
-    input: '',
-    groups: {}
+  "username": {
+    "groups": {
+      "0": ""
+    },
+    "input": ""
   }
 }
 
@@ -312,7 +314,7 @@ if (result) {
 | `hash` | `string` | 哈希模式 | `'*'`、`':section'` |
 | `hasRegExpGroups` | `boolean` | 是否包含正则表达式组 | `true`、`false` |
 
-```JAVASCRIPT
+```JavaScript
 const pattern = new URLPattern('/users/:id', 'https://example.com');
 
 console.log(pattern.protocol);  // 'https'
@@ -347,7 +349,7 @@ URLPattern 使用类似于 path-to-regexp 的语法。
 
 捕获单个路径段（不包含 `/`）。
 
-```JAVASCRIPT
+```JavaScript
 const pattern = new URLPattern('/users/:userId/posts/:postId', baseURL);
 
 // ✓ 匹配
@@ -363,7 +365,7 @@ pattern.test('.../users/123/posts');     // false
 
 匹配任意字符（包括 `/`），结果存储在 `groups[0]`。
 
-```JAVASCRIPT
+```JavaScript
 const pattern = new URLPattern('/api/*', baseURL);
 
 pattern.exec('.../api/users/123/posts');
@@ -377,7 +379,7 @@ pattern.test('.../api/anything'); // true
 
 参数可以存在也可以不存在。
 
-```JAVASCRIPT
+```JavaScript
 const pattern = new URLPattern('/users/:id?', baseURL);
 
 pattern.test('.../users');       // true, groups.id = undefined
@@ -388,7 +390,7 @@ pattern.test('.../users/123/x'); // false（多余的段）
 
 ### 4. 重复参数 `:name+` 和 `:name*`
 
-```JAVASCRIPT
+```JavaScript
 // :path+ 匹配一个或多个段
 const patternPlus = new URLPattern('/files/:path+', baseURL);
 patternPlus.test('.../files/a');       // true, path = 'a'
@@ -405,7 +407,7 @@ patternStar.test('.../docs/a/b');      // true, path = 'a/b'
 
 使用正则表达式限制匹配内容。
 
-```JAVASCRIPT
+```JavaScript
 // 只匹配数字 ID
 const pattern = new URLPattern('/users/:id(\\d+)', baseURL);
 
@@ -424,7 +426,9 @@ datePattern.test('.../posts/2024-1-5');   // false
 
 将多个部分组合在一起，常与 `?` 配合实现可选路径段。
 
-```JAVASCRIPT
+```JavaScript
+// 将多个部分组合在一起，常与 `?` 配合实现可选路径段。
+
 // 可选的版本前缀
 const pattern = new URLPattern('/api{/v:version}?/users', baseURL);
 
@@ -435,7 +439,7 @@ pattern.test('.../api/v2/users');   // true, version = '2'
 
 ### 7. 主机名模式
 
-```JAVASCRIPT
+```JavaScript
 // 匹配子域名
 const pattern = new URLPattern({
   hostname: ':subdomain.example.com',
@@ -458,7 +462,7 @@ const wildcardPattern = new URLPattern({
 ### HTML 交互示例（浏览器运行）
 
 | 文件 | 说明 |
-|------|------|
+| --- | --- |
 | [01-basic-usage.html](./01-basic-usage.html) | 基本用法：创建模式、test()、exec() |
 | [02-pattern-syntax.html](./02-pattern-syntax.html) | 模式语法详解与交互测试 |
 | [03-exec-result.html](./03-exec-result.html) | exec() 返回值结构详解 |
@@ -470,7 +474,7 @@ const wildcardPattern = new URLPattern({
 需要 Node.js 18.17.0+ 版本。运行方式：`node <文件名>`
 
 | 文件 | 说明 |
-|------|------|
+| --- | --- |
 | [01-constructor.js](./01-constructor.js) | 构造函数的各种用法、参数详解 |
 | [02-test-method.js](./02-test-method.js) | test() 方法的各种使用场景 |
 | [03-exec-method.js](./03-exec-method.js) | exec() 方法和返回值结构 |
@@ -484,7 +488,7 @@ const wildcardPattern = new URLPattern({
 
 ### 前端路由
 
-```JAVASCRIPT
+```JavaScript
 const routes = [
   { pattern: new URLPattern({ pathname: '/' }), component: 'Home' },
   { pattern: new URLPattern({ pathname: '/users' }), component: 'UserList' },
@@ -504,7 +508,7 @@ function matchRoute(url) {
 
 ### Service Worker 请求拦截
 
-```JAVASCRIPT
+```JavaScript
 const apiPattern = new URLPattern({ pathname: '/api/*' });
 
 self.addEventListener('fetch', (event) => {
@@ -516,7 +520,7 @@ self.addEventListener('fetch', (event) => {
 
 ### URL 参数提取
 
-```JAVASCRIPT
+```JavaScript
 const pattern = new URLPattern(
   'https://:subdomain.example.com/api/v:version/:resource/:id',
   { ignoreCase: true }
