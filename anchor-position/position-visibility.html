@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>position-visibility 示例</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --text-muted: #64748b;
+    --border:     #e2e8f0;
+    --code-bg:    #f1f5f9;
+    --code-text:  #475569;
+    --code-prop:  #3b82f6;
+    --code-val:   #f97316;
+    --code-cmt:   #94a3b8;
+    --demo-bg:    #f9fafb;
+    --btn-bg:     #ffffff;
+    --btn-text:   #475569;
+    --btn-border: #e2e8f0;
+    --scroll-track: #e2e8f0;
+    --scroll-thumb: #cbd5e1;
+  }
+
+  :root.dark {
+    --text-muted: #94a3b8;
+    --border:     #334155;
+    --code-bg:    #1e293b;
+    --code-text:  #94a3b8;
+    --code-prop:  #60a5fa;
+    --code-val:   #fb923c;
+    --code-cmt:   #475569;
+    --demo-bg:    #18181b;
+    --btn-bg:     #1e293b;
+    --btn-text:   #94a3b8;
+    --btn-border: #334155;
+    --scroll-track: #1e293b;
+    --scroll-thumb: #334155;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: transparent;
+    padding: 24px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  p.desc {
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .tab-btn {
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-family: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, Consolas, monospace;
+    border: 1px solid var(--btn-border);
+    background: var(--btn-bg);
+    color: var(--btn-text);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .tab-btn:hover { border-color: #3b82f6; }
+  .tab-btn.active {
+    background: #3b82f6;
+    color: #fff;
+    border-color: #3b82f6;
+  }
+
+  .demo-panel {
+    display: none;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .demo-panel.active { display: flex; }
+
+  /* ── Scrollable box ── */
+  .scroll-box {
+    position: relative;
+    height: 200px;
+    overflow-y: auto;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    background: var(--demo-bg);
+    scrollbar-width: thin;
+    scrollbar-color: var(--scroll-thumb) var(--scroll-track);
+  }
+  .scroll-box::-webkit-scrollbar { width: 6px; }
+  .scroll-box::-webkit-scrollbar-track { background: var(--scroll-track); border-radius: 3px; }
+  .scroll-box::-webkit-scrollbar-thumb { background: var(--scroll-thumb); border-radius: 3px; }
+
+  .scroll-content {
+    height: 500px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .scroll-hint-top,
+  .scroll-hint-bottom {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 11px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  .scroll-hint-top    { top: 8px; }
+  .scroll-hint-bottom { bottom: 8px; }
+
+  /* ── no-overflow clip box ── */
+  .clip-box {
+    position: relative;
+    overflow: hidden;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    background: var(--demo-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: height 0.15s ease;
+  }
+
+  /* ── Anchor button ── */
+  .anchor-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 16px;
+    border-radius: 8px;
+    background: #3b82f6;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 500;
+    border: none;
+    cursor: default;
+    white-space: nowrap;
+    box-shadow: 0 1px 3px rgba(0,0,0,.15);
+  }
+
+  /* ── Tooltip ── */
+  .tooltip {
+    position: absolute;
+    position-area: top;
+    margin-bottom: 8px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    background: #1e293b;
+    color: #f8fafc;
+    font-size: 12px;
+    white-space: nowrap;
+    pointer-events: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,.15);
+  }
+  :root.dark .tooltip {
+    background: #f1f5f9;
+    color: #1e293b;
+  }
+
+  #anchor-vis-btn { anchor-name: --vis-anchor; }
+  #anchor-vis-tip { position-anchor: --vis-anchor; position-visibility: anchors-visible; }
+
+  #no-overflow-btn { anchor-name: --no-overflow-anchor; }
+  #no-overflow-tip { position-anchor: --no-overflow-anchor; position-visibility: no-overflow; }
+
+  #always-btn { anchor-name: --always-anchor; }
+  #always-tip { position-anchor: --always-anchor; position-visibility: always; }
+
+  /* ── Status row ── */
+  .status-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-muted);
+    flex-wrap: wrap;
+  }
+  .vis-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-family: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, Consolas, monospace;
+    font-size: 11px;
+    transition: background 0.15s, color 0.15s;
+  }
+  .vis-tag.shown  { background: #059669; color: #f8fafc; }
+  .vis-tag.hidden { background: #dc2626; color: #f8fafc; }
+
+  /* ── Code block ── */
+  .code-block {
+    background: var(--code-bg);
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-family: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, Consolas, monospace;
+    font-size: 12px;
+    color: var(--code-text);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .code-block .prop { color: var(--code-prop); }
+  .code-block .val  { color: var(--code-val); }
+  .code-block .cmt  { color: var(--code-cmt); }
+
+  /* ── Slider ── */
+  .slider-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  input[type=range] {
+    flex: 1;
+    accent-color: #3b82f6;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<p class="desc">切换不同的 position-visibility 值，观察浮层在各种情况下的显隐行为</p>
+
+<div class="tabs">
+  <button class="tab-btn active" data-tab="anchors-visible">anchors-visible</button>
+  <button class="tab-btn" data-tab="no-overflow">no-overflow</button>
+  <button class="tab-btn" data-tab="always">always（对比）</button>
+</div>
+
+<!-- ══════════════════════════════════════════
+     Panel 1: anchors-visible
+════════════════════════════════════════════ -->
+<div class="demo-panel active" id="panel-anchors-visible">
+  <div class="scroll-box" id="scroll-box-vis">
+    <div class="scroll-hint-top">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+      向上滚动，锚点消失，浮层隐藏
+    </div>
+    <div class="scroll-content">
+      <button class="anchor-btn" id="anchor-vis-btn">锚点按钮</button>
+      <div class="tooltip" id="anchor-vis-tip">我跟着锚点显隐 ✦</div>
+    </div>
+    <div class="scroll-hint-bottom">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+      向下滚动，锚点消失，浮层隐藏
+    </div>
+  </div>
+
+  <div class="status-row">
+    浮层状态：<span class="vis-tag shown" id="vis-status-tag">显示中</span>
+    <span id="vis-status-desc">锚点在容器视口内</span>
+  </div>
+
+  <div class="code-block">
+    <div><span class="prop">position-visibility</span><span class="cmt">: </span><span class="val">anchors-visible</span><span class="cmt">;</span></div>
+    <div><span class="cmt">/* 锚点元素滚出视口时，浮层自动隐藏 */</span></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     Panel 2: no-overflow
+════════════════════════════════════════════ -->
+<div class="demo-panel" id="panel-no-overflow">
+  <div class="clip-box" id="clip-box" style="height: 200px;">
+    <button class="anchor-btn" id="no-overflow-btn">锚点按钮</button>
+    <div class="tooltip" id="no-overflow-tip">浮层溢出容器时我会消失 ✦</div>
+  </div>
+
+  <div class="slider-row">
+    <span style="white-space:nowrap;">容器高度</span>
+    <input type="range" id="height-slider" min="60" max="260" value="200">
+    <span id="height-val" style="white-space:nowrap; min-width:36px;">200px</span>
+  </div>
+
+  <div class="status-row">
+    浮层状态：<span class="vis-tag shown" id="overflow-status-tag">显示中</span>
+    <span id="overflow-status-desc">浮层未溢出容器</span>
+  </div>
+
+  <div class="code-block">
+    <div><span class="prop">position-visibility</span><span class="cmt">: </span><span class="val">no-overflow</span><span class="cmt">;</span></div>
+    <div><span class="cmt">/* 浮层超出其包含块时，自动隐藏 */</span></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     Panel 3: always（对比）
+════════════════════════════════════════════ -->
+<div class="demo-panel" id="panel-always">
+  <div class="scroll-box" id="scroll-box-always">
+    <div class="scroll-hint-top">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+      向上滚动，锚点消失，但浮层仍然显示
+    </div>
+    <div class="scroll-content">
+      <button class="anchor-btn" id="always-btn">锚点按钮</button>
+      <div class="tooltip" id="always-tip">我始终显示 ✦</div>
+    </div>
+    <div class="scroll-hint-bottom">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+      向下滚动，锚点消失，但浮层仍然显示
+    </div>
+  </div>
+
+  <div class="status-row">
+    浮层状态：<span class="vis-tag shown">始终显示</span>
+    <span>锚点不可见时浮层不会自动隐藏</span>
+  </div>
+
+  <div class="code-block">
+    <div><span class="prop">position-visibility</span><span class="cmt">: </span><span class="val">always</span><span class="cmt">;</span></div>
+    <div><span class="cmt">/* 默认值，定位元素始终渲染，不受锚点可见性影响 */</span></div>
+  </div>
+</div>
+
+<script>
+  /* ── 深色模式 ── */
+  const params = new URLSearchParams(location.search);
+  if (params.get('dark') === '1') {
+    document.documentElement.classList.add('dark');
+  }
+
+  /* ── Tab 切换 ── */
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.demo-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  /* ── Panel 1: anchors-visible ── */
+  (function () {
+    const scrollBox = document.getElementById('scroll-box-vis');
+    const anchorBtn = document.getElementById('anchor-vis-btn');
+    const tag       = document.getElementById('vis-status-tag');
+    const desc      = document.getElementById('vis-status-desc');
+
+    scrollBox.scrollTop = 140;
+
+    function update() {
+      const boxRect    = scrollBox.getBoundingClientRect();
+      const anchorRect = anchorBtn.getBoundingClientRect();
+      const visible =
+        anchorRect.bottom > boxRect.top &&
+        anchorRect.top    < boxRect.bottom;
+
+      tag.textContent  = visible ? '显示中' : '已隐藏';
+      tag.className    = 'vis-tag ' + (visible ? 'shown' : 'hidden');
+      desc.textContent = visible ? '锚点在容器视口内' : '锚点已滚出容器视口';
+    }
+
+    scrollBox.addEventListener('scroll', update);
+    update();
+  })();
+
+  /* ── Panel 2: no-overflow ── */
+  (function () {
+    const clipBox   = document.getElementById('clip-box');
+    const slider    = document.getElementById('height-slider');
+    const heightVal = document.getElementById('height-val');
+    const tooltip   = document.getElementById('no-overflow-tip');
+    const tag       = document.getElementById('overflow-status-tag');
+    const desc      = document.getElementById('overflow-status-desc');
+
+    function update() {
+      const h = parseInt(slider.value);
+      clipBox.style.height = h + 'px';
+      heightVal.textContent = h + 'px';
+
+      requestAnimationFrame(() => {
+        const boxRect = clipBox.getBoundingClientRect();
+        const tipRect = tooltip.getBoundingClientRect();
+        const overflow =
+          tipRect.top    < boxRect.top    - 1 ||
+          tipRect.bottom > boxRect.bottom + 1 ||
+          tipRect.left   < boxRect.left   - 1 ||
+          tipRect.right  > boxRect.right  + 1;
+
+        tag.textContent  = overflow ? '已隐藏' : '显示中';
+        tag.className    = 'vis-tag ' + (overflow ? 'hidden' : 'shown');
+        desc.textContent = overflow ? '浮层超出了容器边界' : '浮层未溢出容器';
+      });
+    }
+
+    slider.addEventListener('input', update);
+    update();
+  })();
+
+  /* ── Panel 3: always ── */
+  document.getElementById('scroll-box-always').scrollTop = 140;
+</script>
+</body>
+</html>
