@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CSS corner-shape - Per Corner</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #1e293b;
+      background: #f5f0ec;
+    }
+
+    main {
+      width: min(940px, calc(100vw - 32px));
+      margin: 40px auto;
+      padding: 32px;
+      border: 1px solid #d4c7bd;
+      background: #fffaf6;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: 28px;
+      letter-spacing: 0;
+    }
+
+    p {
+      margin: 0 0 26px;
+      color: #5b6573;
+      line-height: 1.7;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .panel {
+      min-height: 290px;
+      padding: 28px;
+      border: 10px solid #503047;
+      border-radius: 76px 36px 76px 36px;
+      corner-shape: scoop bevel notch squircle;
+      color: #ffffff;
+      background:
+        linear-gradient(135deg, rgb(255 255 255 / 18%) 0 24%, transparent 24%),
+        #7c3f58;
+      box-shadow: 0 18px 32px rgb(80 48 71 / 18%);
+    }
+
+    .panel h2 {
+      margin: 0 0 12px;
+      font-size: 24px;
+      letter-spacing: 0;
+    }
+
+    .panel p {
+      margin: 0;
+      color: rgb(255 255 255 / 82%);
+    }
+
+    .code-card {
+      padding: 18px;
+      border: 1px solid #d7c9c1;
+      background: #fffefe;
+    }
+
+    pre {
+      margin: 0;
+      overflow: auto;
+      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+      font-size: 14px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
+
+    .labels {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 14px;
+      font-size: 13px;
+      color: #4b5563;
+    }
+
+    .label {
+      padding: 8px 10px;
+      border: 1px solid #e1d7d0;
+      background: #fff8f1;
+    }
+
+    .notice {
+      display: none;
+      margin-top: 22px;
+      padding: 12px;
+      border: 1px solid #e2b84d;
+      background: #fff4cc;
+      color: #614800;
+    }
+
+    @supports not (corner-shape: scoop bevel notch squircle) {
+      .notice {
+        display: block;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>四个角可以分别设置</h1>
+    <p><code>corner-shape</code> 是简写属性，值的展开顺序和 <code>border-radius</code> 类似：左上、右上、右下、左下。</p>
+
+    <section class="layout">
+      <div>
+        <div class="panel">
+          <h2>同一个盒子，四种角</h2>
+          <p>左上 scoop，右上 bevel，右下 notch，左下 squircle。</p>
+        </div>
+        <div class="labels">
+          <div class="label">左上: scoop</div>
+          <div class="label">右上: bevel</div>
+          <div class="label">左下: squircle</div>
+          <div class="label">右下: notch</div>
+        </div>
+      </div>
+
+      <div class="code-card">
+        <pre><code>.panel {
+  border-radius: 76px 36px 76px 36px;
+  corner-shape: scoop bevel notch squircle;
+}</code></pre>
+      </div>
+    </section>
+
+    <div class="notice">当前浏览器可能不支持 <code>corner-shape</code>，所以四个角可能只显示为普通圆角。</div>
+  </main>
+</body>
+</html>

@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CSS corner-shape - Animation</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #16202f;
+      background: #f6f1f1;
+    }
+
+    main {
+      width: min(760px, calc(100vw - 32px));
+      padding: 32px;
+      border: 1px solid #dccccc;
+      background: #fffafa;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: 28px;
+      letter-spacing: 0;
+    }
+
+    p {
+      margin: 0 0 28px;
+      color: #5b6573;
+      line-height: 1.7;
+    }
+
+    .stage {
+      min-height: 330px;
+      display: grid;
+      place-items: center;
+      border: 1px dashed #d0b7b7;
+      background:
+        linear-gradient(90deg, rgb(153 73 73 / 8%) 1px, transparent 1px),
+        linear-gradient(rgb(153 73 73 / 8%) 1px, transparent 1px);
+      background-size: 28px 28px;
+    }
+
+    .shape {
+      width: min(240px, 58vw);
+      aspect-ratio: 1;
+      display: grid;
+      place-items: center;
+      border: 12px solid #6d2e46;
+      border-radius: 58px;
+      corner-shape: round;
+      color: #ffffff;
+      font-weight: 850;
+      background:
+        radial-gradient(circle at 68% 28%, rgb(255 255 255 / 32%) 0 14%, transparent 15%),
+        #a26769;
+      box-shadow: 0 22px 44px rgb(109 46 70 / 22%);
+      animation: morph 5s ease-in-out infinite alternate;
+    }
+
+    @keyframes morph {
+      0% {
+        corner-shape: notch;
+      }
+
+      20% {
+        corner-shape: scoop;
+      }
+
+      45% {
+        corner-shape: bevel;
+      }
+
+      70% {
+        corner-shape: round;
+      }
+
+      100% {
+        corner-shape: squircle;
+      }
+    }
+
+    .notice {
+      display: none;
+      margin-top: 18px;
+      padding: 12px;
+      border: 1px solid #e2b84d;
+      background: #fff4cc;
+      color: #614800;
+    }
+
+    @supports not (corner-shape: squircle) {
+      .notice {
+        display: block;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>角形状可以动画过渡</h1>
+    <p>规范把关键字映射到对应的 <code>superellipse()</code> 参数，因此 <code>corner-shape</code> 可以在不同角形状之间插值动画。</p>
+
+    <section class="stage">
+      <div class="shape">corner-shape</div>
+    </section>
+
+    <div class="notice">当前浏览器可能不支持 <code>corner-shape</code> 动画。若只看到静态圆角，这是正常的降级表现。</div>
+  </main>
+</body>
+</html>

@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CSS corner-shape - superellipse()</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #16202f;
+      background: #f2f2ef;
+    }
+
+    main {
+      width: min(1050px, calc(100vw - 32px));
+      margin: 40px auto;
+      padding: 32px;
+      border: 1px solid #d2d2c8;
+      background: #ffffff;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: 28px;
+      letter-spacing: 0;
+    }
+
+    p {
+      margin: 0 0 26px;
+      color: #586273;
+      line-height: 1.7;
+    }
+
+    .scale {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 18px;
+    }
+
+    .item {
+      display: grid;
+      gap: 10px;
+      justify-items: center;
+      padding: 16px 10px;
+      border: 1px solid #ddddd2;
+      background: #fbfbf7;
+    }
+
+    .shape {
+      width: 112px;
+      aspect-ratio: 1;
+      border: 6px solid #31572c;
+      border-radius: 36px;
+      background:
+        radial-gradient(circle at 70% 30%, rgb(255 255 255 / 45%) 0 16%, transparent 17%),
+        #90a955;
+      box-shadow: 0 12px 24px rgb(49 87 44 / 14%);
+    }
+
+    .k-neg-inf {
+      corner-shape: notch;
+    }
+
+    .k-neg-2 {
+      corner-shape: superellipse(-2);
+    }
+
+    .k-neg-1 {
+      corner-shape: superellipse(-1);
+    }
+
+    .k-0 {
+      corner-shape: superellipse(0);
+    }
+
+    .k-1 {
+      corner-shape: superellipse(1);
+    }
+
+    .k-2 {
+      corner-shape: superellipse(2);
+    }
+
+    .k-inf {
+      corner-shape: square;
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+      font-size: 13px;
+      text-align: center;
+    }
+
+    .hint {
+      margin-top: 24px;
+      padding: 14px;
+      border-left: 4px solid #90a955;
+      background: #f7faef;
+      color: #3c4a32;
+      line-height: 1.7;
+    }
+
+    .notice {
+      display: none;
+      margin-top: 18px;
+      padding: 12px;
+      border: 1px solid #e2b84d;
+      background: #fff4cc;
+      color: #614800;
+    }
+
+    @supports not (corner-shape: superellipse(0)) {
+      .notice {
+        display: block;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1><code>superellipse()</code> 连续调节</h1>
+    <p>关键字只是常用 <code>superellipse()</code> 参数的别名。负值产生凹角，0 是斜切角，正值产生凸角，参数越大越接近方角。</p>
+
+    <section class="scale">
+      <div class="item">
+        <div class="shape k-neg-inf"></div>
+        <code>notch<br>≈ -infinity</code>
+      </div>
+      <div class="item">
+        <div class="shape k-neg-2"></div>
+        <code>superellipse(-2)</code>
+      </div>
+      <div class="item">
+        <div class="shape k-neg-1"></div>
+        <code>scoop<br>≈ -1</code>
+      </div>
+      <div class="item">
+        <div class="shape k-0"></div>
+        <code>bevel<br>≈ 0</code>
+      </div>
+      <div class="item">
+        <div class="shape k-1"></div>
+        <code>round<br>≈ 1</code>
+      </div>
+      <div class="item">
+        <div class="shape k-2"></div>
+        <code>squircle<br>≈ 2</code>
+      </div>
+      <div class="item">
+        <div class="shape k-inf"></div>
+        <code>square<br>≈ infinity</code>
+      </div>
+    </section>
+
+    <div class="hint">把 <code>superellipse()</code> 理解成一个连续旋钮会更自然：它不是替代 <code>border-radius</code>，而是在已有半径范围内决定这条角曲线该向外鼓、拉直，还是向内凹。</div>
+    <div class="notice">当前浏览器可能不支持 <code>superellipse()</code> 或 <code>corner-shape</code>。</div>
+  </main>
+</body>
+</html>

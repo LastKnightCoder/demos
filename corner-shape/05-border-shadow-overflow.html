@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CSS corner-shape - Border Shadow Overflow</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #18212f;
+      background: #eef1f0;
+    }
+
+    main {
+      width: min(980px, calc(100vw - 32px));
+      margin: 40px auto;
+      padding: 32px;
+      border: 1px solid #cbd5d1;
+      background: #ffffff;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: 28px;
+      letter-spacing: 0;
+    }
+
+    p {
+      margin: 0 0 28px;
+      color: #526170;
+      line-height: 1.7;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 24px;
+    }
+
+    .card {
+      min-height: 300px;
+      overflow: hidden;
+      border: 12px solid #1f3a5f;
+      border-radius: 56px;
+      corner-shape: scoop;
+      background: #ffffff;
+      box-shadow: 0 24px 45px rgb(31 58 95 / 22%);
+    }
+
+    .card.round {
+      corner-shape: round;
+    }
+
+    .hero {
+      min-height: 180px;
+      padding: 24px;
+      color: #ffffff;
+      background:
+        linear-gradient(135deg, rgb(255 255 255 / 28%) 0 22%, transparent 22%),
+        linear-gradient(120deg, #2a9d8f, #1f3a5f);
+    }
+
+    .hero strong {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 22px;
+    }
+
+    .content {
+      padding: 20px 24px 24px;
+      line-height: 1.65;
+      color: #526170;
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+      font-size: 13px;
+      color: #243447;
+    }
+
+    .notice {
+      display: none;
+      margin-top: 24px;
+      padding: 12px;
+      border: 1px solid #e2b84d;
+      background: #fff4cc;
+      color: #614800;
+    }
+
+    @supports not (corner-shape: scoop) {
+      .notice {
+        display: block;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>背景、边框、阴影和裁剪会跟随角形状</h1>
+    <p>左边是普通圆角，右边只把 <code>corner-shape</code> 改成 <code>scoop</code>。注意边框、背景图层、盒阴影，以及 <code>overflow: hidden</code> 的裁剪边界都会受到影响。</p>
+
+    <section class="row">
+      <article class="card round">
+        <div class="hero">
+          <strong>round</strong>
+          <code>border-radius: 56px;<br>corner-shape: round;</code>
+        </div>
+        <div class="content">普通 <code>border-radius</code> 的默认效果，角是凸出的椭圆弧。</div>
+      </article>
+
+      <article class="card">
+        <div class="hero">
+          <strong>scoop</strong>
+          <code>border-radius: 56px;<br>corner-shape: scoop;</code>
+        </div>
+        <div class="content">凹角会真实改变盒子的绘制和裁剪形状，不只是视觉贴图。</div>
+      </article>
+    </section>
+
+    <div class="notice">当前浏览器可能不支持 <code>corner-shape</code>，右侧卡片会退化为普通圆角。</div>
+  </main>
+</body>
+</html>
