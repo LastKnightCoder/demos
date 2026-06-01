@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CSS Scroll Snap - Vertical Sections</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #18202a;
+      background: #f1f5f9;
+    }
+
+    .page {
+      height: 100vh;
+      overflow-y: auto;
+      scroll-snap-type: y mandatory;
+    }
+
+    .section {
+      min-height: 100vh;
+      scroll-snap-align: start;
+      display: grid;
+      place-items: center;
+      padding: 40px 20px;
+    }
+
+    .panel {
+      width: min(760px, 100%);
+      padding: 36px;
+      border: 1px solid rgb(15 23 42 / 16%);
+      background: rgb(255 255 255 / 88%);
+      box-shadow: 0 24px 60px rgb(15 23 42 / 14%);
+    }
+
+    .section:nth-child(1) {
+      background: #e0f2fe;
+    }
+
+    .section:nth-child(2) {
+      background: #dcfce7;
+    }
+
+    .section:nth-child(3) {
+      background: #fef3c7;
+    }
+
+    .section:nth-child(4) {
+      background: #fae8ff;
+    }
+
+    h1,
+    h2 {
+      margin: 0 0 12px;
+      font-size: clamp(30px, 5vw, 54px);
+      letter-spacing: 0;
+    }
+
+    p {
+      margin: 0;
+      max-width: 62ch;
+      color: #475569;
+      font-size: 18px;
+      line-height: 1.75;
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+      color: #0369a1;
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="section">
+      <div class="panel">
+        <h1>纵向整屏吸附</h1>
+        <p>这个滚动容器使用 <code>scroll-snap-type: y mandatory</code>。向下滚动一点再松手，页面会停在最近的整屏 section。</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="panel">
+        <h2>每一屏都是吸附目标</h2>
+        <p>每个 <code>.section</code> 都设置了 <code>scroll-snap-align: start</code>，所以它们的顶部会对齐到容器顶部。</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="panel">
+        <h2>适合明确分页的内容</h2>
+        <p>整屏产品叙事、演示 slide、作品集章节很适合。普通长文章则通常不建议强制分页。</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="panel">
+        <h2>仍然是原生滚动</h2>
+        <p>你可以用滚轮、触控板、触摸屏、键盘 PageDown。Scroll Snap 只影响滚动结束后的停靠位置。</p>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

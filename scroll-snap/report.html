@@ -1,0 +1,1982 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CSS Scroll Snap 深度报告</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;800;900&family=Space+Grotesk:wght@500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --paper: #fffdf5;
+      --paper-2: #f0ece2;
+      --ink: #1a1a1a;
+      --yellow: #ffe600;
+      --red: #ff3333;
+      --blue: #2e4cff;
+      --green: #00cc66;
+      --border: 4px solid var(--ink);
+      --border-thin: 3px solid var(--ink);
+      --shadow: 7px 7px 0 var(--ink);
+      --shadow-sm: 4px 4px 0 var(--ink);
+      --font-display: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --font-mono: "Space Mono", ui-monospace, SFMono-Regular, Consolas, monospace;
+      --title-size: clamp(3.6rem, 9vw, 8.8rem);
+      --h1-size: clamp(2rem, 4vw, 3.2rem);
+      --h2-size: clamp(1.25rem, 2vw, 1.75rem);
+      --body-size: clamp(0.96rem, 1.05vw, 1.06rem);
+      --small-size: 0.78rem;
+      --container: 1120px;
+      --gap-section: clamp(4.5rem, 8vw, 8rem);
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: 20px;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: var(--font-body);
+      font-size: var(--body-size);
+      line-height: 1.75;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgb(26 26 26 / 5%) 1px, transparent 1px),
+        linear-gradient(90deg, rgb(26 26 26 / 5%) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.16;
+      background-image: radial-gradient(circle at 1px 1px, rgb(26 26 26 / 20%) 1px, transparent 0);
+      background-size: 9px 9px;
+      mix-blend-mode: multiply;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    code,
+    kbd,
+    samp,
+    pre {
+      font-family: var(--font-mono);
+    }
+
+    kbd {
+      display: inline-block;
+      min-width: 1.8em;
+      border: 2px solid var(--ink);
+      background: var(--paper);
+      box-shadow: 2px 2px 0 var(--ink);
+      padding: 0 0.35em;
+      font-size: 0.82em;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .page-progress {
+      position: fixed;
+      inset: 0 auto auto 0;
+      z-index: 100;
+      width: 0%;
+      height: 4px;
+      background: var(--red);
+    }
+
+    .back-to-top {
+      position: fixed;
+      right: 1.6rem;
+      bottom: 1.6rem;
+      z-index: 30;
+      width: 50px;
+      height: 50px;
+      border: var(--border-thin);
+      background: var(--yellow);
+      box-shadow: var(--shadow-sm);
+      font-family: var(--font-display);
+      font-size: 1.35rem;
+      font-weight: 900;
+      cursor: pointer;
+      opacity: 0;
+      transform: translateY(14px);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    .back-to-top.visible {
+      opacity: 1;
+      transform: none;
+    }
+
+    .report {
+      position: relative;
+      z-index: 1;
+      width: min(var(--container), calc(100vw - 56px));
+      margin: 0 auto;
+      padding: clamp(1.4rem, 3vw, 3rem) 0 5rem;
+    }
+
+    .section {
+      margin-bottom: var(--gap-section);
+    }
+
+    .cover {
+      min-height: 88vh;
+      display: grid;
+      align-items: center;
+    }
+
+    .cover-frame {
+      position: relative;
+      overflow: hidden;
+      border: var(--border);
+      box-shadow: var(--shadow);
+      background: var(--paper);
+      padding: clamp(1.4rem, 4vw, 4rem);
+    }
+
+    .cover-frame::before {
+      content: "SNAP";
+      position: absolute;
+      right: -0.08em;
+      bottom: -0.22em;
+      color: rgb(26 26 26 / 5%);
+      font-family: var(--font-display);
+      font-size: clamp(8rem, 24vw, 19rem);
+      font-weight: 900;
+      line-height: 1;
+      pointer-events: none;
+    }
+
+    .label {
+      display: inline-block;
+      border: 2px solid var(--ink);
+      background: var(--yellow);
+      padding: 0.25rem 0.75rem;
+      font-family: var(--font-mono);
+      font-size: var(--small-size);
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .cover-title {
+      position: relative;
+      max-width: 940px;
+      margin: 1.2rem 0 1.4rem;
+      font-family: var(--font-display);
+      font-size: var(--title-size);
+      font-weight: 900;
+      line-height: 0.86;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    .cover-title span {
+      color: var(--red);
+    }
+
+    .cover-subtitle {
+      position: relative;
+      max-width: 760px;
+      margin: 0 0 2rem;
+      font-size: var(--h2-size);
+      font-weight: 300;
+      line-height: 1.45;
+    }
+
+    .cover-meta {
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      border: var(--border-thin);
+      background: var(--paper-2);
+    }
+
+    .cover-meta div {
+      min-width: 0;
+      border-right: var(--border-thin);
+      padding: 0.9rem;
+      font-family: var(--font-mono);
+      font-size: var(--small-size);
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .cover-meta div:last-child {
+      border-right: 0;
+    }
+
+    .section-title {
+      position: relative;
+      margin: 0 0 2rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 4px solid var(--ink);
+      font-family: var(--font-display);
+      font-size: var(--h1-size);
+      font-weight: 900;
+      line-height: 0.95;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    .section-title::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      bottom: -4px;
+      width: 96px;
+      height: 4px;
+      background: var(--yellow);
+    }
+
+    .lead-grid,
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1.5rem;
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 1.25rem;
+    }
+
+    .card {
+      min-width: 0;
+      border: var(--border);
+      background: var(--paper);
+      box-shadow: var(--shadow);
+      padding: clamp(1.1rem, 2vw, 1.8rem);
+    }
+
+    .card.yellow { border-top: 9px solid var(--yellow); }
+    .card.red { border-top: 9px solid var(--red); }
+    .card.blue { border-top: 9px solid var(--blue); }
+    .card.green { border-top: 9px solid var(--green); }
+
+    .card h3,
+    .block-title,
+    .pattern-title {
+      margin: 0 0 0.8rem;
+      font-family: var(--font-display);
+      font-size: var(--h2-size);
+      font-weight: 900;
+      line-height: 1.05;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    .card p,
+    .pattern-copy p,
+    .note-list li {
+      margin: 0;
+      font-weight: 300;
+    }
+
+    .metric-number {
+      display: block;
+      margin-bottom: 0.55rem;
+      font-family: var(--font-mono);
+      font-size: clamp(2rem, 5vw, 4rem);
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .metric-label {
+      font-family: var(--font-mono);
+      font-size: var(--small-size);
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .metric-bar {
+      width: 46px;
+      height: 5px;
+      margin-top: 0.85rem;
+      background: var(--yellow);
+    }
+
+    .concept-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1.25rem;
+    }
+
+    .concept {
+      min-width: 0;
+      border: var(--border-thin);
+      background: var(--paper);
+      box-shadow: var(--shadow-sm);
+      padding: 1.35rem;
+    }
+
+    .concept h3 {
+      margin: 0 0 0.8rem;
+      padding-bottom: 0.45rem;
+      border-bottom: 3px solid var(--ink);
+      font-family: var(--font-display);
+      font-size: 1.15rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0;
+    }
+
+    .concept p {
+      margin: 0 0 0.9rem;
+      font-weight: 300;
+    }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+
+    .tag {
+      border: 2px solid var(--ink);
+      background: var(--paper-2);
+      padding: 0.1rem 0.45rem;
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .highlight {
+      background: var(--yellow);
+      padding: 0.08em 0.25em;
+      font-weight: 700;
+    }
+
+    .highlight-red {
+      background: var(--red);
+      color: #fff;
+      padding: 0.08em 0.25em;
+      font-weight: 700;
+    }
+
+    .highlight-blue {
+      background: var(--blue);
+      color: #fff;
+      padding: 0.08em 0.25em;
+      font-weight: 700;
+    }
+
+    .pattern {
+      overflow: hidden;
+      border: var(--border);
+      background: var(--paper);
+      box-shadow: var(--shadow);
+      margin-bottom: 2rem;
+    }
+
+    .pattern-head {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 1rem;
+      align-items: center;
+      border-bottom: var(--border-thin);
+      background: var(--paper-2);
+      padding: 1rem;
+    }
+
+    .pattern-index {
+      width: 52px;
+      height: 52px;
+      display: grid;
+      place-items: center;
+      border: var(--border-thin);
+      background: var(--red);
+      color: #fff;
+      font-family: var(--font-mono);
+      font-size: 1.05rem;
+      font-weight: 700;
+    }
+
+    .pattern-title {
+      margin: 0;
+    }
+
+    .pattern-body {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      background: var(--ink);
+    }
+
+    .pattern-copy,
+    .pattern-demo,
+    .pattern-code {
+      min-width: 0;
+      background: var(--paper);
+      padding: clamp(1rem, 2vw, 1.5rem);
+    }
+
+    .pattern-copy {
+      display: block;
+      border-bottom: var(--border-thin);
+    }
+
+    .pattern-copy p + p {
+      margin-top: 1rem;
+    }
+
+    .hint {
+      border: var(--border-thin);
+      background: var(--paper-2);
+      padding: 0.75rem;
+      font-family: var(--font-mono);
+      font-size: var(--small-size);
+      font-weight: 700;
+      line-height: 1.5;
+      text-transform: uppercase;
+    }
+
+    .pattern-copy .hint {
+      margin-top: 1.15rem;
+    }
+
+    .pattern-demo {
+      overflow: hidden;
+      border-bottom: var(--border-thin);
+    }
+
+    .pattern-code {
+      background: var(--ink);
+      color: var(--paper);
+    }
+
+    .code-title {
+      margin-bottom: 0.65rem;
+      color: var(--yellow);
+      font-family: var(--font-mono);
+      font-size: var(--small-size);
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    pre {
+      margin: 0;
+      overflow-x: auto;
+      font-size: 0.82rem;
+      line-height: 1.55;
+      white-space: pre;
+      scrollbar-color: var(--yellow) var(--ink);
+    }
+
+    .snap-scroll {
+      scrollbar-color: var(--red) var(--paper-2);
+      scrollbar-width: thin;
+      scroll-behavior: smooth;
+    }
+
+    .snap-scroll::-webkit-scrollbar,
+    pre::-webkit-scrollbar {
+      width: 14px;
+      height: 14px;
+    }
+
+    .snap-scroll::-webkit-scrollbar-track,
+    pre::-webkit-scrollbar-track {
+      border: 2px solid var(--ink);
+      background: var(--paper-2);
+    }
+
+    .snap-scroll::-webkit-scrollbar-thumb,
+    pre::-webkit-scrollbar-thumb {
+      border: 2px solid var(--ink);
+      background: var(--red);
+    }
+
+    pre::-webkit-scrollbar-thumb {
+      background: var(--yellow);
+    }
+
+    .snap-scroll::-webkit-scrollbar-corner {
+      background: var(--paper-2);
+    }
+
+    .demo-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .demo-status {
+      border: 2px solid var(--ink);
+      background: var(--yellow);
+      padding: 0.22rem 0.55rem;
+      font-family: var(--font-mono);
+      font-size: var(--small-size);
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .demo-buttons {
+      display: flex;
+      gap: 0.45rem;
+      flex-wrap: wrap;
+    }
+
+    .demo-button {
+      min-width: 38px;
+      min-height: 36px;
+      border: 2px solid var(--ink);
+      background: var(--paper);
+      box-shadow: 3px 3px 0 var(--ink);
+      font-family: var(--font-mono);
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .demo-button:hover,
+    .demo-button.is-active {
+      background: var(--yellow);
+    }
+
+    .demo-button:active {
+      transform: translate(2px, 2px);
+      box-shadow: 1px 1px 0 var(--ink);
+    }
+
+    .demo-frame {
+      position: relative;
+      overflow: hidden;
+      border: var(--border-thin);
+      background: var(--paper-2);
+    }
+
+    .snap-line-x::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 24px;
+      z-index: 2;
+      width: 5px;
+      background: var(--red);
+      pointer-events: none;
+    }
+
+    .snap-line-y::before {
+      content: "";
+      position: absolute;
+      top: 64px;
+      left: 0;
+      right: 0;
+      z-index: 2;
+      height: 5px;
+      background: var(--red);
+      pointer-events: none;
+    }
+
+    .horizontal-track {
+      display: flex;
+      gap: 16px;
+      width: 100%;
+      max-width: 100%;
+      overflow-x: auto;
+      overflow-y: hidden;
+      overscroll-behavior-inline: contain;
+      scroll-snap-type: x mandatory;
+      scroll-padding-inline-start: 24px;
+      padding: 24px;
+    }
+
+    .demo-card {
+      flex: 0 0 clamp(220px, 58%, 340px);
+      min-height: 220px;
+      scroll-snap-align: start;
+      border: var(--border-thin);
+      background: var(--paper);
+      padding: 1.1rem;
+      display: grid;
+      align-content: space-between;
+    }
+
+    .demo-card strong,
+    .demo-panel strong,
+    .gallery-tile strong,
+    .slide strong {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: clamp(2rem, 6vw, 3.6rem);
+      line-height: 1;
+    }
+
+    .demo-card span,
+    .demo-panel span,
+    .gallery-tile span,
+    .slide span {
+      display: block;
+      margin-top: 0.5rem;
+      font-family: var(--font-mono);
+      font-size: var(--small-size);
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .vertical-track {
+      height: 440px;
+      overflow-y: auto;
+      scroll-snap-type: y mandatory;
+      scroll-padding-top: 0;
+    }
+
+    .strictness-grid {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .strictness-unit-title {
+      margin-bottom: 0.5rem;
+      border: 2px solid var(--ink);
+      background: var(--yellow);
+      padding: 0.25rem 0.55rem;
+      font-family: var(--font-mono);
+      font-size: var(--small-size);
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .strictness-track {
+      height: 360px;
+      overflow-y: auto;
+      border: var(--border-thin);
+      background: var(--paper-2);
+      scroll-padding-block: 20px;
+    }
+
+    .strictness-track.mandatory {
+      scroll-snap-type: y mandatory;
+    }
+
+    .strictness-track.proximity {
+      scroll-snap-type: y proximity;
+    }
+
+    .strictness-section {
+      min-height: 260px;
+      display: grid;
+      place-items: center;
+      scroll-snap-align: start;
+      border-bottom: var(--border-thin);
+      padding: 1rem;
+      background: var(--paper);
+    }
+
+    .strictness-section:nth-child(2n) {
+      background: var(--yellow);
+    }
+
+    .strictness-section-inner {
+      width: min(520px, 100%);
+      border: var(--border-thin);
+      background: var(--paper);
+      box-shadow: var(--shadow-sm);
+      padding: 1rem;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .demo-panel {
+      min-height: 440px;
+      scroll-snap-align: start;
+      display: grid;
+      place-items: center;
+      border-bottom: var(--border-thin);
+      padding: 1.2rem;
+    }
+
+    .demo-panel:nth-child(1) { background: var(--yellow); }
+    .demo-panel:nth-child(2) { background: var(--paper); }
+    .demo-panel:nth-child(3) { background: var(--blue); color: #fff; }
+
+    .panel-inner {
+      width: min(360px, 100%);
+      border: var(--border-thin);
+      background: var(--paper);
+      color: var(--ink);
+      box-shadow: var(--shadow-sm);
+      padding: 1.2rem;
+    }
+
+    .offset-grid {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .offset-unit {
+      min-width: 0;
+    }
+
+    .offset-unit-title {
+      margin-bottom: 0.5rem;
+      border: 2px solid var(--ink);
+      background: var(--yellow);
+      padding: 0.25rem 0.55rem;
+      font-family: var(--font-mono);
+      font-size: var(--small-size);
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .offset-shell {
+      height: 460px;
+      --offset-panel-size: 460px;
+      overflow-y: auto;
+      scroll-snap-type: y mandatory;
+      scroll-padding-top: 64px;
+      background: var(--paper);
+    }
+
+    .offset-shell.margin-only {
+      scroll-padding-top: 0;
+    }
+
+    .offset-header {
+      position: sticky;
+      top: 0;
+      z-index: 3;
+      height: 64px;
+      display: grid;
+      place-items: center;
+      border-bottom: var(--border-thin);
+      background: var(--red);
+      color: #fff;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .offset-section {
+      min-height: var(--offset-panel-size);
+      scroll-snap-align: start;
+      display: grid;
+      place-items: center;
+      padding: 1rem;
+      border-bottom: var(--border-thin);
+    }
+
+    .offset-section.special {
+      scroll-margin-top: 44px;
+      background: #fff;
+    }
+
+    .offset-section.special .offset-card {
+      outline: 6px solid rgb(255 51 51 / 22%);
+      outline-offset: 10px;
+    }
+
+    .offset-section.special .offset-card::after {
+      content: "+44px SCROLL-MARGIN-TOP";
+      display: block;
+      margin: 0.8rem -1.1rem -1.1rem;
+      border-top: var(--border-thin);
+      background: var(--red);
+      color: #fff;
+      padding: 0.35rem;
+      font-size: var(--small-size);
+    }
+
+    .offset-section.final {
+      background: var(--paper);
+    }
+
+    .offset-section.final .offset-card::before {
+      background: var(--green);
+    }
+
+    .offset-card {
+      width: min(430px, 100%);
+      border: var(--border-thin);
+      background: var(--paper);
+      box-shadow: var(--shadow-sm);
+      padding: 1.1rem;
+      text-align: center;
+      font-family: var(--font-mono);
+      font-weight: 700;
+    }
+
+    .offset-card::before {
+      content: "SNAP TARGET";
+      display: block;
+      margin: -1.1rem -1.1rem 0.8rem;
+      border-bottom: var(--border-thin);
+      background: var(--yellow);
+      padding: 0.35rem;
+      font-size: var(--small-size);
+    }
+
+    .stop-compare {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .stop-unit {
+      min-width: 0;
+    }
+
+    .stop-unit-title {
+      margin-bottom: 0.5rem;
+      border: 2px solid var(--ink);
+      padding: 0.25rem 0.55rem;
+      font-family: var(--font-mono);
+      font-size: var(--small-size);
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .stop-unit-title.always {
+      background: var(--yellow);
+    }
+
+    .stop-track {
+      display: flex;
+      gap: 16px;
+      width: 100%;
+      max-width: 100%;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scroll-padding-inline: 24px;
+      padding: 24px;
+    }
+
+    .stop-card {
+      flex: 0 0 clamp(220px, 32%, 310px);
+      min-height: 210px;
+      scroll-snap-align: center;
+      border: var(--border-thin);
+      background: var(--paper);
+      padding: 1rem;
+      font-family: var(--font-mono);
+      font-weight: 700;
+    }
+
+    .stop-track.always-track .stop-card.important {
+      scroll-snap-stop: always;
+      background: var(--red);
+      color: #fff;
+    }
+
+    .stop-track.normal-track .stop-card.important {
+      background: var(--paper);
+      color: var(--ink);
+      box-shadow: inset 0 0 0 6px rgb(255 51 51 / 28%);
+    }
+
+    .gallery-shell {
+      height: 560px;
+      overflow: auto;
+      scroll-snap-type: both mandatory;
+      scroll-padding: 28px;
+      padding: 28px;
+      background:
+        linear-gradient(var(--ink) 1px, transparent 1px),
+        linear-gradient(90deg, var(--ink) 1px, transparent 1px),
+        var(--paper-2);
+      background-size: 48px 48px;
+    }
+
+    .gallery-grid {
+      width: max-content;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(520px, 640px)) minmax(520px, 70vw);
+      grid-template-rows: repeat(4, 300px) 420px;
+      gap: 18px;
+    }
+
+    .gallery-tile {
+      scroll-snap-align: start;
+      display: grid;
+      place-items: center;
+      border: var(--border-thin);
+      background: var(--paper);
+      text-align: center;
+    }
+
+    .gallery-tile:nth-child(3n) { background: var(--yellow); }
+    .gallery-tile:nth-child(4n) { background: var(--blue); color: #fff; }
+
+    .gallery-spacer {
+      pointer-events: none;
+      border: var(--border-thin);
+      background:
+        repeating-linear-gradient(45deg, transparent 0 14px, rgb(26 26 26 / 9%) 14px 16px),
+        var(--paper-2);
+      opacity: 0.72;
+    }
+
+    .gallery-spacer-x {
+      grid-column: 5;
+      grid-row: 1 / 5;
+    }
+
+    .gallery-spacer-y {
+      grid-column: 1 / 5;
+      grid-row: 5;
+    }
+
+    .gallery-spacer-corner {
+      grid-column: 5;
+      grid-row: 5;
+    }
+
+    .carousel-shell {
+      border: var(--border-thin);
+      background: var(--paper-2);
+      padding: 1rem;
+    }
+
+    .carousel-nav {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 0.8rem;
+    }
+
+    .carousel-nav button {
+      min-width: 40px;
+      min-height: 38px;
+      border: 2px solid var(--ink);
+      background: var(--paper);
+      box-shadow: 3px 3px 0 var(--ink);
+      font-family: var(--font-mono);
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .carousel-nav button.is-active {
+      background: var(--yellow);
+    }
+
+    .carousel-track {
+      display: flex;
+      gap: 18px;
+      width: 100%;
+      max-width: 100%;
+      overflow-x: auto;
+      overflow-y: hidden;
+      scroll-snap-type: x mandatory;
+      scroll-padding-inline: calc((100% - min(560px, 82%)) / 2);
+      padding: 18px calc((100% - min(560px, 82%)) / 2);
+      background: var(--paper);
+      border: var(--border-thin);
+    }
+
+    .slide {
+      flex: 0 0 min(560px, 82%);
+      min-height: 260px;
+      scroll-snap-align: center;
+      border: var(--border-thin);
+      background: var(--paper-2);
+      padding: 1.2rem;
+      display: grid;
+      align-content: end;
+    }
+
+    .slide:nth-child(2) { background: var(--green); }
+    .slide:nth-child(3) { background: var(--yellow); }
+    .slide:nth-child(4) { background: var(--blue); color: #fff; }
+
+    .note-list {
+      display: grid;
+      gap: 1rem;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .note-list li {
+      position: relative;
+      border: var(--border-thin);
+      background: var(--paper);
+      box-shadow: var(--shadow-sm);
+      padding: 1rem 1rem 1rem 2.3rem;
+    }
+
+    .note-list li::before {
+      content: "";
+      position: absolute;
+      left: 1rem;
+      top: 1.55rem;
+      width: 10px;
+      height: 10px;
+      background: var(--red);
+    }
+
+    .compare-card {
+      border: var(--border);
+      background: var(--paper);
+      padding: 1.5rem;
+    }
+
+    .compare-card.before {
+      box-shadow: 6px 6px 0 var(--red);
+    }
+
+    .compare-card.after {
+      box-shadow: 6px 6px 0 var(--green);
+    }
+
+    .compare-card h3 {
+      margin: 0 0 1rem;
+      padding-bottom: 0.55rem;
+      border-bottom: 3px solid var(--ink);
+      font-family: var(--font-display);
+      font-size: var(--h2-size);
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0;
+    }
+
+    .compare-card ul {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .compare-card li {
+      position: relative;
+      padding: 0.55rem 0 0.55rem 1.2rem;
+      border-bottom: 1px solid rgb(26 26 26 / 14%);
+      font-weight: 300;
+    }
+
+    .compare-card li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 1.15rem;
+      width: 8px;
+      height: 8px;
+      background: var(--ink);
+    }
+
+    .reveal,
+    .reveal-left,
+    .reveal-right {
+      opacity: 0;
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+
+    .reveal { transform: translateY(18px); }
+    .reveal-left { transform: translateX(-18px); }
+    .reveal-right { transform: translateX(18px); }
+    .reveal.visible,
+    .reveal-left.visible,
+    .reveal-right.visible {
+      opacity: 1;
+      transform: none;
+    }
+
+    .delay-1 { transition-delay: 0.08s; }
+    .delay-2 { transition-delay: 0.16s; }
+    .delay-3 { transition-delay: 0.24s; }
+
+    @media (prefers-reduced-motion: reduce) {
+      html,
+      .snap-scroll {
+        scroll-behavior: auto;
+      }
+
+      .reveal,
+      .reveal-left,
+      .reveal-right {
+        opacity: 1;
+        transform: none;
+        transition: none;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .cover-meta,
+      .lead-grid,
+      .metrics-grid,
+      .concept-grid,
+      .comparison-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .cover-meta div {
+        border-right: 0;
+        border-bottom: var(--border-thin);
+      }
+
+      .cover-meta div:last-child {
+        border-bottom: 0;
+      }
+
+      .demo-card {
+        flex-basis: min(280px, 78vw);
+      }
+    }
+
+    @media (max-width: 560px) {
+      .report {
+        width: min(100% - 40px, var(--container));
+      }
+
+      .pattern-head {
+        grid-template-columns: 1fr;
+      }
+
+      .pattern-index {
+        width: 48px;
+        height: 48px;
+      }
+
+      .horizontal-track,
+      .stop-track {
+        padding: 18px;
+        scroll-padding-inline-start: 18px;
+      }
+
+      .snap-line-x::before {
+        left: 18px;
+      }
+
+      .gallery-grid {
+        grid-template-columns: repeat(4, 78vw) 78vw;
+      }
+
+      .back-to-top {
+        right: 0.9rem;
+        bottom: 0.9rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-progress" id="pageProgress"></div>
+  <button class="back-to-top" id="backToTop" type="button" aria-label="回到顶部">↑</button>
+
+  <main class="report">
+    <section class="cover">
+      <div class="cover-frame reveal">
+        <div class="label">CSS MODULE FIELD REPORT / SCROLL SNAP</div>
+        <h1 class="cover-title">Scroll <span>Snap</span> 深度报告</h1>
+        <p class="cover-subtitle">Scroll Snap 的价值不是“做一个轮播”，而是把滚动结束后的落点变成可声明、可维护、可渐进增强的布局规则。</p>
+        <div class="cover-meta">
+          <div>Module: CSS Scroll Snap</div>
+          <div>Axis: x / y / both</div>
+          <div>Mode: mandatory / proximity</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title reveal">执行摘要</h2>
+      <div class="lead-grid">
+        <article class="card yellow reveal-left">
+          <h3>它解决什么</h3>
+          <p>普通滚动可以停在任意像素位置。Scroll Snap 让浏览器在滚动结束后自动选择最近或最合适的停靠点，尤其适合卡片、分页、轮播和画廊。</p>
+        </article>
+        <article class="card red reveal-right delay-1">
+          <h3>它不解决什么</h3>
+          <p>它不负责打开关闭状态、无限循环、复杂手势识别，也不应该用来强行劫持普通文章阅读。它是滚动落点约束，不是交互框架。</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title reveal">关键指标</h2>
+      <div class="metrics-grid">
+        <div class="card yellow reveal">
+          <span class="metric-number" data-count="5">0</span>
+          <span class="metric-label">核心 CSS 属性</span>
+          <div class="metric-bar"></div>
+        </div>
+        <div class="card red reveal delay-1">
+          <span class="metric-number" data-count="2">0</span>
+          <span class="metric-label">吸附强度</span>
+          <div class="metric-bar" style="background: var(--red);"></div>
+        </div>
+        <div class="card blue reveal delay-2">
+          <span class="metric-number" data-count="4">0</span>
+          <span class="metric-label">轴向选择</span>
+          <div class="metric-bar" style="background: var(--blue);"></div>
+        </div>
+        <div class="card green reveal delay-3">
+          <span class="metric-number" data-count="6">0</span>
+          <span class="metric-label">完整交互示例</span>
+          <div class="metric-bar" style="background: var(--green);"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title reveal">心智模型</h2>
+      <div class="concept-grid">
+        <article class="concept reveal">
+          <h3>Scroll Container</h3>
+          <p>真正滚动的元素。它必须有 <code>overflow</code>，并通过 <code>scroll-snap-type</code> 声明轴向和强度。</p>
+          <div class="tags"><span class="tag">overflow-x</span><span class="tag">scroll-snap-type</span></div>
+        </article>
+        <article class="concept reveal delay-1">
+          <h3>Snapport</h3>
+          <p>容器内部用于吸附对齐的目标窗口。默认接近可视区域，用 <code>scroll-padding</code> 调整。</p>
+          <div class="tags"><span class="tag">scroll-padding</span><span class="tag">target window</span></div>
+        </article>
+        <article class="concept reveal delay-2">
+          <h3>Snap Area</h3>
+          <p>子项参与吸附的区域。默认接近元素自身盒子，用 <code>scroll-margin</code> 调整。</p>
+          <div class="tags"><span class="tag">scroll-margin</span><span class="tag">snap item</span></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title reveal">基础语法</h2>
+      <div class="card blue reveal">
+        <h3>最小可用结构</h3>
+        <p style="margin-bottom: 1rem;">Scroll Snap 的职责分离非常明确：<span class="highlight">容器决定吸附规则，子项决定对齐点</span>。如果写了 <code>scroll-snap-align</code> 仍然没效果，第一件事就是检查父级是不是实际滚动容器。</p>
+        <div class="pattern-code" style="border: var(--border-thin);">
+          <div class="code-title">Minimal CSS</div>
+          <pre><code>.scroller {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline-start: 24px;
+}
+
+.item {
+  flex: 0 0 320px;
+  scroll-snap-align: start;
+}</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title reveal">示例与代码</h2>
+
+      <article class="pattern reveal" id="horizontal">
+        <header class="pattern-head">
+          <div class="pattern-index">01</div>
+          <h3 class="pattern-title">横向卡片 / x mandatory</h3>
+        </header>
+        <div class="pattern-body">
+          <div class="pattern-copy">
+            <p>横向列表是 Scroll Snap 最常见的入口场景。容器沿 x 轴强制吸附，卡片把自己的 start 边对齐到容器 snapport 的 start 边。</p>
+            <p>这里的红色竖线不是装饰，它标出 <span class="highlight">scroll-padding-inline-start</span> 后的吸附参考位置。每次按钮跳转或滚轮横向滚动结束，卡片都会向这条线靠齐。</p>
+            <div class="hint">提示：在这个报告里，横向 demo 支持 <kbd>Shift</kbd> + 鼠标滚轮横向滚动；触控板也可直接横向滑动。</div>
+          </div>
+          <div class="pattern-demo">
+            <div class="demo-toolbar">
+              <span class="demo-status" data-status-for="cards">CARD 01 / 04</span>
+              <div class="demo-buttons" data-controls-for="cards"></div>
+            </div>
+            <div class="demo-frame snap-line-x">
+              <div class="horizontal-track snap-scroll" id="cards" data-horizontal-wheel>
+                <article class="demo-card"><strong>01</strong><span>container owns snap type</span></article>
+                <article class="demo-card"><strong>02</strong><span>child owns snap align</span></article>
+                <article class="demo-card"><strong>03</strong><span>native inertial scroll</span></article>
+                <article class="demo-card"><strong>04</strong><span>snap to red line</span></article>
+              </div>
+            </div>
+          </div>
+          <div class="pattern-code">
+            <div class="code-title">Code / 横向强制吸附</div>
+            <pre><code>.cards {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline-start: 24px;
+  scroll-behavior: smooth;
+}
+
+.card {
+  flex: 0 0 clamp(220px, 58%, 340px);
+  scroll-snap-align: start;
+}</code></pre>
+          </div>
+        </div>
+      </article>
+
+      <article class="pattern reveal" id="vertical">
+        <header class="pattern-head">
+          <div class="pattern-index">02</div>
+          <h3 class="pattern-title">纵向分页 / y mandatory</h3>
+        </header>
+        <div class="pattern-body">
+          <div class="pattern-copy">
+            <p>当内容天然是一屏一屏时，<code>scroll-snap-type: y mandatory</code> 可以把连续滚动改造成稳定分页。</p>
+            <p>重点是：每一页的高度要足够稳定，否则吸附会让人觉得页面在抢控制权。普通长文章更适合 <code>proximity</code> 或完全不用吸附。</p>
+            <div class="hint">使用右侧按钮或在 demo 内滚动。每一屏都设置了 scroll-snap-align: start。</div>
+          </div>
+          <div class="pattern-demo">
+            <div class="demo-toolbar">
+              <span class="demo-status" data-status-for="sections">PAGE 01 / 03</span>
+              <div class="demo-buttons" data-controls-for="sections"></div>
+            </div>
+            <div class="demo-frame">
+              <div class="vertical-track snap-scroll" id="sections">
+                <section class="demo-panel"><div class="panel-inner"><strong>01</strong><span>start aligned section</span></div></section>
+                <section class="demo-panel"><div class="panel-inner"><strong>02</strong><span>mandatory snap point</span></div></section>
+                <section class="demo-panel"><div class="panel-inner"><strong>03</strong><span>native vertical scroll</span></div></section>
+              </div>
+            </div>
+          </div>
+          <div class="pattern-code">
+            <div class="code-title">Code / 纵向分页</div>
+            <pre><code>.page {
+  height: 440px;
+  overflow-y: auto;
+  scroll-snap-type: y mandatory;
+}
+
+.section {
+  min-height: 440px;
+  scroll-snap-align: start;
+}</code></pre>
+          </div>
+        </div>
+      </article>
+
+      <article class="pattern reveal" id="strictness">
+        <header class="pattern-head">
+          <div class="pattern-index">03</div>
+          <h3 class="pattern-title">吸附强度 / mandatory vs proximity</h3>
+        </header>
+        <div class="pattern-body">
+          <div class="pattern-copy">
+            <p><code>mandatory</code> 表示强制吸附。只要滚动结束附近存在合法 snap point，浏览器就会把位置拉回某个停靠点。</p>
+            <p><code>proximity</code> 表示接近时才吸附。用户停得离 snap point 比较远时，浏览器可以尊重这个停留位置，不强行拉回。</p>
+            <div class="hint">分别滚动两个 demo 后松手。mandatory 更像分页；proximity 更像带“轻微磁吸”的普通滚动。</div>
+          </div>
+          <div class="pattern-demo">
+            <div class="strictness-grid">
+              <div>
+                <div class="strictness-unit-title">scroll-snap-type: y mandatory</div>
+                <div class="strictness-track mandatory snap-scroll">
+                  <section class="strictness-section"><div class="strictness-section-inner">01 / forced snap</div></section>
+                  <section class="strictness-section"><div class="strictness-section-inner">02 / forced snap</div></section>
+                  <section class="strictness-section"><div class="strictness-section-inner">03 / forced snap</div></section>
+                  <section class="strictness-section"><div class="strictness-section-inner">04 / forced snap</div></section>
+                </div>
+              </div>
+              <div>
+                <div class="strictness-unit-title">scroll-snap-type: y proximity</div>
+                <div class="strictness-track proximity snap-scroll">
+                  <section class="strictness-section"><div class="strictness-section-inner">01 / nearby snap only</div></section>
+                  <section class="strictness-section"><div class="strictness-section-inner">02 / nearby snap only</div></section>
+                  <section class="strictness-section"><div class="strictness-section-inner">03 / nearby snap only</div></section>
+                  <section class="strictness-section"><div class="strictness-section-inner">04 / nearby snap only</div></section>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="pattern-code">
+            <div class="code-title">Code / 吸附强度</div>
+            <pre><code>.mandatory {
+  overflow-y: auto;
+  scroll-snap-type: y mandatory;
+}
+
+.proximity {
+  overflow-y: auto;
+  scroll-snap-type: y proximity;
+}
+
+.section {
+  scroll-snap-align: start;
+}</code></pre>
+          </div>
+        </div>
+      </article>
+
+      <article class="pattern reveal" id="offset">
+        <header class="pattern-head">
+          <div class="pattern-index">04</div>
+          <h3 class="pattern-title">吸附偏移 / scroll-padding 与 scroll-margin</h3>
+        </header>
+        <div class="pattern-body">
+          <div class="pattern-copy">
+            <p><code>scroll-padding</code> 和 <code>scroll-margin</code> 都会改变吸附位置，但它们改的是不同对象：前者改容器的 snapport，后者改子项的 snap area。</p>
+            <p>所以这里拆成两个演示：第一个只看固定导航下的 <span class="highlight">scroll-padding-top</span>；第二个只看某个子项的 <span class="highlight-red">scroll-margin-top</span>。</p>
+            <p>两个演示里的每个 section 都和滚动容器同高，因此 A/B/C 像一页一页的面板。这样 B 的额外停靠距离会更容易看出来。</p>
+          </div>
+          <div class="pattern-demo">
+            <div class="offset-grid">
+              <div class="offset-unit">
+                <div class="offset-unit-title">scroll-padding-top</div>
+                <div class="demo-toolbar">
+                  <span class="demo-status" data-status-for="paddingDemo">A / 3</span>
+                  <div class="demo-buttons" data-controls-for="paddingDemo"></div>
+                </div>
+                <div class="demo-frame snap-line-y">
+                  <div class="offset-shell snap-scroll" id="paddingDemo">
+                    <div class="offset-header">sticky header</div>
+                    <section class="offset-section"><div class="offset-card">A / align below header</div></section>
+                    <section class="offset-section"><div class="offset-card">B / same snapport</div></section>
+                    <section class="offset-section final"><div class="offset-card">C / same snapport</div></section>
+                  </div>
+                </div>
+              </div>
+              <div class="offset-unit">
+                <div class="offset-unit-title">scroll-margin-top</div>
+                <div class="demo-toolbar">
+                  <span class="demo-status" data-status-for="marginDemo">A / 3</span>
+                  <div class="demo-buttons" data-controls-for="marginDemo"></div>
+                </div>
+                <div class="demo-frame">
+                  <div class="offset-shell margin-only snap-scroll" id="marginDemo">
+                    <section class="offset-section"><div class="offset-card">A / normal snap area</div></section>
+                    <section class="offset-section special"><div class="offset-card">B / +44px scroll-margin-top</div></section>
+                    <section class="offset-section final"><div class="offset-card">C / normal snap area</div></section>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="pattern-code">
+            <div class="code-title">Code / 吸附偏移</div>
+            <pre><code>.with-fixed-header {
+  height: 430px;
+  overflow-y: auto;
+  scroll-snap-type: y mandatory;
+  scroll-padding-top: 64px;
+}
+
+.section {
+  min-height: 430px;
+  scroll-snap-align: start;
+}
+
+.section.special {
+  scroll-margin-top: 44px;
+}</code></pre>
+          </div>
+        </div>
+      </article>
+
+      <article class="pattern reveal" id="stop">
+        <header class="pattern-head">
+          <div class="pattern-index">05</div>
+          <h3 class="pattern-title">关键节点 / scroll-snap-stop</h3>
+        </header>
+        <div class="pattern-body">
+          <div class="pattern-copy">
+            <p><code>scroll-snap-stop: always</code> 的差异只发生在“滚动操作会越过多个 snap point”的场景。慢慢拖动、滚动条拖拽、锚点跳转、很多脚本滚动都不一定触发这种 pass-over 语义。</p>
+            <p>右侧保留原生对照：上方 normal 轨道的 03 只是视觉标记；下方 always 轨道的 03 才真正设置了 <code>scroll-snap-stop: always</code>。如果你的设备/浏览器没有明显差异，这本身就是这个属性的一个重要学习点。</p>
+            <div class="hint">建议用触控板快速甩动或触摸屏惯性滑动观察。鼠标滚轮、按钮、scrollTo 这类输入经常看不出差别。</div>
+          </div>
+          <div class="pattern-demo">
+            <div class="demo-toolbar">
+              <span class="demo-status">NATIVE INPUT ONLY</span>
+              <span class="demo-status">TRY TOUCHPAD FLING</span>
+            </div>
+            <div class="stop-compare">
+              <div class="stop-unit">
+                <div class="stop-unit-title">normal / may skip 03</div>
+                <div class="demo-frame">
+                  <div class="stop-track normal-track snap-scroll" id="stopNormalDemo" data-horizontal-wheel>
+                    <article class="stop-card"><strong>01</strong><br><samp>normal</samp></article>
+                    <article class="stop-card"><strong>02</strong><br><samp>normal</samp></article>
+                    <article class="stop-card important"><strong>03</strong><br><samp>visual only</samp></article>
+                    <article class="stop-card"><strong>04</strong><br><samp>normal</samp></article>
+                    <article class="stop-card"><strong>05</strong><br><samp>normal</samp></article>
+                  </div>
+                </div>
+              </div>
+              <div class="stop-unit">
+                <div class="stop-unit-title always">always / key stop at 03</div>
+                <div class="demo-frame">
+                  <div class="stop-track always-track snap-scroll" id="stopAlwaysDemo" data-horizontal-wheel>
+                    <article class="stop-card"><strong>01</strong><br><samp>normal</samp></article>
+                    <article class="stop-card"><strong>02</strong><br><samp>normal</samp></article>
+                    <article class="stop-card important"><strong>03</strong><br><samp>always</samp></article>
+                    <article class="stop-card"><strong>04</strong><br><samp>normal</samp></article>
+                    <article class="stop-card"><strong>05</strong><br><samp>normal</samp></article>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="pattern-code">
+            <div class="code-title">Code / 不跳过关键项</div>
+            <pre><code>.steps {
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+}
+
+.step {
+  scroll-snap-align: center;
+}
+
+.always-track .step.important {
+  scroll-snap-stop: always;
+}</code></pre>
+          </div>
+        </div>
+      </article>
+
+      <article class="pattern reveal" id="gallery">
+        <header class="pattern-head">
+          <div class="pattern-index">06</div>
+          <h3 class="pattern-title">双轴画廊 / both mandatory</h3>
+        </header>
+        <div class="pattern-body">
+          <div class="pattern-copy">
+            <p><code>scroll-snap-type: both mandatory</code> 让水平和垂直方向都参与吸附。它适合二维内容，比如图片墙、地图式面板、产品矩阵。</p>
+            <p>这里扩展成 4 × 4 的矩阵，纵向距离足够长。点击 C3、D4，或者在画廊内垂直滚动，可以更明显地看到 y 轴吸附。每个 tile 使用 <code>scroll-snap-align: start</code>，按钮和高亮都按左上角吸附点同步。</p>
+            <div class="hint">滚动画廊区域，或用按钮跳到不同 tile。横向支持 Shift + 滚轮，纵向直接滚轮。</div>
+          </div>
+          <div class="pattern-demo">
+            <div class="demo-toolbar">
+              <span class="demo-status" data-status-for="galleryDemo">TILE A1</span>
+              <div class="demo-buttons" data-controls-for="galleryDemo"></div>
+            </div>
+            <div class="demo-frame">
+              <div class="gallery-shell snap-scroll" id="galleryDemo" data-horizontal-wheel>
+                <div class="gallery-grid">
+                  <div class="gallery-tile"><div><strong>A1</strong><span>center</span></div></div>
+                  <div class="gallery-tile"><div><strong>A2</strong><span>x axis</span></div></div>
+                  <div class="gallery-tile"><div><strong>A3</strong><span>x axis</span></div></div>
+                  <div class="gallery-tile"><div><strong>A4</strong><span>x axis</span></div></div>
+                  <div class="gallery-tile"><div><strong>B1</strong><span>y axis</span></div></div>
+                  <div class="gallery-tile"><div><strong>B2</strong><span>both</span></div></div>
+                  <div class="gallery-tile"><div><strong>B3</strong><span>both</span></div></div>
+                  <div class="gallery-tile"><div><strong>B4</strong><span>both</span></div></div>
+                  <div class="gallery-tile"><div><strong>C1</strong><span>y axis</span></div></div>
+                  <div class="gallery-tile"><div><strong>C2</strong><span>both</span></div></div>
+                  <div class="gallery-tile"><div><strong>C3</strong><span>both</span></div></div>
+                  <div class="gallery-tile"><div><strong>C4</strong><span>both</span></div></div>
+                  <div class="gallery-tile"><div><strong>D1</strong><span>y axis</span></div></div>
+                  <div class="gallery-tile"><div><strong>D2</strong><span>both</span></div></div>
+                  <div class="gallery-tile"><div><strong>D3</strong><span>both</span></div></div>
+                  <div class="gallery-tile"><div><strong>D4</strong><span>both</span></div></div>
+                  <div class="gallery-spacer gallery-spacer-x" aria-hidden="true"></div>
+                  <div class="gallery-spacer gallery-spacer-y" aria-hidden="true"></div>
+                  <div class="gallery-spacer gallery-spacer-corner" aria-hidden="true"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="pattern-code">
+            <div class="code-title">Code / 双轴吸附</div>
+            <pre><code>.gallery {
+  height: 460px;
+  overflow: auto;
+  scroll-snap-type: both mandatory;
+  scroll-padding: 28px;
+}
+
+.tile {
+  scroll-snap-align: start;
+}
+
+.trailing-space {
+  grid-column: 5;
+  grid-row: 1 / 5;
+}</code></pre>
+          </div>
+        </div>
+      </article>
+
+      <article class="pattern reveal" id="carousel">
+        <header class="pattern-head">
+          <div class="pattern-index">07</div>
+          <h3 class="pattern-title">轮播控制 / buttons + smooth scroll</h3>
+        </header>
+        <div class="pattern-body">
+          <div class="pattern-copy">
+            <p>Scroll Snap 可以承担轮播的“最终落点”，按钮只负责把对应 slide 滚进视野。这样保留了原生滚动条、触控板、键盘和触摸惯性。</p>
+            <p>这里用 <code>scrollIntoView()</code> 触发平滑滚动，容器用 <code>scroll-snap-align: center</code> 保证最后居中。动效会遵守 <code>prefers-reduced-motion</code>。</p>
+            <div class="hint">点击编号按钮。滚动完成后，当前 slide 会被自动识别并更新按钮状态。</div>
+          </div>
+          <div class="pattern-demo">
+            <div class="carousel-shell">
+              <nav class="carousel-nav" aria-label="轮播导航" data-carousel-nav="carouselDemo"></nav>
+              <div class="carousel-track snap-scroll" id="carouselDemo" data-horizontal-wheel>
+                <article class="slide"><strong>01</strong><span>native scroll retained</span></article>
+                <article class="slide"><strong>02</strong><span>center aligned snap</span></article>
+                <article class="slide"><strong>03</strong><span>buttons only navigate</span></article>
+                <article class="slide"><strong>04</strong><span>snap decides final stop</span></article>
+              </div>
+            </div>
+          </div>
+          <div class="pattern-code">
+            <div class="code-title">Code / 轮播控制</div>
+            <pre><code>.carousel {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: calc((100% - 460px) / 2);
+  scroll-behavior: smooth;
+}
+
+.slide {
+  flex: 0 0 460px;
+  scroll-snap-align: center;
+}
+
+button.addEventListener("click", () => {
+  slide.scrollIntoView({ inline: "center", behavior: "smooth" });
+});</code></pre>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title reveal">生产使用准则</h2>
+      <ul class="note-list reveal">
+        <li><span class="highlight">先判断内容是否天然分段。</span> 卡片、slide、步骤、图片墙适合；连续阅读内容通常不应该强制吸附。</li>
+        <li><span class="highlight">mandatory 用在明确分页。</span> 如果只是希望靠近章节时稍微对齐，用 <code>proximity</code> 会更温和。</li>
+        <li><span class="highlight">固定头部用 scroll-padding。</span> 它描述容器的吸附目标窗口，比给内容塞空白更稳定。</li>
+        <li><span class="highlight">特殊子项用 scroll-margin。</span> 它只调整某个 snap area，适合少数项目的额外停靠距离。</li>
+        <li><span class="highlight">按钮只是辅助导航。</span> 保留滚动条、触控板、触摸和键盘输入，让 Scroll Snap 负责最终落点。</li>
+      </ul>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title reveal">前后对比</h2>
+      <div class="comparison-grid">
+        <article class="compare-card before reveal-left">
+          <h3>手写滚动吸附</h3>
+          <ul>
+            <li>监听 scroll，计算最近元素</li>
+            <li>手动处理触摸、滚轮和键盘差异</li>
+            <li>容易和浏览器惯性滚动互相抢控制权</li>
+            <li>固定头部、响应式、边缘条件都要单独维护</li>
+          </ul>
+        </article>
+        <article class="compare-card after reveal-right delay-1">
+          <h3>CSS Scroll Snap</h3>
+          <ul>
+            <li>声明轴向、强度、子项对齐点</li>
+            <li>浏览器保留原生输入和滚动惯性</li>
+            <li>用 scroll-padding / scroll-margin 处理偏移</li>
+            <li>可渐进增强，不支持时仍是普通滚动</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    class ScrollSnapReport {
+      constructor() {
+        this.prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        this.initReveal();
+        this.initPageProgress();
+        this.initBackToTop();
+        this.initCounters();
+        this.initHorizontalWheel();
+        this.initSnapControls();
+        this.initCarousel();
+      }
+
+      initReveal() {
+        const items = document.querySelectorAll(".reveal, .reveal-left, .reveal-right");
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add("visible");
+              observer.unobserve(entry.target);
+            }
+          });
+        }, { threshold: 0.1, rootMargin: "0px 0px -40px 0px" });
+
+        items.forEach((item) => observer.observe(item));
+      }
+
+      initPageProgress() {
+        const progress = document.getElementById("pageProgress");
+        const update = () => {
+          const max = document.documentElement.scrollHeight - window.innerHeight;
+          progress.style.width = max > 0 ? `${(window.scrollY / max) * 100}%` : "0%";
+        };
+        window.addEventListener("scroll", update, { passive: true });
+        update();
+      }
+
+      initBackToTop() {
+        const button = document.getElementById("backToTop");
+        window.addEventListener("scroll", () => {
+          button.classList.toggle("visible", window.scrollY > 420);
+        }, { passive: true });
+
+        button.addEventListener("click", () => {
+          window.scrollTo({
+            top: 0,
+            behavior: this.prefersReducedMotion ? "auto" : "smooth"
+          });
+        });
+      }
+
+      initCounters() {
+        const counters = document.querySelectorAll("[data-count]");
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach((entry) => {
+            if (!entry.isIntersecting) return;
+
+            const el = entry.target;
+            const target = Number(el.dataset.count);
+            const start = performance.now();
+            const duration = 900;
+
+            const tick = (now) => {
+              const progress = Math.min((now - start) / duration, 1);
+              const eased = 1 - Math.pow(1 - progress, 3);
+              el.textContent = Math.round(target * eased);
+              if (progress < 1) requestAnimationFrame(tick);
+            };
+
+            requestAnimationFrame(tick);
+            observer.unobserve(el);
+          });
+        }, { threshold: 0.5 });
+
+        counters.forEach((counter) => observer.observe(counter));
+      }
+
+      initHorizontalWheel() {
+        document.querySelectorAll("[data-horizontal-wheel]").forEach((scroller) => {
+          scroller.addEventListener("wheel", (event) => {
+            if (!event.shiftKey && Math.abs(event.deltaY) > Math.abs(event.deltaX)) return;
+            const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
+            scroller.scrollBy({ left: delta, behavior: "auto" });
+            event.preventDefault();
+          }, { passive: false });
+        });
+      }
+
+      initSnapControls() {
+        const configs = [
+          { id: "cards", label: "CARD", selector: ".demo-card" },
+          { id: "sections", label: "PAGE", selector: ".demo-panel" },
+          { id: "paddingDemo", label: "", selector: ".offset-section", names: ["A", "B", "C"] },
+          { id: "marginDemo", label: "", selector: ".offset-section", names: ["A", "B", "C"] },
+          {
+            id: "galleryDemo",
+            label: "TILE",
+            selector: ".gallery-tile",
+            names: ["A1", "A2", "A3", "A4", "B1", "B2", "B3", "B4", "C1", "C2", "C3", "C4", "D1", "D2", "D3", "D4"]
+          }
+        ];
+
+        configs.forEach((config) => this.setupControlledScroller(config));
+      }
+
+      setupControlledScroller(config) {
+        const scroller = document.getElementById(config.id);
+        const controls = document.querySelector(`[data-controls-for="${config.id}"]`);
+        const status = document.querySelector(`[data-status-for="${config.id}"]`);
+        if (!scroller || !controls || !status) return;
+
+        const items = Array.from(scroller.querySelectorAll(config.selector));
+        controls.innerHTML = "";
+
+        items.forEach((item, index) => {
+          const button = document.createElement("button");
+          button.className = "demo-button";
+          button.type = "button";
+          button.textContent = config.names ? config.names[index] : String(index + 1).padStart(2, "0");
+          button.addEventListener("click", () => {
+            this.scrollControlledItem(scroller, item, config.id);
+          });
+          controls.appendChild(button);
+        });
+
+        const buttons = Array.from(controls.children);
+        const update = () => {
+          const index = this.getNearestSnapIndex(scroller, items, config.id);
+          buttons.forEach((button, buttonIndex) => {
+            button.classList.toggle("is-active", buttonIndex === index);
+          });
+
+          const name = config.names ? config.names[index] : String(index + 1).padStart(2, "0");
+          status.textContent = config.label ? `${config.label} ${name} / ${items.length}` : `${name} / ${items.length}`;
+        };
+
+        scroller.addEventListener("scroll", () => {
+          window.clearTimeout(scroller._snapStatusTimer);
+          scroller._snapStatusTimer = window.setTimeout(update, 80);
+        }, { passive: true });
+
+        requestAnimationFrame(update);
+      }
+
+      getNearestSnapIndex(scroller, items, id) {
+        const scrollerStyles = getComputedStyle(scroller);
+        const paddingTop = parseFloat(scrollerStyles.scrollPaddingTop) || 0;
+        const paddingLeft = parseFloat(scrollerStyles.scrollPaddingLeft) || 0;
+
+        let bestIndex = 0;
+        let bestDistance = Infinity;
+
+        items.forEach((item, index) => {
+          const itemStyles = getComputedStyle(item);
+          const marginTop = parseFloat(itemStyles.scrollMarginTop) || 0;
+          const marginLeft = parseFloat(itemStyles.scrollMarginLeft) || 0;
+          let distance;
+
+          if (id === "galleryDemo") {
+            const targetLeft = this.clampScrollLeft(scroller, this.getItemScrollLeft(scroller, item) - paddingLeft - marginLeft);
+            const targetTop = this.clampScrollTop(scroller, this.getItemScrollTop(scroller, item) - paddingTop - marginTop);
+            distance = Math.hypot(scroller.scrollLeft - targetLeft, scroller.scrollTop - targetTop);
+          } else if (id === "cards") {
+            const targetLeft = item.offsetLeft - paddingLeft - marginLeft;
+            distance = Math.abs(scroller.scrollLeft - targetLeft);
+          } else {
+            const targetTop = this.getItemScrollTop(scroller, item) - paddingTop - marginTop;
+            distance = Math.abs(scroller.scrollTop - targetTop);
+          }
+
+          if (distance < bestDistance) {
+            bestDistance = distance;
+            bestIndex = index;
+          }
+        });
+
+        return bestIndex;
+      }
+
+      scrollControlledItem(scroller, item, id) {
+        const behavior = this.prefersReducedMotion ? "auto" : "smooth";
+        const scrollerStyles = getComputedStyle(scroller);
+        const itemStyles = getComputedStyle(item);
+        const paddingTop = parseFloat(scrollerStyles.scrollPaddingTop) || 0;
+        const paddingLeft = parseFloat(scrollerStyles.scrollPaddingLeft) || 0;
+        const marginTop = parseFloat(itemStyles.scrollMarginTop) || 0;
+        const marginLeft = parseFloat(itemStyles.scrollMarginLeft) || 0;
+
+        if (id === "galleryDemo") {
+          scroller.scrollTo({
+            left: this.clampScrollLeft(scroller, this.getItemScrollLeft(scroller, item) - paddingLeft - marginLeft),
+            top: this.clampScrollTop(scroller, this.getItemScrollTop(scroller, item) - paddingTop - marginTop),
+            behavior
+          });
+          return;
+        }
+
+        if (id === "cards") {
+          scroller.scrollTo({
+            left: item.offsetLeft - paddingLeft - marginLeft,
+            behavior
+          });
+          return;
+        }
+
+        scroller.scrollTo({
+          top: this.getItemScrollTop(scroller, item) - paddingTop - marginTop,
+          behavior
+        });
+      }
+
+      getItemScrollLeft(scroller, item) {
+        const scrollerRect = scroller.getBoundingClientRect();
+        const itemRect = item.getBoundingClientRect();
+        return scroller.scrollLeft + itemRect.left - scrollerRect.left;
+      }
+
+      getItemScrollTop(scroller, item) {
+        const scrollerRect = scroller.getBoundingClientRect();
+        const itemRect = item.getBoundingClientRect();
+        return scroller.scrollTop + itemRect.top - scrollerRect.top;
+      }
+
+      clampScrollLeft(scroller, value) {
+        return Math.max(0, Math.min(scroller.scrollWidth - scroller.clientWidth, value));
+      }
+
+      clampScrollTop(scroller, value) {
+        return Math.max(0, Math.min(scroller.scrollHeight - scroller.clientHeight, value));
+      }
+
+      initCarousel() {
+        const nav = document.querySelector('[data-carousel-nav="carouselDemo"]');
+        const scroller = document.getElementById("carouselDemo");
+        if (!nav || !scroller) return;
+
+        const slides = Array.from(scroller.querySelectorAll(".slide"));
+        nav.innerHTML = "";
+
+        slides.forEach((slide, index) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.textContent = String(index + 1);
+          button.addEventListener("click", () => {
+            slide.scrollIntoView({
+              block: "nearest",
+              inline: "center",
+              behavior: this.prefersReducedMotion ? "auto" : "smooth"
+            });
+          });
+          nav.appendChild(button);
+        });
+
+        const buttons = Array.from(nav.children);
+        const update = () => {
+          const index = this.getNearestCarouselIndex(scroller, slides);
+          buttons.forEach((button, buttonIndex) => {
+            button.classList.toggle("is-active", buttonIndex === index);
+          });
+        };
+
+        scroller.addEventListener("scroll", () => {
+          window.clearTimeout(scroller._snapStatusTimer);
+          scroller._snapStatusTimer = window.setTimeout(update, 80);
+        }, { passive: true });
+
+        requestAnimationFrame(update);
+      }
+
+      getNearestCarouselIndex(scroller, slides) {
+        let bestIndex = 0;
+        let bestDistance = Infinity;
+
+        slides.forEach((slide, index) => {
+          const targetLeft = slide.offsetLeft - (scroller.clientWidth - slide.clientWidth) / 2;
+          const distance = Math.abs(scroller.scrollLeft - targetLeft);
+          if (distance < bestDistance) {
+            bestDistance = distance;
+            bestIndex = index;
+          }
+        });
+
+        return bestIndex;
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      new ScrollSnapReport();
+    });
+  </script>
+</body>
+</html>
