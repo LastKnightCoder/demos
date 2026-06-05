@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>页面 B - 文章详情</title>
+  <style>
+    @view-transition {
+      navigation: auto;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #ffffff;
+      --text: #18181b;
+      --text-secondary: #52525b;
+      --text-muted: #a1a1aa;
+      --btn-bg: #f4f4f5;
+      --btn-text: #3f3f46;
+    }
+
+    .dark {
+      --bg: #09090b;
+      --text: #fafafa;
+      --text-secondary: #a1a1aa;
+      --text-muted: #71717a;
+      --btn-bg: #27272a;
+      --btn-text: #d4d4d8;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 0;
+      min-height: 100vh;
+    }
+
+    .hero-img {
+      width: 100%;
+      height: 280px;
+      object-fit: cover;
+      display: block;
+      view-transition-name: hero-img;
+    }
+
+    .container {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      view-transition-name: page-title;
+    }
+
+    .content {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.8;
+      margin-bottom: 24px;
+    }
+
+    .back-btn {
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      border: none;
+      cursor: pointer;
+      background: var(--btn-bg);
+      color: var(--btn-text);
+      transition: opacity 0.2s;
+    }
+
+    .back-btn:hover {
+      opacity: 0.8;
+    }
+  </style>
+</head>
+<body>
+  <img class="hero-img" src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=400&fit=crop" alt="cover" />
+  <div class="container">
+    <h1>文章详情</h1>
+    <div class="content">
+      <p>View Transition API 提供了浏览器原生的视图过渡能力。在跨页面（MPA）场景下，只需要在两个页面的 CSS 中都声明 <code>@view-transition { navigation: auto; }</code>，浏览器就会在同源页面跳转时自动执行过渡动画。</p>
+      <br />
+      <p>两个页面中设置了相同 <code>view-transition-name</code> 的元素会被配对，产生位移和尺寸的连续过渡。比如这个页面的头图和列表页的封面图使用了相同的 name，跳转时图片就会平滑地从列表位置飞到详情页顶部。</p>
+    </div>
+    <button class="back-btn" id="back">← 返回列表</button>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const isDark = params.get('dark') === '1';
+    if (isDark) document.documentElement.classList.add('dark');
+
+    document.getElementById('back').addEventListener('click', () => {
+      const darkParam = isDark ? '?dark=1' : '';
+      window.location.href = `mpa-page-1.html${darkParam}`;
+    });
+  </script>
+</body>
+</html>
