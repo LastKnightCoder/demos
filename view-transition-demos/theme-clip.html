@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>View Transition - 主题切换 clip-path</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #ffffff;
+      --card-bg: #f9fafb;
+      --text: #18181b;
+      --text-secondary: #52525b;
+      --text-muted: #a1a1aa;
+      --border: #e4e4e7;
+      --btn-bg: #18181b;
+      --btn-text: #ffffff;
+    }
+
+    .dark {
+      --bg: #09090b;
+      --card-bg: #18181b;
+      --text: #fafafa;
+      --text-secondary: #a1a1aa;
+      --text-muted: #71717a;
+      --border: #27272a;
+      --btn-bg: #fafafa;
+      --btn-text: #09090b;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 32px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 420px;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+
+    .header h3 {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .toggle-btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      background: var(--btn-bg);
+      color: var(--btn-text);
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 12px;
+    }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    .card-desc {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    .tags {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .tag {
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      background: var(--border);
+      color: var(--text-muted);
+    }
+
+    .hint {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 20px;
+    }
+
+    /* 关闭默认动画，完全由 JS 接管 */
+    ::view-transition-old(root),
+    ::view-transition-new(root) {
+      animation: none;
+      mix-blend-mode: normal;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h3>设置</h3>
+      <button class="toggle-btn" id="toggle">🌓 切换主题</button>
+    </div>
+    <div class="card">
+      <div class="card-title">外观</div>
+      <div class="card-desc">点击右上角按钮切换主题，观察从按钮位置展开/收缩的圆形过渡效果。</div>
+      <div class="tags">
+        <span class="tag">clip-path</span>
+        <span class="tag">transition.ready</span>
+        <span class="tag">Web Animations</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">实现原理</div>
+      <div class="card-desc">亮→暗：暗色从点击位置向外扩展覆盖。暗→亮：暗色从边缘向点击位置收缩退去，露出亮色。</div>
+    </div>
+    <div class="hint">点击按钮试试 ↗</div>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('dark') === '1') {
+      document.documentElement.classList.add('dark');
+    }
+
+    const toggleBtn = document.getElementById('toggle');
+
+    toggleBtn.addEventListener('click', (e) => {
+      const x = e.clientX;
+      const y = e.clientY;
+      const isDark = document.documentElement.classList.contains('dark');
+
+      if (!document.startViewTransition) {
+        document.documentElement.classList.toggle('dark');
+        return;
+      }
+
+      const transition = document.startViewTransition(() => {
+        document.documentElement.classList.toggle('dark');
+      });
+
+      transition.ready.then(() => {
+        const radius = Math.hypot(
+          Math.max(x, window.innerWidth - x),
+          Math.max(y, window.innerHeight - y)
+        );
+
+        if (!isDark) {
+          // 亮→暗：新视图（暗色）在上层展开
+          document.documentElement.animate(
+            { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${radius}px at ${x}px ${y}px)`] },
+            { duration: 500, easing: 'ease-in-out', pseudoElement: '::view-transition-new(root)' }
+          );
+        } else {
+          // 暗→亮：旧视图（暗色）提到上层，收缩退去
+          document.documentElement.animate(
+            { clipPath: [`circle(${radius}px at ${x}px ${y}px)`, `circle(0px at ${x}px ${y}px)`], zIndex: [1, 1] },
+            { duration: 500, easing: 'ease-in-out', pseudoElement: '::view-transition-old(root)' }
+          );
+        }
+      });
+    });
+  </script>
+</body>
+</html>
