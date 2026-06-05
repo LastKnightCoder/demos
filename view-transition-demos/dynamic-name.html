@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>动态生成 view-transition-name Demo</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --card-bg: #f5f5f5;
+      --text: #1a1a1a;
+      --text-secondary: #666666;
+      --overlay: rgba(0, 0, 0, 0.85);
+      --close-bg: rgba(255, 255, 255, 0.15);
+      --close-hover: rgba(255, 255, 255, 0.3);
+    }
+
+    .dark {
+      --bg: #1a1a1a;
+      --card-bg: #2a2a2a;
+      --text: #e5e5e5;
+      --text-secondary: #999999;
+      --overlay: rgba(0, 0, 0, 0.92);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 32px;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .gallery-item {
+      cursor: pointer;
+      border-radius: 12px;
+      overflow: hidden;
+      background: var(--card-bg);
+      aspect-ratio: 4 / 3;
+      position: relative;
+    }
+
+    .gallery-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .gallery-item .caption {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 8px 12px;
+      background: linear-gradient(transparent, rgba(0,0,0,0.6));
+      color: #fff;
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: var(--overlay);
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 16px;
+      padding: 40px;
+    }
+
+    .lightbox.active {
+      display: flex;
+    }
+
+    .lightbox img {
+      max-width: 100%;
+      max-height: 70vh;
+      border-radius: 12px;
+      object-fit: contain;
+    }
+
+    .lightbox .title {
+      color: #fff;
+      font-size: 16px;
+      font-weight: 500;
+    }
+
+    .lightbox .close-btn {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: none;
+      background: var(--close-bg);
+      color: #fff;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(4px);
+    }
+
+    .lightbox .close-btn:hover {
+      background: var(--close-hover);
+    }
+
+    ::view-transition-old(active-image),
+    ::view-transition-new(active-image) {
+      object-fit: cover;
+      overflow: hidden;
+      border-radius: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="gallery">
+    <div class="gallery-item" data-id="1">
+      <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=600&fit=crop" alt="阿尔卑斯山脉">
+      <div class="caption">阿尔卑斯山脉</div>
+    </div>
+    <div class="gallery-item" data-id="2">
+      <img src="https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=800&h=600&fit=crop" alt="湖畔日落">
+      <div class="caption">湖畔日落</div>
+    </div>
+    <div class="gallery-item" data-id="3">
+      <img src="https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=800&h=600&fit=crop" alt="森林晨雾">
+      <div class="caption">森林晨雾</div>
+    </div>
+    <div class="gallery-item" data-id="4">
+      <img src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800&h=600&fit=crop" alt="林间小径">
+      <div class="caption">林间小径</div>
+    </div>
+  </div>
+
+  <div class="lightbox" id="lightbox">
+    <button class="close-btn" id="closeBtn">✕</button>
+    <img id="lightboxImg" src="" alt="">
+    <div class="title" id="lightboxTitle"></div>
+  </div>
+
+  <script>
+    // 深色模式适配
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('dark') === '1') {
+      document.documentElement.classList.add('dark');
+    }
+
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImg = document.getElementById('lightboxImg');
+    const lightboxTitle = document.getElementById('lightboxTitle');
+    const closeBtn = document.getElementById('closeBtn');
+    const galleryItems = document.querySelectorAll('.gallery-item');
+
+    let activeItem = null;
+
+    galleryItems.forEach(item => {
+      item.addEventListener('click', () => {
+        const img = item.querySelector('img');
+        const caption = item.querySelector('.caption');
+
+        // 动态设置 view-transition-name
+        img.style.viewTransitionName = 'active-image';
+
+        activeItem = img;
+
+        const transition = document.startViewTransition(() => {
+          lightboxImg.src = img.src;
+          lightboxImg.alt = img.alt;
+          lightboxTitle.textContent = caption.textContent;
+          lightbox.classList.add('active');
+
+          // 给 lightbox 中的图片也设置相同的 name
+          lightboxImg.style.viewTransitionName = 'active-image';
+          // 移除缩略图上的 name（同一时刻只能有一个元素持有同一个 name）
+          img.style.viewTransitionName = '';
+        });
+
+        transition.finished.then(() => {
+          // 动画结束后不需要额外清理，name 留在 lightboxImg 上等关闭时使用
+        });
+      });
+    });
+
+    function closeLightbox() {
+      if (!activeItem) return;
+
+      // 关闭时：把 name 交还给缩略图
+      const transition = document.startViewTransition(() => {
+        lightbox.classList.remove('active');
+        lightboxImg.style.viewTransitionName = '';
+        activeItem.style.viewTransitionName = 'active-image';
+      });
+
+      transition.finished.then(() => {
+        // 动画结束后清理
+        activeItem.style.viewTransitionName = '';
+        activeItem = null;
+      });
+    }
+
+    closeBtn.addEventListener('click', closeLightbox);
+    lightbox.addEventListener('click', (e) => {
+      if (e.target === lightbox) closeLightbox();
+    });
+  </script>
+</body>
+</html>
