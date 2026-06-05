@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>View Transition - view-transition-class 排行榜</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #ffffff;
+      --text: #18181b;
+      --text-muted: #71717a;
+      --item-bg: #f9fafb;
+      --border: #e4e4e7;
+      --btn-bg: #18181b;
+      --btn-text: #ffffff;
+      --btn-hover: #3f3f46;
+      --gold: #f59e0b;
+      --silver: #6b7280;
+      --bronze: #d97706;
+    }
+
+    .dark {
+      --bg: #09090b;
+      --text: #fafafa;
+      --text-muted: #a1a1aa;
+      --item-bg: #18181b;
+      --border: #27272a;
+      --btn-bg: #fafafa;
+      --btn-text: #09090b;
+      --btn-hover: #d4d4d8;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 32px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .header h3 {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .update-btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      background: var(--btn-bg);
+      color: var(--btn-text);
+      transition: background 0.2s;
+    }
+
+    .update-btn:hover {
+      background: var(--btn-hover);
+    }
+
+    .list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 16px;
+      border-radius: 10px;
+      background: var(--item-bg);
+      border: 1px solid var(--border);
+      /* 关键：所有 item 共享同一个 view-transition-class */
+      view-transition-class: rank-item;
+    }
+
+    .item-rank {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      background: var(--border);
+      color: var(--text);
+      flex-shrink: 0;
+    }
+
+    .item-rank.gold { background: var(--gold); color: #fff; }
+    .item-rank.silver { background: var(--silver); color: #fff; }
+    .item-rank.bronze { background: var(--bronze); color: #fff; }
+
+    .item-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .item-name {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .item-score {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .item-change {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 12px;
+    }
+
+    .item-change.up {
+      color: #16a34a;
+      background: #dcfce7;
+    }
+
+    .item-change.down {
+      color: #dc2626;
+      background: #fee2e2;
+    }
+
+    .dark .item-change.up {
+      background: #14532d;
+    }
+
+    .dark .item-change.down {
+      background: #450a0a;
+    }
+
+    /*
+      关键 CSS：用 view-transition-class 统一控制所有排行项的过渡
+      不需要写 ::view-transition-group(item-1), group(item-2)... 一堆选择器
+    */
+    ::view-transition-group(*.rank-item) {
+      animation-duration: 0.4s;
+      animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h3>🏆 热度排行榜</h3>
+      <button class="update-btn" id="update">📊 刷新数据</button>
+    </div>
+    <div class="list" id="list"></div>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('dark') === '1') {
+      document.documentElement.classList.add('dark');
+    }
+
+    let items = [
+      { id: 'ts', name: 'TypeScript', score: 9823 },
+      { id: 'rust', name: 'Rust', score: 8721 },
+      { id: 'go', name: 'Go', score: 7845 },
+      { id: 'python', name: 'Python', score: 7234 },
+      { id: 'swift', name: 'Swift', score: 6129 },
+      { id: 'kotlin', name: 'Kotlin', score: 5467 },
+      { id: 'zig', name: 'Zig', score: 4891 },
+      { id: 'elixir', name: 'Elixir', score: 3752 },
+    ];
+
+    const listEl = document.getElementById('list');
+
+    function getRankClass(index) {
+      if (index === 0) return 'gold';
+      if (index === 1) return 'silver';
+      if (index === 2) return 'bronze';
+      return '';
+    }
+
+    let prevOrder = items.map(i => i.id);
+
+    function render() {
+      const currentOrder = items.map(i => i.id);
+
+      listEl.innerHTML = items.map((item, index) => {
+        const prevIndex = prevOrder.indexOf(item.id);
+        const diff = prevIndex - index;
+        let changeHtml = '';
+        if (diff > 0) changeHtml = `<span class="item-change up">↑${diff}</span>`;
+        else if (diff < 0) changeHtml = `<span class="item-change down">↓${Math.abs(diff)}</span>`;
+
+        return `
+          <div class="item" style="view-transition-name: item-${item.id};">
+            <div class="item-rank ${getRankClass(index)}">${index + 1}</div>
+            <div class="item-info">
+              <span class="item-name">${item.name}</span>
+              <span class="item-score">${item.score.toLocaleString()} 热度</span>
+            </div>
+            ${changeHtml}
+          </div>
+        `;
+      }).join('');
+
+      prevOrder = currentOrder;
+    }
+
+    function randomizeScores() {
+      items.forEach(item => {
+        const change = Math.floor(Math.random() * 3000) - 1000;
+        item.score = Math.max(1000, item.score + change);
+      });
+      items.sort((a, b) => b.score - a.score);
+    }
+
+    document.getElementById('update').addEventListener('click', () => {
+      randomizeScores();
+      if (!document.startViewTransition) {
+        render();
+        return;
+      }
+      document.startViewTransition(() => render());
+    });
+
+    render();
+  </script>
+</body>
+</html>
