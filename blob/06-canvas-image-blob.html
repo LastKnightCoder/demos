@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>06 · Canvas 导出图片 Blob</title>
+  <link rel="stylesheet" href="./shared.css">
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <span class="eyebrow">Image Blob</span>
+      <h1>用 canvas.toBlob() 生成图片文件</h1>
+      <p class="lead">Canvas 可以异步导出为图片 Blob，再用对象 URL 预览或下载。这个模式常见于截图、图片编辑、二维码、图表导出。</p>
+      <nav class="nav">
+        <a class="button secondary" href="./index.html">返回目录</a>
+        <a class="button secondary" href="./01-create-read.html">回到第一个示例</a>
+      </nav>
+    </section>
+
+    <section class="grid">
+      <div class="panel">
+        <h2>绘制设置</h2>
+        <label>
+          标题
+          <input id="titleInput" value="Blob Image Export">
+        </label>
+        <label>
+          图片格式
+          <select id="typeInput">
+            <option value="image/png">PNG</option>
+            <option value="image/jpeg">JPEG</option>
+            <option value="image/webp">WebP</option>
+          </select>
+        </label>
+        <label>
+          质量：<span id="qualityLabel">0.92</span>
+          <input id="qualityInput" type="range" min="0.1" max="1" step="0.01" value="0.92">
+        </label>
+        <div class="controls">
+          <button id="drawBtn">重绘 Canvas</button>
+          <button class="secondary" id="exportBtn">导出 Blob</button>
+          <a class="button secondary" id="downloadLink" href="#" download="canvas-blob.png" aria-disabled="true">下载图片</a>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Canvas</h2>
+        <canvas id="canvas" width="720" height="360" style="width:100%;border:1px solid var(--line);border-radius:8px;background:#fff"></canvas>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="panel">
+        <h2>Blob 预览</h2>
+        <div id="preview" class="preview">导出后会显示图片 Blob 预览。</div>
+      </div>
+      <div class="panel">
+        <h2>输出</h2>
+        <pre id="output">点击“导出 Blob”。</pre>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const canvas = document.querySelector('#canvas');
+    const ctx = canvas.getContext('2d');
+    const titleInput = document.querySelector('#titleInput');
+    const typeInput = document.querySelector('#typeInput');
+    const qualityInput = document.querySelector('#qualityInput');
+    const qualityLabel = document.querySelector('#qualityLabel');
+    const preview = document.querySelector('#preview');
+    const output = document.querySelector('#output');
+    const downloadLink = document.querySelector('#downloadLink');
+    let objectUrl = '';
+
+    function cleanupUrl() {
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+      objectUrl = '';
+    }
+
+    function draw() {
+      const title = titleInput.value || 'Blob Image Export';
+      const gradient = ctx.createLinearGradient(0, 0, 720, 360);
+      gradient.addColorStop(0, '#e0f2fe');
+      gradient.addColorStop(0.5, '#f8fafc');
+      gradient.addColorStop(1, '#ccfbf1');
+
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, 720, 360);
+      ctx.fillStyle = 'rgba(15, 118, 110, 0.14)';
+      ctx.beginPath();
+      ctx.arc(116, 100, 80, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.strokeStyle = '#d9e1ea';
+      ctx.lineWidth = 2;
+      ctx.roundRect(86, 122, 548, 146, 18);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = '#172033';
+      ctx.font = '700 36px system-ui, sans-serif';
+      ctx.fillText(title, 122, 190, 470);
+      ctx.fillStyle = '#5e6b7c';
+      ctx.font = '20px system-ui, sans-serif';
+      ctx.fillText(new Date().toLocaleString('zh-CN'), 122, 230);
+      ctx.fillStyle = '#0f766e';
+      ctx.font = '700 18px system-ui, sans-serif';
+      ctx.fillText('canvas.toBlob() -> Blob URL -> preview/download', 122, 262);
+    }
+
+    function canvasToBlob(canvasElement, type, quality) {
+      return new Promise((resolve, reject) => {
+        canvasElement.toBlob((blob) => {
+          if (blob) resolve(blob);
+          else reject(new Error('Canvas export failed. The requested image type may not be supported.'));
+        }, type, quality);
+      });
+    }
+
+    document.querySelector('#drawBtn').addEventListener('click', draw);
+
+    qualityInput.addEventListener('input', () => {
+      qualityLabel.textContent = qualityInput.value;
+    });
+
+    document.querySelector('#exportBtn').addEventListener('click', async () => {
+      cleanupUrl();
+      const type = typeInput.value;
+      const quality = Number(qualityInput.value);
+      const blob = await canvasToBlob(canvas, type, quality);
+      objectUrl = URL.createObjectURL(blob);
+
+      const extension = blob.type.includes('jpeg') ? 'jpg' : blob.type.split('/')[1] || 'png';
+      downloadLink.href = objectUrl;
+      downloadLink.download = `canvas-blob.${extension}`;
+      downloadLink.setAttribute('aria-disabled', 'false');
+
+      preview.innerHTML = '';
+      const image = document.createElement('img');
+      image.src = objectUrl;
+      image.alt = 'Canvas exported Blob preview';
+      preview.append(image);
+
+      output.textContent = `canvas.toBlob() result:
+type: ${blob.type}
+size: ${new Intl.NumberFormat('zh-CN').format(blob.size)} bytes
+object URL: ${objectUrl}
+
+canvas.toBlob(callback, "${type}", ${quality});`;
+    });
+
+    window.addEventListener('pagehide', cleanupUrl);
+    draw();
+  </script>
+</body>
+</html>

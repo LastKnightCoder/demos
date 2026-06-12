@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>column-rule centerline</title>
+  <style>
+    :root {
+      --bg: #f7f5ef;
+      --ink: #1f2933;
+      --muted: #65717f;
+      --panel: #fffdf8;
+      --line: #d9d1c3;
+      --accent: #d14f3f;
+      --gap: 48px;
+      --rule-width: 6px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+    }
+
+    main {
+      width: min(1040px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 32px 0 56px;
+    }
+
+    a {
+      color: #0f766e;
+    }
+
+    h1 {
+      margin: 14px 0 8px;
+      font-size: 30px;
+      line-height: 1.15;
+      letter-spacing: 0;
+    }
+
+    p {
+      margin: 0 0 16px;
+      color: var(--muted);
+    }
+
+    code {
+      background: #ece6da;
+      border: 1px solid #ddd2c2;
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    .stage {
+      margin-top: 24px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      padding: 24px;
+      overflow-x: auto;
+    }
+
+    .grid-wrap {
+      position: relative;
+      width: 688px;
+      padding: 28px 0 44px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 200px 200px 200px;
+      column-gap: var(--gap);
+      column-rule: var(--rule-width) solid var(--accent);
+      min-height: 150px;
+    }
+
+    .cell {
+      display: grid;
+      place-items: center;
+      min-height: 150px;
+      border: 1px solid #c8d2d0;
+      background: #e8f1ee;
+      color: #153d37;
+      font-weight: 700;
+    }
+
+    .gap-guide {
+      position: absolute;
+      top: 16px;
+      bottom: 28px;
+      width: var(--gap);
+      background: repeating-linear-gradient(
+        90deg,
+        rgba(15, 118, 110, 0.08),
+        rgba(15, 118, 110, 0.08) 8px,
+        rgba(15, 118, 110, 0.14) 8px,
+        rgba(15, 118, 110, 0.14) 16px
+      );
+      border-inline: 1px dashed rgba(15, 118, 110, 0.45);
+      pointer-events: none;
+    }
+
+    .gap-guide::after {
+      content: "gap centerline";
+      position: absolute;
+      left: 50%;
+      top: -18px;
+      transform: translateX(-50%);
+      width: 120px;
+      color: #0f766e;
+      font-size: 12px;
+      text-align: center;
+    }
+
+    .gap-guide::before {
+      content: "";
+      position: absolute;
+      left: calc(50% - 0.5px);
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      background: #0f766e;
+    }
+
+    .gap-1 {
+      left: 200px;
+    }
+
+    .gap-2 {
+      left: 448px;
+    }
+
+    .measure {
+      position: absolute;
+      bottom: 0;
+      height: 22px;
+      color: var(--muted);
+      font-size: 12px;
+      text-align: center;
+    }
+
+    .measure::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 6px;
+      border-top: 1px solid #8d8170;
+    }
+
+    .measure span {
+      position: relative;
+      z-index: 1;
+      background: var(--panel);
+      padding: 0 6px;
+    }
+
+    .m-gap {
+      left: 200px;
+      width: var(--gap);
+    }
+
+    .m-rule {
+      left: calc(200px + (var(--gap) - var(--rule-width)) / 2);
+      width: var(--rule-width);
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .explain {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .fact {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      background: #faf8f2;
+    }
+
+    .fact strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    @supports not (row-rule: 1px solid red) {
+      .grid {
+        column-rule: none;
+      }
+
+      .cell + .cell {
+        border-left: var(--rule-width) solid var(--accent);
+      }
+    }
+
+    @media (max-width: 760px) {
+      main {
+        width: min(100% - 24px, 1040px);
+      }
+
+      h1 {
+        font-size: 26px;
+      }
+
+      .stage {
+        padding: 16px;
+      }
+
+      .explain {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <a href="./index.html">返回索引</a>
+    <h1>01. `column-rule` 默认画在 gap 的正中间</h1>
+    <p>这里的 <code>column-gap</code> 是 <code>48px</code>，<code>column-rule-width</code> 是 <code>6px</code>。红线的中心和 gap 的中心线重合。</p>
+
+    <section class="stage">
+      <div class="grid-wrap" aria-label="column-rule centerline demo">
+        <div class="gap-guide gap-1"></div>
+        <div class="gap-guide gap-2"></div>
+        <div class="grid">
+          <div class="cell">Item A</div>
+          <div class="cell">Item B</div>
+          <div class="cell">Item C</div>
+        </div>
+        <div class="measure m-gap"><span>48px gap</span></div>
+        <div class="measure m-rule"><span>6px</span></div>
+      </div>
+    </section>
+
+    <section class="explain">
+      <div class="fact">
+        <strong>定位</strong>
+        <span>规则线的中心线 = gap 的中心线。</span>
+      </div>
+      <div class="fact">
+        <strong>宽度</strong>
+        <span>6px 线宽会围绕中心线左右各占 3px。</span>
+      </div>
+      <div class="fact">
+        <strong>布局</strong>
+        <span>线不占空间，item 位置由 grid tracks 和 gap 决定。</span>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
+

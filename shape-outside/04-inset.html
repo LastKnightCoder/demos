@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>shape-outside: inset()</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 0 20px;
+      line-height: 1.8;
+      color: #333;
+    }
+
+    h1 {
+      border-bottom: 2px solid #4a90d9;
+      padding-bottom: 10px;
+    }
+
+    .demo {
+      margin: 30px 0;
+      padding: 20px;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      background: #fafafa;
+    }
+
+    .demo h2 {
+      margin-top: 0;
+      color: #4a90d9;
+    }
+
+    .inset-basic {
+      float: left;
+      width: 200px;
+      height: 200px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      shape-outside: inset(10px);
+      margin-right: 15px;
+      margin-bottom: 10px;
+    }
+
+    .inset-rounded {
+      float: right;
+      width: 200px;
+      height: 200px;
+      background: linear-gradient(135deg, #f093fb, #f5576c);
+      border-radius: 30px;
+      shape-outside: inset(0px round 30px);
+      margin-left: 15px;
+      margin-bottom: 10px;
+    }
+
+    .inset-asymmetric {
+      float: left;
+      width: 200px;
+      height: 200px;
+      background: linear-gradient(135deg, #4facfe, #00f2fe);
+      shape-outside: inset(0px round 50%);
+      border-radius: 50%;
+      shape-margin: 10px;
+      margin-right: 0;
+      margin-bottom: 10px;
+    }
+
+    .clearfix::after {
+      content: "";
+      display: block;
+      clear: both;
+    }
+
+    code {
+      background: #f0f0f0;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 0.9em;
+    }
+
+    pre {
+      background: #2d2d2d;
+      color: #f8f8f2;
+      padding: 15px;
+      border-radius: 6px;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>shape-outside: inset()</h1>
+  <p>使用 <code>inset()</code> 函数定义一个内嵌的矩形环绕区域，可以为矩形指定圆角。这在需要文字更靠近浮动元素时非常有用。</p>
+
+  <div class="demo clearfix">
+    <h2>基础 inset — 四边内缩 10px</h2>
+    <div class="inset-basic"></div>
+    <p>inset() 函数从元素的各边向内缩进指定的距离来定义环绕形状。这意味着文字可以比元素的可见边界更靠近元素。在这个示例中，环绕形状比元素本身向内缩了 10px，所以如果没有 margin 的影响，文字实际上可以覆盖到元素边缘的 10px 区域。inset 的值遵循类似 padding 的简写规则：一个值表示四边相同，两个值表示上下和左右，四个值分别表示上右下左。这种方式提供了非常精确的控制。</p>
+  </div>
+
+  <div class="demo clearfix">
+    <h2>带圆角的 inset</h2>
+    <div class="inset-rounded"></div>
+    <p>inset() 最强大的特性是可以通过 round 关键字指定圆角。这让你可以创建圆角矩形的环绕形状。在这个示例中，元素有 30px 的 border-radius，同时 shape-outside 也使用了相同的圆角值，使得文字环绕形状与元素的可见形状完美匹配。文字会沿着圆角的弧线环绕，而不是沿着方形的边角。这种效果在卡片式设计中特别有用，可以让文字和圆角卡片之间产生更自然的关系。注意角落处文字的排列方式。</p>
+  </div>
+
+  <div class="demo clearfix">
+    <h2>inset + round 50% 模拟圆形</h2>
+    <div class="inset-asymmetric"></div>
+    <p>使用 inset(0px round 50%) 配合 border-radius: 50% 可以创建圆形环绕效果，这是 circle() 的另一种写法。这里同时使用了 shape-margin: 10px 来增加文字间距。inset 配合大圆角值的优势在于：你可以先用 inset 缩小形状区域，再用 round 指定圆角，两步操作独立可控。在某些场景下，这种组合比直接用 circle() 或 ellipse() 更容易微调文字与元素的相对位置。</p>
+  </div>
+
+  <h2>语法</h2>
+  <pre>
+/* 四边统一内缩 */
+shape-outside: inset(10px);
+
+/* 上下和左右分别设置 */
+shape-outside: inset(10px 20px);
+
+/* 四边分别设置 */
+shape-outside: inset(10px 20px 30px 40px);
+
+/* 添加圆角 */
+shape-outside: inset(10px round 20px);
+
+/* 非对称圆角 */
+shape-outside: inset(10px round 20px 30px 40px 50px);
+
+/* 使用百分比 */
+shape-outside: inset(5% round 50%);
+  </pre>
+</body>
+</html>

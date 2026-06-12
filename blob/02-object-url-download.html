@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>02 · 对象 URL 与下载</title>
+  <link rel="stylesheet" href="./shared.css">
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <span class="eyebrow">Object URL</span>
+      <h1>用 Blob URL 预览和下载内存中的数据</h1>
+      <p class="lead">对象 URL 是浏览器为 Blob 分配的临时地址，适合赋给 <code>img.src</code>、<code>a.href</code>、<code>video.src</code> 等属性。用完后应调用 <code>URL.revokeObjectURL()</code>。</p>
+      <nav class="nav">
+        <a class="button secondary" href="./index.html">返回目录</a>
+        <a class="button secondary" href="./03-file-input-slice.html">下一个示例</a>
+      </nav>
+    </section>
+
+    <section class="grid">
+      <div class="panel">
+        <h2>选择 Blob 类型</h2>
+        <label>
+          类型
+          <select id="kind">
+            <option value="text">文本文件</option>
+            <option value="json">JSON 文件</option>
+            <option value="svg">SVG 图片</option>
+          </select>
+        </label>
+        <label>
+          文件内容
+          <textarea id="source">Blob URL 可以把内存中的数据当作临时文件地址使用。
+这段文本会被生成并下载为 hello-blob.txt。</textarea>
+        </label>
+        <div class="controls">
+          <button id="createBtn">创建对象 URL</button>
+          <button class="warn" id="revokeBtn" disabled>释放对象 URL</button>
+          <a class="button secondary" id="downloadLink" download="hello-blob.txt" href="#" aria-disabled="true">下载</a>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>预览</h2>
+        <div id="preview" class="preview">对象 URL 创建后会显示在这里。</div>
+        <pre id="urlOut">URL 尚未创建。</pre>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const kind = document.querySelector('#kind');
+    const source = document.querySelector('#source');
+    const preview = document.querySelector('#preview');
+    const urlOut = document.querySelector('#urlOut');
+    const downloadLink = document.querySelector('#downloadLink');
+    const revokeBtn = document.querySelector('#revokeBtn');
+    let currentUrl = '';
+
+    function revokeCurrentUrl() {
+      if (currentUrl) {
+        URL.revokeObjectURL(currentUrl);
+        currentUrl = '';
+      }
+    }
+
+    function makeBlob() {
+      if (kind.value === 'json') {
+        const data = {
+          title: 'Blob JSON example',
+          createdAt: new Date().toISOString(),
+          message: source.value
+        };
+        return {
+          blob: new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }),
+          filename: 'blob-data.json'
+        };
+      }
+
+      if (kind.value === 'svg') {
+        const escaped = source.value.replace(/[<>&]/g, (char) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' })[char]);
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="720" height="360" viewBox="0 0 720 360">
+  <rect width="720" height="360" fill="#f5f7fb"/>
+  <circle cx="132" cy="102" r="70" fill="#0f766e" opacity="0.18"/>
+  <rect x="88" y="132" width="544" height="132" rx="14" fill="#ffffff" stroke="#d9e1ea"/>
+  <text x="120" y="188" font-family="system-ui, sans-serif" font-size="26" font-weight="700" fill="#172033">Blob generated SVG</text>
+  <text x="120" y="226" font-family="system-ui, sans-serif" font-size="18" fill="#5e6b7c">${escaped}</text>
+</svg>`;
+        return {
+          blob: new Blob([svg], { type: 'image/svg+xml' }),
+          filename: 'blob-card.svg'
+        };
+      }
+
+      return {
+        blob: new Blob([source.value], { type: 'text/plain;charset=utf-8' }),
+        filename: 'hello-blob.txt'
+      };
+    }
+
+    function renderPreview(url, blob) {
+      preview.innerHTML = '';
+
+      if (blob.type.startsWith('image/')) {
+        const image = document.createElement('img');
+        image.src = url;
+        image.alt = 'Blob URL preview';
+        preview.append(image);
+        return;
+      }
+
+      const iframe = document.createElement('iframe');
+      iframe.title = 'Blob URL text preview';
+      iframe.src = url;
+      iframe.style.width = '100%';
+      iframe.style.minHeight = '210px';
+      iframe.style.border = '0';
+      preview.append(iframe);
+    }
+
+    document.querySelector('#createBtn').addEventListener('click', () => {
+      revokeCurrentUrl();
+      const { blob, filename } = makeBlob();
+      currentUrl = URL.createObjectURL(blob);
+      downloadLink.href = currentUrl;
+      downloadLink.download = filename;
+      downloadLink.setAttribute('aria-disabled', 'false');
+      revokeBtn.disabled = false;
+      renderPreview(currentUrl, blob);
+      urlOut.textContent = `const url = URL.createObjectURL(blob);
+anchor.href = url;
+anchor.download = "${filename}";
+
+URL:
+${currentUrl}
+
+Blob size: ${blob.size} bytes
+Blob type: ${blob.type}`;
+    });
+
+    revokeBtn.addEventListener('click', () => {
+      revokeCurrentUrl();
+      downloadLink.href = '#';
+      downloadLink.setAttribute('aria-disabled', 'true');
+      revokeBtn.disabled = true;
+      preview.textContent = '对象 URL 已释放，旧的预览地址不应继续使用。';
+      urlOut.textContent = 'URL.revokeObjectURL(url) 已调用。';
+    });
+
+    kind.addEventListener('change', () => {
+      if (kind.value === 'json') {
+        source.value = '这段文本会放入 JSON 的 message 字段。';
+      } else if (kind.value === 'svg') {
+        source.value = '用 Blob 生成图片资源';
+      } else {
+        source.value = 'Blob URL 可以把内存中的数据当作临时文件地址使用。\n这段文本会被生成并下载为 hello-blob.txt。';
+      }
+    });
+
+    window.addEventListener('pagehide', revokeCurrentUrl);
+  </script>
+</body>
+</html>

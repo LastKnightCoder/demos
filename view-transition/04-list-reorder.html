@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>View Transition - 列表排序</title>
+  <style>
+    *,
+    *::before,
+    *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --surface: oklch(0.15 0.012 240);
+      --surface-card: oklch(0.2 0.014 240);
+      --surface-hover: oklch(0.24 0.016 240);
+      --text-primary: oklch(0.92 0.005 65);
+      --text-secondary: oklch(0.62 0.008 240);
+      --accent: oklch(0.7 0.2 200);
+      --accent-secondary: oklch(0.68 0.16 140);
+      --danger: oklch(0.65 0.2 25);
+      --border: oklch(0.26 0.012 240);
+      --radius: 10px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: var(--surface);
+      color: var(--text-primary);
+      min-height: 100vh;
+      padding: 3rem 1.5rem;
+    }
+
+    .container {
+      max-width: 560px;
+      margin: 0 auto;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+
+    .header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.5rem;
+    }
+
+    .header p {
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+    }
+
+    .toolbar button {
+      padding: 0.5rem 0.9rem;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      background: var(--surface-card);
+      color: var(--text-secondary);
+      font-size: 0.78rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s, background 0.15s;
+    }
+
+    .toolbar button:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .toolbar button.active {
+      background: oklch(0.7 0.2 200 / 0.12);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .list-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem 1.25rem;
+      background: var(--surface-card);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .list-item:hover {
+      background: var(--surface-hover);
+      border-color: oklch(0.32 0.014 240);
+    }
+
+    .item-rank {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      width: 1.8rem;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .item-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+
+    .item-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .item-name {
+      font-size: 0.88rem;
+      font-weight: 600;
+      margin-bottom: 0.15rem;
+    }
+
+    .item-meta {
+      font-size: 0.72rem;
+      color: var(--text-secondary);
+    }
+
+    .item-score {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--accent);
+      flex-shrink: 0;
+    }
+
+    .item-actions {
+      display: flex;
+      gap: 0.3rem;
+      flex-shrink: 0;
+    }
+
+    .item-actions button {
+      width: 26px;
+      height: 26px;
+      border: none;
+      border-radius: 5px;
+      background: transparent;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 0.8rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .item-actions button:hover {
+      background: oklch(0.3 0.012 240);
+      color: var(--text-primary);
+    }
+
+    .item-actions button.delete:hover {
+      background: oklch(0.65 0.2 25 / 0.15);
+      color: var(--danger);
+    }
+
+    .add-btn {
+      width: 100%;
+      padding: 0.8rem;
+      margin-top: 0.5rem;
+      border: 1px dashed var(--border);
+      border-radius: var(--radius);
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+
+    .add-btn:hover {
+      border-color: var(--accent-secondary);
+      color: var(--accent-secondary);
+    }
+
+    /* View Transition */
+    ::view-transition-group(*) {
+      animation-duration: 0.3s;
+      animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      ::view-transition-group(*),
+      ::view-transition-old(*),
+      ::view-transition-new(*) {
+        animation-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>列表排序动画</h1>
+      <p>每个列表项有唯一的 view-transition-name，排序时自动滑到新位置</p>
+    </div>
+
+    <div class="toolbar">
+      <button class="active" onclick="sortBy('score')">按分数</button>
+      <button onclick="sortBy('name')">按名称</button>
+      <button onclick="sortBy('date')">按日期</button>
+      <button onclick="shuffle()">随机打乱</button>
+    </div>
+
+    <div class="list" id="list"></div>
+    <button class="add-btn" onclick="addItem()">+ 添加新项目</button>
+  </div>
+
+  <script>
+    let items = [
+      { id: 'a', name: 'Rust 编译器', emoji: '🦀', color: 'oklch(0.3 0.05 25)', score: 94, date: '2024-01', meta: '系统编程' },
+      { id: 'b', name: 'TypeScript', emoji: '🔷', color: 'oklch(0.28 0.06 240)', score: 89, date: '2024-03', meta: '类型系统' },
+      { id: 'c', name: 'Go Runtime', emoji: '🐹', color: 'oklch(0.3 0.05 200)', score: 82, date: '2024-02', meta: '并发模型' },
+      { id: 'd', name: 'Zig 工具链', emoji: '⚡', color: 'oklch(0.32 0.06 65)', score: 78, date: '2024-05', meta: '零开销抽象' },
+      { id: 'e', name: 'Bun Runtime', emoji: '🍞', color: 'oklch(0.3 0.05 80)', score: 71, date: '2024-04', meta: 'JavaScript' },
+      { id: 'f', name: 'Deno Deploy', emoji: '🦕', color: 'oklch(0.28 0.05 160)', score: 67, date: '2024-06', meta: '边缘计算' },
+    ];
+
+    let currentSort = 'score';
+
+    function render() {
+      const list = document.getElementById('list');
+      list.innerHTML = items.map((item, i) => `
+        <div class="list-item" style="view-transition-name: item-${item.id};">
+          <span class="item-rank">#${i + 1}</span>
+          <div class="item-avatar" style="background: ${item.color};">${item.emoji}</div>
+          <div class="item-info">
+            <div class="item-name">${item.name}</div>
+            <div class="item-meta">${item.meta} · ${item.date}</div>
+          </div>
+          <span class="item-score">${item.score}</span>
+          <div class="item-actions">
+            <button onclick="moveUp('${item.id}')">↑</button>
+            <button onclick="moveDown('${item.id}')">↓</button>
+            <button class="delete" onclick="removeItem('${item.id}')">×</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function withTransition(fn) {
+      if (!document.startViewTransition) {
+        fn();
+        return;
+      }
+      document.startViewTransition(() => fn());
+    }
+
+    function sortBy(key) {
+      currentSort = key;
+      document.querySelectorAll('.toolbar button').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+
+      withTransition(() => {
+        if (key === 'score') items.sort((a, b) => b.score - a.score);
+        else if (key === 'name') items.sort((a, b) => a.name.localeCompare(b.name));
+        else if (key === 'date') items.sort((a, b) => a.date.localeCompare(b.date));
+        render();
+      });
+    }
+
+    function shuffle() {
+      withTransition(() => {
+        for (let i = items.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [items[i], items[j]] = [items[j], items[i]];
+        }
+        render();
+      });
+    }
+
+    function moveUp(id) {
+      const idx = items.findIndex(i => i.id === id);
+      if (idx <= 0) return;
+      withTransition(() => {
+        [items[idx], items[idx - 1]] = [items[idx - 1], items[idx]];
+        render();
+      });
+    }
+
+    function moveDown(id) {
+      const idx = items.findIndex(i => i.id === id);
+      if (idx >= items.length - 1) return;
+      withTransition(() => {
+        [items[idx], items[idx + 1]] = [items[idx + 1], items[idx]];
+        render();
+      });
+    }
+
+    function removeItem(id) {
+      withTransition(() => {
+        items = items.filter(i => i.id !== id);
+        render();
+      });
+    }
+
+    let addCounter = 0;
+    const newItems = [
+      { name: 'Gleam Lang', emoji: '✨', color: 'oklch(0.3 0.06 320)', meta: '函数式' },
+      { name: 'Mojo Fire', emoji: '🔥', color: 'oklch(0.3 0.06 30)', meta: 'AI 原生' },
+      { name: 'Roc Lang', emoji: '🪨', color: 'oklch(0.3 0.04 180)', meta: '纯函数' },
+    ];
+
+    function addItem() {
+      const template = newItems[addCounter % newItems.length];
+      const id = 'new-' + Date.now();
+      const score = Math.floor(Math.random() * 30) + 50;
+      const newItem = { ...template, id, score, date: '2024-07' };
+      addCounter++;
+
+      withTransition(() => {
+        items.push(newItem);
+        render();
+      });
+    }
+
+    render();
+  </script>
+</body>
+</html>

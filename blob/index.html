@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blob API 示例目录</title>
+  <link rel="stylesheet" href="./shared.css">
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <span class="eyebrow">JavaScript Binary Data</span>
+      <h1>Blob API 交互式学习示例</h1>
+      <p class="lead">
+        Blob 表示不可变的原始数据块，常用于文件下载、图片预览、流式处理、Worker 脚本、上传二进制内容等场景。
+        这些示例都可以直接打开，不需要安装依赖。
+      </p>
+      <nav class="nav">
+        <a class="button" href="./01-create-read.html">开始基础示例</a>
+        <a class="button secondary" href="./README.md">查看 README</a>
+      </nav>
+    </section>
+
+    <section class="grid" aria-label="示例列表">
+      <a class="example-card" href="./01-create-read.html">
+        <span class="tag">01</span>
+        <h2>创建与读取 Blob</h2>
+        <p class="muted">演示 <code>new Blob()</code>、<code>text()</code>、<code>arrayBuffer()</code>、<code>bytes()</code>、<code>stream()</code> 的基础语法。</p>
+      </a>
+
+      <a class="example-card" href="./02-object-url-download.html">
+        <span class="tag">02</span>
+        <h2>对象 URL 与下载</h2>
+        <p class="muted">用 <code>URL.createObjectURL()</code> 预览和下载文本、JSON、SVG Blob，并正确释放 URL。</p>
+      </a>
+
+      <a class="example-card" href="./03-file-input-slice.html">
+        <span class="tag">03</span>
+        <h2>File、预览与 slice</h2>
+        <p class="muted"><code>File</code> 是 Blob 的子类。本示例读取用户选择的文件，并用 <code>slice()</code> 截取片段。</p>
+      </a>
+
+      <a class="example-card" href="./04-stream-large-blob.html">
+        <span class="tag">04</span>
+        <h2>大 Blob 与流式读取</h2>
+        <p class="muted">生成 CSV 数据，比较一次性读取与 <code>blob.stream()</code> 分块读取时的行为差异。</p>
+      </a>
+
+      <a class="example-card" href="./05-worker-and-fetch.html">
+        <span class="tag">05</span>
+        <h2>Worker 与 fetch</h2>
+        <p class="muted">从字符串 Blob 创建 Worker 脚本，并通过 <code>fetch(blobURL)</code> 把对象 URL 重新读回 Blob。</p>
+      </a>
+
+      <a class="example-card" href="./06-canvas-image-blob.html">
+        <span class="tag">06</span>
+        <h2>Canvas 导出图片 Blob</h2>
+        <p class="muted">使用 <code>canvas.toBlob()</code> 生成 PNG/JPEG 图片，完成预览和下载。</p>
+      </a>
+    </section>
+
+    <section class="panel">
+      <h2>建议学习顺序</h2>
+      <p class="muted">
+        先理解 Blob 是“数据容器”而不是“文件路径”，再学习对象 URL 的生命周期，最后看流式读取、Worker 脚本和 Canvas 导出这些工程场景。
+      </p>
+    </section>
+  </main>
+</body>
+</html>

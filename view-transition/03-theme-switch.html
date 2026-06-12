@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>View Transition - 主题切换</title>
+  <style>
+    *,
+    *::before,
+    *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --transition-duration: 0.6s;
+    }
+
+    [data-theme="light"] {
+      --surface: oklch(0.97 0.005 65);
+      --surface-card: oklch(1 0 0);
+      --text-primary: oklch(0.2 0.01 260);
+      --text-secondary: oklch(0.5 0.008 260);
+      --accent: oklch(0.55 0.22 270);
+      --accent-surface: oklch(0.95 0.03 270);
+      --border: oklch(0.9 0.005 65);
+      --shadow: oklch(0.3 0 0 / 0.06);
+    }
+
+    [data-theme="dark"] {
+      --surface: oklch(0.14 0.01 270);
+      --surface-card: oklch(0.2 0.012 270);
+      --text-primary: oklch(0.93 0.005 65);
+      --text-secondary: oklch(0.65 0.008 270);
+      --accent: oklch(0.75 0.18 65);
+      --accent-surface: oklch(0.25 0.03 65);
+      --border: oklch(0.28 0.012 270);
+      --shadow: oklch(0 0 0 / 0.3);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: var(--surface);
+      color: var(--text-primary);
+      min-height: 100vh;
+      transition: background 0s, color 0s;
+      padding: 3rem 1.5rem;
+    }
+
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 3rem;
+    }
+
+    .topbar h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+    }
+
+    .theme-toggle {
+      position: relative;
+      width: 52px;
+      height: 28px;
+      border-radius: 14px;
+      border: 2px solid var(--border);
+      background: var(--surface-card);
+      cursor: pointer;
+      transition: border-color 0.3s;
+    }
+
+    .theme-toggle::after {
+      content: '';
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--accent);
+      transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    [data-theme="dark"] .theme-toggle::after {
+      transform: translateX(24px);
+    }
+
+    .theme-toggle:hover {
+      border-color: var(--accent);
+    }
+
+    .theme-icon {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.7rem;
+      line-height: 1;
+    }
+
+    .theme-icon.sun {
+      left: 6px;
+    }
+
+    .theme-icon.moon {
+      right: 6px;
+    }
+
+    .demo-description {
+      background: var(--accent-surface);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 2.5rem;
+      border: 1px solid var(--border);
+    }
+
+    .demo-description p {
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+      line-height: 1.7;
+    }
+
+    .demo-description strong {
+      color: var(--accent);
+    }
+
+    .content-grid {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .content-card {
+      background: var(--surface-card);
+      border-radius: 12px;
+      padding: 1.5rem;
+      border: 1px solid var(--border);
+      box-shadow: 0 2px 8px var(--shadow);
+    }
+
+    .content-card h3 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .content-card p {
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    .content-card .badge {
+      display: inline-block;
+      margin-top: 0.75rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 5px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      background: var(--accent-surface);
+      color: var(--accent);
+    }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .stat-card {
+      background: var(--surface-card);
+      border-radius: 12px;
+      padding: 1.25rem;
+      text-align: center;
+      border: 1px solid var(--border);
+    }
+
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 0.25rem;
+    }
+
+    .stat-label {
+      font-size: 0.72rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .code-block {
+      margin-top: 2rem;
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.75rem;
+      line-height: 1.9;
+      color: var(--text-secondary);
+      overflow-x: auto;
+    }
+
+    .code-block .comment {
+      color: oklch(0.55 0 0);
+    }
+
+    .code-block .keyword {
+      color: var(--accent);
+    }
+
+    /* 圆形扩展动画 */
+    ::view-transition-old(root),
+    ::view-transition-new(root) {
+      animation: none;
+      mix-blend-mode: normal;
+    }
+
+    ::view-transition-new(root) {
+      z-index: 9999;
+    }
+
+    ::view-transition-old(root) {
+      z-index: 1;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      ::view-transition-group(*),
+      ::view-transition-old(*),
+      ::view-transition-new(*) {
+        animation-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="topbar">
+      <h1>主题切换</h1>
+      <div class="theme-toggle" id="themeToggle" onclick="toggleTheme(event)">
+        <span class="theme-icon sun">☀️</span>
+        <span class="theme-icon moon">🌙</span>
+      </div>
+    </div>
+
+    <div class="demo-description">
+      <p>
+        点击右上角的开关切换主题。过渡使用 <strong>clipPath 圆形扩展</strong>动画：
+        从点击位置开始，新主题如墨水扩散般覆盖整个页面。这通过在
+        <code>transition.ready</code> Promise 中使用 Web Animations API 实现。
+      </p>
+    </div>
+
+    <div class="content-grid">
+      <div class="content-card">
+        <h3>核心实现原理</h3>
+        <p>在 transition.ready 回调中，对 ::view-transition-new(root) 伪元素应用 clip-path 动画，从点击坐标扩展到覆盖全屏的圆形。</p>
+        <span class="badge">CSS clip-path</span>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-value">60</div>
+          <div class="stat-label">FPS</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">0</div>
+          <div class="stat-label">重排</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">GPU</div>
+          <div class="stat-label">加速</div>
+        </div>
+      </div>
+
+      <div class="content-card">
+        <h3>用户体验优势</h3>
+        <p>与传统的瞬间切换相比，圆形扩展动画给用户一种"意图延续"感——视觉焦点从操作点向外辐射，符合直觉预期。</p>
+        <span class="badge">UX Pattern</span>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <span class="comment">// 获取点击坐标，计算到最远角的距离</span><br>
+      <span class="keyword">const</span> x = event.clientX, y = event.clientY;<br>
+      <span class="keyword">const</span> radius = Math.hypot(<br>
+      &nbsp;&nbsp;Math.max(x, innerWidth - x),<br>
+      &nbsp;&nbsp;Math.max(y, innerHeight - y)<br>
+      );<br><br>
+      <span class="comment">// 在 ready 后对新快照应用 clip-path 动画</span><br>
+      transition.ready.then(() => {<br>
+      &nbsp;&nbsp;document.documentElement.animate(<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{ clipPath: [<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`circle(0px at ${x}px ${y}px)`,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`circle(${radius}px at ${x}px ${y}px)`<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;]},<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;{ duration: 600, pseudoElement: <span class="keyword">'::view-transition-new(root)'</span> }<br>
+      &nbsp;&nbsp;);<br>
+      });
+    </div>
+  </div>
+
+  <script>
+    function toggleTheme(event) {
+      const isDark = document.documentElement.dataset.theme === 'dark';
+      const x = event.clientX;
+      const y = event.clientY;
+      const radius = Math.hypot(
+        Math.max(x, window.innerWidth - x),
+        Math.max(y, window.innerHeight - y)
+      );
+
+      if (!document.startViewTransition) {
+        document.documentElement.dataset.theme = isDark ? 'light' : 'dark';
+        return;
+      }
+
+      const transition = document.startViewTransition(() => {
+        document.documentElement.dataset.theme = isDark ? 'light' : 'dark';
+      });
+
+      transition.ready.then(() => {
+        document.documentElement.animate(
+          { clipPath: [
+            `circle(0px at ${x}px ${y}px)`,
+            `circle(${radius}px at ${x}px ${y}px)`
+          ]},
+          {
+            duration: 600,
+            easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+            pseudoElement: '::view-transition-new(root)',
+          }
+        );
+      });
+    }
+  </script>
+</body>
+</html>

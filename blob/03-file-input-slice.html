@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>03 · File、预览与 slice</title>
+  <link rel="stylesheet" href="./shared.css">
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <span class="eyebrow">File Extends Blob</span>
+      <h1>用户选择的 File 也可以当作 Blob 使用</h1>
+      <p class="lead">File 继承自 Blob，除了 <code>size</code>、<code>type</code> 和读取方法外，还带有 <code>name</code>、<code>lastModified</code> 等文件元信息。</p>
+      <nav class="nav">
+        <a class="button secondary" href="./index.html">返回目录</a>
+        <a class="button secondary" href="./04-stream-large-blob.html">下一个示例</a>
+      </nav>
+    </section>
+
+    <section class="grid">
+      <div class="panel">
+        <h2>选择本地文件</h2>
+        <label>
+          文件
+          <input id="fileInput" type="file">
+        </label>
+        <div class="controls">
+          <button id="readBtn" disabled>读取文件</button>
+          <button class="secondary" id="sliceBtn" disabled>slice 前 128 字节</button>
+          <button class="secondary" id="tailBtn" disabled>slice 末尾 128 字节</button>
+        </div>
+        <div class="metrics">
+          <div class="metric"><strong>name</strong><span id="nameOut">-</span></div>
+          <div class="metric"><strong>size</strong><span id="sizeOut">-</span></div>
+          <div class="metric"><strong>type</strong><span id="typeOut">-</span></div>
+          <div class="metric"><strong>modified</strong><span id="modifiedOut">-</span></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>预览</h2>
+        <div id="preview" class="preview">选择文件后会显示文本或图片预览。</div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>输出</h2>
+      <pre id="output">等待选择文件。</pre>
+    </section>
+  </main>
+
+  <script>
+    const fileInput = document.querySelector('#fileInput');
+    const readBtn = document.querySelector('#readBtn');
+    const sliceBtn = document.querySelector('#sliceBtn');
+    const tailBtn = document.querySelector('#tailBtn');
+    const output = document.querySelector('#output');
+    const preview = document.querySelector('#preview');
+    const nameOut = document.querySelector('#nameOut');
+    const sizeOut = document.querySelector('#sizeOut');
+    const typeOut = document.querySelector('#typeOut');
+    const modifiedOut = document.querySelector('#modifiedOut');
+    let objectUrl = '';
+
+    function cleanupUrl() {
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+        objectUrl = '';
+      }
+    }
+
+    function getFile() {
+      return fileInput.files[0] || null;
+    }
+
+    function formatSize(size) {
+      return new Intl.NumberFormat('zh-CN').format(size) + ' bytes';
+    }
+
+    fileInput.addEventListener('change', () => {
+      const file = getFile();
+      cleanupUrl();
+      preview.textContent = '选择文件后会显示文本或图片预览。';
+
+      const hasFile = Boolean(file);
+      readBtn.disabled = !hasFile;
+      sliceBtn.disabled = !hasFile;
+      tailBtn.disabled = !hasFile;
+
+      if (!file) return;
+
+      nameOut.textContent = file.name;
+      sizeOut.textContent = formatSize(file.size);
+      typeOut.textContent = file.type || '(unknown)';
+      modifiedOut.textContent = new Date(file.lastModified).toLocaleString('zh-CN');
+      output.textContent = `File selected.
+
+file instanceof Blob: ${file instanceof Blob}
+file instanceof File: ${file instanceof File}
+
+File adds:
+- name: ${file.name}
+- lastModified: ${file.lastModified}`;
+    });
+
+    readBtn.addEventListener('click', async () => {
+      const file = getFile();
+      if (!file) return;
+
+      cleanupUrl();
+      preview.innerHTML = '';
+
+      if (file.type.startsWith('image/')) {
+        objectUrl = URL.createObjectURL(file);
+        const img = document.createElement('img');
+        img.src = objectUrl;
+        img.alt = file.name;
+        preview.append(img);
+        output.textContent = '图片 File 直接作为 Blob 创建对象 URL 进行预览。';
+        return;
+      }
+
+      const text = await file.slice(0, 4096).text();
+      preview.textContent = text || '(空文件或非文本内容)';
+      output.textContent = `读取 file.slice(0, 4096).text()。
+如果文件很大，只预览前 4KB，避免一次性把全部内容读入内存。`;
+    });
+
+    sliceBtn.addEventListener('click', async () => {
+      const file = getFile();
+      if (!file) return;
+
+      const chunk = file.slice(0, 128, file.type);
+      const buffer = await chunk.arrayBuffer();
+      output.textContent = `const chunk = file.slice(0, 128, file.type);
+
+chunk.size = ${chunk.size}
+chunk.type = "${chunk.type}"
+bytes =
+${[...new Uint8Array(buffer)].join(' ')}`;
+    });
+
+    tailBtn.addEventListener('click', async () => {
+      const file = getFile();
+      if (!file) return;
+
+      const chunk = file.slice(-128);
+      const text = await chunk.text();
+      output.textContent = `const tail = file.slice(-128);
+
+tail.size = ${chunk.size}
+tail text preview =
+${text}`;
+    });
+
+    window.addEventListener('pagehide', cleanupUrl);
+  </script>
+</body>
+</html>

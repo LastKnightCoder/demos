@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>View Transition - 基础交叉淡入淡出</title>
+  <style>
+    *,
+    *::before,
+    *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --surface: oklch(0.17 0.008 260);
+      --surface-raised: oklch(0.22 0.01 260);
+      --surface-overlay: oklch(0.28 0.012 260);
+      --text-primary: oklch(0.93 0.006 260);
+      --text-secondary: oklch(0.68 0.008 260);
+      --accent: oklch(0.72 0.18 155);
+      --accent-dim: oklch(0.55 0.14 155);
+      --radius: 12px;
+      --transition-duration: 0.4s;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: var(--surface);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 4rem 1.5rem;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    .header h1 {
+      font-size: 1.75rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.5rem;
+    }
+
+    .header p {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      max-width: 50ch;
+    }
+
+    .demo-area {
+      width: 100%;
+      max-width: 600px;
+      background: var(--surface-raised);
+      border-radius: var(--radius);
+      padding: 2.5rem;
+      border: 1px solid oklch(0.3 0.01 260);
+    }
+
+    .content-block {
+      view-transition-name: content;
+    }
+
+    .content-block h2 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: var(--accent);
+    }
+
+    .content-block p {
+      color: var(--text-secondary);
+      line-height: 1.7;
+      font-size: 0.92rem;
+    }
+
+    .content-block .illustration {
+      width: 100%;
+      height: 180px;
+      border-radius: 8px;
+      margin: 1.5rem 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+      transition: background 0.3s;
+    }
+
+    .controls {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 2rem;
+      flex-wrap: wrap;
+    }
+
+    button {
+      padding: 0.6rem 1.2rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    button:active {
+      transform: scale(0.96);
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: oklch(0.15 0.01 155);
+    }
+
+    .btn-primary:hover {
+      box-shadow: 0 4px 20px oklch(0.72 0.18 155 / 0.3);
+    }
+
+    .btn-secondary {
+      background: var(--surface-overlay);
+      color: var(--text-primary);
+    }
+
+    .btn-secondary:hover {
+      background: oklch(0.32 0.012 260);
+    }
+
+    .code-hint {
+      margin-top: 2.5rem;
+      padding: 1.25rem;
+      background: oklch(0.12 0.006 260);
+      border-radius: 8px;
+      border: 1px solid oklch(0.25 0.008 260);
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      line-height: 1.8;
+      overflow-x: auto;
+    }
+
+    .code-hint .keyword {
+      color: oklch(0.75 0.15 310);
+    }
+
+    .code-hint .function {
+      color: oklch(0.78 0.16 200);
+    }
+
+    .code-hint .string {
+      color: var(--accent);
+    }
+
+    ::view-transition-old(content),
+    ::view-transition-new(content) {
+      animation-duration: var(--transition-duration);
+      animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      ::view-transition-group(*),
+      ::view-transition-old(*),
+      ::view-transition-new(*) {
+        animation-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>基础交叉淡入淡出</h1>
+    <p>View Transition 最基本的用法：通过 <code>document.startViewTransition()</code> 触发内容切换时的平滑过渡</p>
+  </div>
+
+  <div class="demo-area">
+    <div class="content-block" id="content">
+      <h2>视图过渡 API</h2>
+      <div class="illustration" style="background: oklch(0.25 0.04 155);">🌊</div>
+      <p>View Transition API 提供了一种机制，可以在更新 DOM 内容的同时轻松创建不同 DOM 状态之间的动画过渡。点击下方按钮查看过渡效果。</p>
+    </div>
+
+    <div class="controls">
+      <button class="btn-primary" onclick="switchContent()">切换内容</button>
+      <button class="btn-secondary" onclick="switchWithoutTransition()">无过渡切换（对比）</button>
+    </div>
+  </div>
+
+  <div class="code-hint">
+    <span class="keyword">document</span>.<span class="function">startViewTransition</span>(() => {<br>
+    &nbsp;&nbsp;<span class="keyword">// 在这里更新 DOM</span><br>
+    &nbsp;&nbsp;<span class="function">updateContent</span>();<br>
+    });
+  </div>
+
+  <script>
+    const contents = [
+      {
+        title: '视图过渡 API',
+        emoji: '🌊',
+        color: 'oklch(0.25 0.04 155)',
+        text: 'View Transition API 提供了一种机制，可以在更新 DOM 内容的同时轻松创建不同 DOM 状态之间的动画过渡。点击下方按钮查看过渡效果。'
+      },
+      {
+        title: '声明式动画',
+        emoji: '✨',
+        color: 'oklch(0.25 0.04 280)',
+        text: '与传统的 JavaScript 动画库不同，View Transition 大部分工作通过 CSS 完成。浏览器负责截图和合成，性能极佳。'
+      },
+      {
+        title: '渐进增强',
+        emoji: '🧱',
+        color: 'oklch(0.25 0.04 30)',
+        text: '不支持 View Transition 的浏览器会直接跳过动画执行 DOM 更新，不会阻塞功能。这意味着你可以安全地使用它而无需担心兼容性问题。'
+      },
+      {
+        title: '合成层运行',
+        emoji: '🚀',
+        color: 'oklch(0.25 0.04 80)',
+        text: '过渡动画在合成层上执行，不触发布局重排。即使过渡复杂的大面积区域，也能保持 60fps 的流畅度。'
+      }
+    ];
+
+    let currentIndex = 0;
+
+    function updateContent() {
+      currentIndex = (currentIndex + 1) % contents.length;
+      const data = contents[currentIndex];
+      const block = document.getElementById('content');
+      block.innerHTML = `
+        <h2>${data.title}</h2>
+        <div class="illustration" style="background: ${data.color};">${data.emoji}</div>
+        <p>${data.text}</p>
+      `;
+    }
+
+    function switchContent() {
+      if (!document.startViewTransition) {
+        updateContent();
+        return;
+      }
+      document.startViewTransition(() => updateContent());
+    }
+
+    function switchWithoutTransition() {
+      updateContent();
+    }
+  </script>
+</body>
+</html>

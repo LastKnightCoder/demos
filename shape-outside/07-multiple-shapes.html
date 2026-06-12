@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>shape-outside 综合示例</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 0 20px;
+      line-height: 1.8;
+      color: #333;
+    }
+
+    h1 {
+      border-bottom: 2px solid #4a90d9;
+      padding-bottom: 10px;
+    }
+
+    .demo {
+      margin: 30px 0;
+      padding: 20px;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      background: #fafafa;
+    }
+
+    .demo h2 {
+      margin-top: 0;
+      color: #4a90d9;
+    }
+
+    /* 杂志风格布局 */
+    .magazine {
+      background: white;
+      padding: 30px;
+      border: 1px solid #ddd;
+    }
+
+    .magazine h2 {
+      font-size: 2em;
+      margin-bottom: 20px;
+      font-family: Georgia, serif;
+    }
+
+    .magazine .avatar {
+      float: left;
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      shape-outside: circle(50%);
+      shape-margin: 15px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 3em;
+      font-weight: bold;
+    }
+
+    /* 两侧环绕 */
+    .dual-wrap .left-shape {
+      float: left;
+      width: 120px;
+      height: 250px;
+      background: linear-gradient(to bottom, #11998e, #38ef7d);
+      clip-path: polygon(0% 0%, 100% 10%, 80% 50%, 100% 90%, 0% 100%);
+      shape-outside: polygon(0% 0%, 100% 10%, 80% 50%, 100% 90%, 0% 100%);
+      shape-margin: 10px;
+    }
+
+    .dual-wrap .right-shape {
+      float: right;
+      width: 120px;
+      height: 250px;
+      background: linear-gradient(to bottom, #f5af19, #f12711);
+      clip-path: polygon(100% 0%, 0% 10%, 20% 50%, 0% 90%, 100% 100%);
+      shape-outside: polygon(100% 0%, 0% 10%, 20% 50%, 0% 90%, 100% 100%);
+      shape-margin: 10px;
+    }
+
+    /* 对角线布局 */
+    .diagonal .top-shape {
+      float: right;
+      width: 300px;
+      height: 150px;
+      background: linear-gradient(135deg, #a18cd1, #fbc2eb);
+      clip-path: polygon(30% 0%, 100% 0%, 100% 100%, 0% 100%);
+      shape-outside: polygon(30% 0%, 100% 0%, 100% 100%, 0% 100%);
+      shape-margin: 12px;
+    }
+
+    .diagonal .bottom-shape {
+      float: left;
+      width: 300px;
+      height: 150px;
+      background: linear-gradient(135deg, #ffecd2, #fcb69f);
+      clip-path: polygon(0% 0%, 100% 0%, 70% 100%, 0% 100%);
+      shape-outside: polygon(0% 0%, 100% 0%, 70% 100%, 0% 100%);
+      shape-margin: 12px;
+      margin-top: 10px;
+    }
+
+    /* 波浪效果 */
+    .wave-container {
+      position: relative;
+      min-height: 300px;
+    }
+
+    .wave-left {
+      float: left;
+      width: 100px;
+      height: 300px;
+      shape-outside: polygon(
+        0% 0%, 80% 0%,
+        60% 10%, 80% 20%,
+        60% 30%, 80% 40%,
+        60% 50%, 80% 60%,
+        60% 70%, 80% 80%,
+        60% 90%, 80% 100%,
+        0% 100%
+      );
+      background: linear-gradient(to bottom, #667eea, #764ba2);
+      clip-path: polygon(
+        0% 0%, 80% 0%,
+        60% 10%, 80% 20%,
+        60% 30%, 80% 40%,
+        60% 50%, 80% 60%,
+        60% 70%, 80% 80%,
+        60% 90%, 80% 100%,
+        0% 100%
+      );
+      shape-margin: 8px;
+    }
+
+    .clearfix::after {
+      content: "";
+      display: block;
+      clear: both;
+    }
+
+    code {
+      background: #f0f0f0;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 0.9em;
+    }
+  </style>
+</head>
+<body>
+  <h1>shape-outside 综合示例</h1>
+  <p>展示 <code>shape-outside</code> 在实际场景中的应用，包括杂志排版、双侧环绕、对角线布局和波浪效果。</p>
+
+  <div class="demo magazine clearfix">
+    <h2>人物专访</h2>
+    <div class="avatar">A</div>
+    <p>张三是一位资深的前端工程师，在过去的十年里，他一直致力于推动 Web 标准的发展和普及。从最早的 CSS2.1 时代到如今功能丰富的 CSS3，他见证了网页排版技术的巨大变革。"shape-outside 是我最喜欢的 CSS 属性之一，"他说道，"它让我们能够在网页上实现曾经只有在印刷媒体中才能看到的排版效果。"张三目前在一家知名互联网公司担任技术总监，他经常在技术会议上分享关于现代 CSS 布局的最新进展。在他的推动下，团队已经在多个项目中使用了 shape-outside 来增强页面的视觉表现力。</p>
+  </div>
+
+  <div class="demo dual-wrap clearfix">
+    <h2>两侧夹击布局</h2>
+    <div class="left-shape"></div>
+    <div class="right-shape"></div>
+    <p>通过在左右两侧分别放置浮动元素并应用 shape-outside，可以创造出文字被两侧形状夹在中间的效果。这种布局在创意网页设计中非常引人注目。文字会同时沿着两侧的不规则边缘进行环绕，形成一种动态的、有节奏感的排版。在中间窄处文字行变短，在两侧形状退让的地方文字行又变长，形成富有韵律的视觉效果。这种技术可以用来模拟书页的边缘装饰，或者创建独特的艺术性排版。通过调整两侧多边形的顶点位置，你可以精确控制文字流动的形态，营造出独特的阅读体验。</p>
+  </div>
+
+  <div class="demo diagonal clearfix">
+    <h2>对角线布局</h2>
+    <div class="top-shape"></div>
+    <p>使用斜切的多边形可以创建对角线风格的布局。右上角的斜切形状让文字在顶部向左退让，形成一种动态的、现代感十足的排版效果。这种设计在创意作品集网站或者艺术类杂志中非常流行。</p>
+    <div class="bottom-shape"></div>
+    <p>配合底部左侧的另一个斜切形状，文字在底部又向右退让，形成对角互补的视觉效果。两个形状的斜线方向相反，创造出一种对称又不失动感的布局结构。这种技术可以为页面增添现代感和创意氛围。</p>
+  </div>
+
+  <div class="demo wave-container clearfix">
+    <h2>波浪边缘效果</h2>
+    <div class="wave-left"></div>
+    <p>通过在 polygon() 中定义交替的顶点位置，可以创建波浪形的边缘效果。左侧的形状使用了锯齿状的多边形，文字沿着这种波浪边缘排列，创造出一种动态的、有节奏感的视觉效果。这种技术常用于装饰性边栏或者创意性的页面分隔元素。你可以调整波浪的频率（顶点的密度）和振幅（凸出和凹入的程度）来获得不同的视觉效果。波浪形边缘为原本单调的矩形布局增添了有机的、自然的感觉。文字随着波浪起伏，每一行的起始位置都略有不同，这种细微的变化让阅读过程变得更加有趣。如果将这种效果应用到整个页面的两侧，就可以创建出非常独特的页面风格。</p>
+  </div>
+</body>
+</html>

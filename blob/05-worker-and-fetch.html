@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>05 · Worker 与 fetch</title>
+  <link rel="stylesheet" href="./shared.css">
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <span class="eyebrow">Blob URL Runtime</span>
+      <h1>把 Blob 当作运行时代码和 fetch 资源</h1>
+      <p class="lead">对象 URL 不只用于下载，也可以作为 Worker 脚本地址，还能通过 <code>fetch(blobURL)</code> 重新读取为 Response。</p>
+      <nav class="nav">
+        <a class="button secondary" href="./index.html">返回目录</a>
+        <a class="button secondary" href="./06-canvas-image-blob.html">下一个示例</a>
+      </nav>
+    </section>
+
+    <section class="grid">
+      <div class="panel">
+        <h2>Worker 脚本 Blob</h2>
+        <label>
+          计算上限
+          <input id="limitInput" type="number" min="1000" max="200000" step="1000" value="50000">
+        </label>
+        <div class="controls">
+          <button id="runWorkerBtn">创建 Worker 并计算</button>
+          <button class="secondary" id="stopWorkerBtn" disabled>终止 Worker</button>
+        </div>
+        <div class="note">Worker 代码来自字符串 Blob；真实项目更推荐单独的 worker 文件，便于缓存、调试和安全审查。</div>
+      </div>
+
+      <div class="panel">
+        <h2>fetch(blobURL)</h2>
+        <label>
+          JSON 内容
+          <textarea id="jsonInput">{"source":"Blob URL","method":"fetch","ok":true}</textarea>
+        </label>
+        <div class="controls">
+          <button id="fetchBtn">创建并 fetch</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>输出</h2>
+      <pre id="output">选择一个操作。</pre>
+    </section>
+  </main>
+
+  <script>
+    const limitInput = document.querySelector('#limitInput');
+    const jsonInput = document.querySelector('#jsonInput');
+    const output = document.querySelector('#output');
+    const stopWorkerBtn = document.querySelector('#stopWorkerBtn');
+    let worker = null;
+    let workerUrl = '';
+
+    function cleanupWorker() {
+      if (worker) {
+        worker.terminate();
+        worker = null;
+      }
+      if (workerUrl) {
+        URL.revokeObjectURL(workerUrl);
+        workerUrl = '';
+      }
+      stopWorkerBtn.disabled = true;
+    }
+
+    document.querySelector('#runWorkerBtn').addEventListener('click', () => {
+      cleanupWorker();
+
+      const workerCode = `
+        self.onmessage = (event) => {
+          const limit = event.data.limit;
+          const primes = [];
+          outer:
+          for (let number = 2; number <= limit; number += 1) {
+            for (let divisor = 2; divisor * divisor <= number; divisor += 1) {
+              if (number % divisor === 0) continue outer;
+            }
+            primes.push(number);
+          }
+          self.postMessage({
+            limit,
+            count: primes.length,
+            lastPrime: primes.at(-1)
+          });
+        };
+      `;
+
+      const scriptBlob = new Blob([workerCode], { type: 'text/javascript' });
+      workerUrl = URL.createObjectURL(scriptBlob);
+      worker = new Worker(workerUrl);
+      stopWorkerBtn.disabled = false;
+      output.textContent = `Worker created from Blob URL:
+${workerUrl}
+
+Calculating primes...`;
+
+      worker.addEventListener('message', (event) => {
+        output.textContent = `Worker result:
+limit: ${event.data.limit}
+prime count: ${event.data.count}
+last prime: ${event.data.lastPrime}
+
+const scriptBlob = new Blob([workerCode], { type: 'text/javascript' });
+const workerUrl = URL.createObjectURL(scriptBlob);
+const worker = new Worker(workerUrl);`;
+      });
+
+      worker.postMessage({ limit: Number(limitInput.value) });
+    });
+
+    stopWorkerBtn.addEventListener('click', () => {
+      cleanupWorker();
+      output.textContent = 'Worker terminated and Blob URL revoked.';
+    });
+
+    document.querySelector('#fetchBtn').addEventListener('click', async () => {
+      const blob = new Blob([jsonInput.value], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+
+      try {
+        const response = await fetch(url);
+        const clonedBlob = await response.blob();
+        const text = await clonedBlob.text();
+        output.textContent = `fetch(blobURL) result:
+response.ok: ${response.ok}
+response.status: ${response.status}
+Content-Type: ${response.headers.get('content-type')}
+Blob type: ${clonedBlob.type}
+Blob size: ${clonedBlob.size}
+
+Body:
+${text}`;
+      } finally {
+        URL.revokeObjectURL(url);
+      }
+    });
+
+    window.addEventListener('pagehide', cleanupWorker);
+  </script>
+</body>
+</html>

@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MPA 过渡 - 文章详情</title>
+  <style>
+    @view-transition {
+      navigation: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --surface: oklch(0.97 0.004 45);
+      --surface-card: oklch(1 0 0);
+      --text-primary: oklch(0.18 0.012 45);
+      --text-secondary: oklch(0.52 0.008 45);
+      --accent: oklch(0.52 0.18 25);
+      --accent-light: oklch(0.95 0.02 25);
+      --border: oklch(0.91 0.005 45);
+      --radius: 14px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: var(--surface);
+      color: var(--text-primary);
+      min-height: 100vh;
+      padding: 3rem 1.5rem;
+    }
+
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    .site-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 2.5rem;
+      view-transition-name: site-header;
+    }
+
+    .site-logo {
+      font-size: 1.2rem;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .back-link {
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      transition: color 0.15s;
+    }
+
+    .back-link:hover {
+      color: var(--text-primary);
+    }
+
+    .article-hero {
+      width: 100%;
+      height: 320px;
+      object-fit: cover;
+      border-radius: var(--radius);
+      display: block;
+      margin-bottom: 2rem;
+    }
+
+    .article-header {
+      margin-bottom: 2rem;
+    }
+
+    .article-tag {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      background: var(--accent-light);
+      color: var(--accent);
+      border-radius: 5px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+    }
+
+    .article-title {
+      font-size: 1.75rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.3;
+      margin-bottom: 0.75rem;
+    }
+
+    .article-meta {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      display: flex;
+      gap: 1.5rem;
+    }
+
+    .article-body {
+      font-size: 0.92rem;
+      line-height: 1.9;
+      color: oklch(0.3 0.008 45);
+    }
+
+    .article-body p {
+      margin-bottom: 1.25rem;
+      max-width: 65ch;
+    }
+
+    .article-body h2 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-top: 2rem;
+      margin-bottom: 0.75rem;
+      color: var(--text-primary);
+    }
+
+    .article-body code {
+      background: oklch(0.94 0.005 45);
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      font-size: 0.82rem;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+    }
+
+    .article-body pre {
+      background: oklch(0.15 0.01 240);
+      color: oklch(0.88 0.005 210);
+      padding: 1.25rem;
+      border-radius: 10px;
+      margin: 1.25rem 0;
+      overflow-x: auto;
+      font-size: 0.78rem;
+      line-height: 1.7;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+    }
+
+    /* View Transition names - matched by article ID */
+    .hero-1 { view-transition-name: article-hero-1; }
+    .hero-2 { view-transition-name: article-hero-2; }
+    .hero-3 { view-transition-name: article-hero-3; }
+
+    .title-1 { view-transition-name: article-title-1; }
+    .title-2 { view-transition-name: article-title-2; }
+    .title-3 { view-transition-name: article-title-3; }
+
+    /* Transition animations */
+    ::view-transition-old(root) {
+      animation-duration: 0.2s;
+      animation-timing-function: ease-out;
+    }
+
+    ::view-transition-new(root) {
+      animation-duration: 0.35s;
+      animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    ::view-transition-group(site-header) {
+      animation-duration: 0.3s;
+    }
+
+    ::view-transition-group(article-hero-1),
+    ::view-transition-group(article-hero-2),
+    ::view-transition-group(article-hero-3) {
+      animation-duration: 0.4s;
+      animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    ::view-transition-group(article-title-1),
+    ::view-transition-group(article-title-2),
+    ::view-transition-group(article-title-3) {
+      animation-duration: 0.35s;
+      animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      ::view-transition-group(*),
+      ::view-transition-old(*),
+      ::view-transition-new(*) {
+        animation-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="site-header">
+      <a class="site-logo" href="07-mpa-page-a.html">Transitions.</a>
+      <a class="back-link" href="07-mpa-page-a.html">← 返回列表</a>
+    </header>
+
+    <article id="article">
+    </article>
+  </div>
+
+  <script>
+    const articles = {
+      '1': {
+        image: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&h=400&fit=crop',
+        tag: '深度解析',
+        title: 'View Transition API 完全指南',
+        date: '2024-06-15',
+        readTime: '12 分钟',
+        heroClass: 'hero-1',
+        titleClass: 'title-1',
+        body: `
+          <p>View Transition API 是浏览器原生的页面过渡动画解决方案。它通过在 DOM 更新前后分别截取快照，然后在合成层上执行动画，实现了流畅的视觉过渡效果。</p>
+
+          <h2>工作原理</h2>
+          <p>当你调用 <code>document.startViewTransition()</code> 时，浏览器会执行以下步骤：首先捕获当前页面标记了 <code>view-transition-name</code> 的元素快照；然后执行你的 DOM 更新回调；最后捕获更新后的快照，并在两者之间执行交叉淡入淡出动画。</p>
+
+          <h2>跨文档过渡</h2>
+          <p>对于传统的多页面应用（MPA），只需在两个页面的 CSS 中添加 <code>@view-transition { navigation: auto; }</code> 即可启用。浏览器会自动在同源页面导航时触发过渡。</p>
+
+          <pre>@view-transition {
+  navigation: auto;
+}
+
+.article-hero {
+  view-transition-name: article-hero;
+}</pre>
+
+          <p>本 demo 就是一个跨文档过渡的实际案例。当你从列表页点击文章进入详情页时，共享的缩略图会平滑地变形为大图，标题也会流畅地移动到新位置。</p>
+
+          <h2>注意事项</h2>
+          <p>跨文档过渡需要通过 HTTP 服务器访问（不能是 file:// 协议）。同时，两个页面必须是同源的，且都声明了 <code>@view-transition</code> 规则。</p>
+        `
+      },
+      '2': {
+        image: 'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=800&h=400&fit=crop',
+        tag: '最佳实践',
+        title: 'CSS 容器查询实战',
+        date: '2024-06-08',
+        readTime: '9 分钟',
+        heroClass: 'hero-2',
+        titleClass: 'title-2',
+        body: `
+          <p>容器查询（Container Queries）让组件可以根据父容器的尺寸来调整自身布局，而不是依赖视口宽度。这是真正的组件级响应式设计。</p>
+
+          <h2>为什么需要容器查询</h2>
+          <p>传统的媒体查询基于视口宽度，但一个组件可能被放置在侧边栏、主内容区或全宽位置。相同的视口宽度下，组件的可用空间完全不同。容器查询解决了这个"上下文感知"问题。</p>
+
+          <h2>基本用法</h2>
+          <pre>.card-container {
+  container-type: inline-size;
+  container-name: card;
+}
+
+@container card (min-width: 400px) {
+  .card { grid-template-columns: 200px 1fr; }
+}</pre>
+
+          <p>首先用 <code>container-type</code> 声明一个容器，然后在 <code>@container</code> 规则中根据容器的尺寸编写样式。组件不再关心自己在哪里，只关心有多少空间可用。</p>
+
+          <h2>与 View Transition 配合</h2>
+          <p>容器查询导致的布局变化可以配合 View Transition 实现平滑过渡。当容器尺寸改变时，触发 <code>startViewTransition()</code> 可以让布局变化不再突兀。</p>
+        `
+      },
+      '3': {
+        image: 'https://images.unsplash.com/photo-1614741118887-7a4ee193a5fa?w=800&h=400&fit=crop',
+        tag: '新特性',
+        title: 'Popover API 交互模式',
+        date: '2024-05-28',
+        readTime: '7 分钟',
+        heroClass: 'hero-3',
+        titleClass: 'title-3',
+        body: `
+          <p>Popover API 是浏览器内置的弹出层解决方案。无需 JavaScript，即可实现具备正确焦点管理、层叠上下文和关闭行为的弹出组件。</p>
+
+          <h2>核心优势</h2>
+          <p>传统的弹出层需要手动处理：点击外部关闭、焦点陷阱、z-index 管理、可访问性属性等。Popover API 把这些全部交给浏览器处理，开发者只需声明意图。</p>
+
+          <h2>语法示例</h2>
+          <pre>&lt;button popovertarget="my-popup"&gt;打开&lt;/button&gt;
+
+&lt;div id="my-popup" popover&gt;
+  这是弹出内容
+&lt;/div&gt;</pre>
+
+          <p>就是这么简单。浏览器会自动处理显示/隐藏、动画、焦点管理和 ESC 关闭。弹出层默认渲染在顶层（top layer），不受父元素 overflow 和 z-index 影响。</p>
+
+          <h2>与 Anchor Positioning 结合</h2>
+          <p>搭配 CSS Anchor Positioning，可以让弹出层精确定位在触发元素旁边，并在空间不足时自动翻转位置。这组合替代了大部分 tooltip/dropdown 库的功能。</p>
+        `
+      }
+    };
+
+    function render() {
+      const params = new URLSearchParams(window.location.search);
+      const id = params.get('id') || '1';
+      const article = articles[id] || articles['1'];
+
+      document.getElementById('article').innerHTML = `
+        <img class="article-hero ${article.heroClass}" src="${article.image}" alt="">
+        <div class="article-header">
+          <span class="article-tag">${article.tag}</span>
+          <h1 class="article-title ${article.titleClass}">${article.title}</h1>
+          <div class="article-meta">
+            <span>${article.date}</span>
+            <span>阅读 ${article.readTime}</span>
+          </div>
+        </div>
+        <div class="article-body">
+          ${article.body}
+        </div>
+      `;
+
+      document.title = `${article.title} - MPA 过渡`;
+    }
+
+    render();
+  </script>
+</body>
+</html>

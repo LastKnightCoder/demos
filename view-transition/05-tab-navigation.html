@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>View Transition - 选项卡导航</title>
+  <style>
+    *,
+    *::before,
+    *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --surface: oklch(0.98 0.003 210);
+      --surface-card: oklch(1 0 0);
+      --text-primary: oklch(0.15 0.01 210);
+      --text-secondary: oklch(0.5 0.006 210);
+      --accent: oklch(0.5 0.2 260);
+      --accent-light: oklch(0.95 0.03 260);
+      --border: oklch(0.91 0.004 210);
+      --radius: 12px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: var(--surface);
+      color: var(--text-primary);
+      min-height: 100vh;
+      padding: 3rem 1.5rem;
+    }
+
+    .container {
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+
+    .header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      margin-bottom: 0.5rem;
+    }
+
+    .header p {
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+    }
+
+    .app-frame {
+      background: var(--surface-card);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: 0 4px 24px oklch(0.2 0 0 / 0.04);
+      overflow: hidden;
+    }
+
+    .tab-bar {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 1rem;
+      text-align: center;
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: color 0.2s;
+      position: relative;
+      user-select: none;
+    }
+
+    .tab:hover {
+      color: var(--text-primary);
+    }
+
+    .tab.active {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .tab-indicator {
+      position: absolute;
+      bottom: -1px;
+      height: 2px;
+      background: var(--accent);
+      border-radius: 1px;
+      transition: left 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+                  width 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+      view-transition-name: tab-indicator;
+    }
+
+    .tab-content {
+      padding: 2rem;
+      min-height: 320px;
+      view-transition-name: tab-content;
+    }
+
+    .tab-content h2 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      letter-spacing: -0.02em;
+    }
+
+    .tab-content p {
+      color: var(--text-secondary);
+      font-size: 0.88rem;
+      line-height: 1.7;
+      margin-bottom: 1rem;
+      max-width: 55ch;
+    }
+
+    .feature-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      margin-top: 1.25rem;
+    }
+
+    .feature-list li {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      background: var(--accent-light);
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 500;
+    }
+
+    .feature-list li .icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      background: var(--surface-card);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      flex-shrink: 0;
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+      margin-top: 1.25rem;
+    }
+
+    .metric {
+      padding: 1rem;
+      border-radius: 8px;
+      background: var(--accent-light);
+    }
+
+    .metric-value {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .metric-label {
+      font-size: 0.72rem;
+      color: var(--text-secondary);
+      margin-top: 0.2rem;
+    }
+
+    .code-snippet {
+      margin-top: 1.25rem;
+      padding: 1rem;
+      background: oklch(0.15 0.01 240);
+      border-radius: 8px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.72rem;
+      color: oklch(0.85 0.005 210);
+      line-height: 1.8;
+      overflow-x: auto;
+    }
+
+    .code-snippet .kw { color: oklch(0.75 0.15 310); }
+    .code-snippet .str { color: oklch(0.72 0.16 155); }
+    .code-snippet .cm { color: oklch(0.5 0.01 210); }
+
+    /* View Transition: 方向感知滑动 */
+    @keyframes slide-out-left {
+      to { transform: translateX(-15%); opacity: 0; }
+    }
+    @keyframes slide-in-right {
+      from { transform: translateX(15%); opacity: 0; }
+    }
+    @keyframes slide-out-right {
+      to { transform: translateX(15%); opacity: 0; }
+    }
+    @keyframes slide-in-left {
+      from { transform: translateX(-15%); opacity: 0; }
+    }
+
+    html:active-view-transition-type(slide-forward) {
+      &::view-transition-old(tab-content) {
+        animation: slide-out-left 0.25s ease-in forwards;
+      }
+      &::view-transition-new(tab-content) {
+        animation: slide-in-right 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      }
+    }
+
+    html:active-view-transition-type(slide-backward) {
+      &::view-transition-old(tab-content) {
+        animation: slide-out-right 0.25s ease-in forwards;
+      }
+      &::view-transition-new(tab-content) {
+        animation: slide-in-left 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      }
+    }
+
+    ::view-transition-group(tab-indicator) {
+      animation-duration: 0.3s;
+      animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      ::view-transition-group(*),
+      ::view-transition-old(*),
+      ::view-transition-new(*) {
+        animation-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>选项卡方向感知导航</h1>
+      <p>根据切换方向自动选择向左或向右滑动，使用 View Transition Types 实现</p>
+    </div>
+
+    <div class="app-frame">
+      <div class="tab-bar" id="tabBar">
+        <div class="tab active" data-index="0" onclick="switchTab(0)">概览</div>
+        <div class="tab" data-index="1" onclick="switchTab(1)">特性</div>
+        <div class="tab" data-index="2" onclick="switchTab(2)">指标</div>
+        <div class="tab" data-index="3" onclick="switchTab(3)">代码</div>
+        <div class="tab-indicator" id="indicator"></div>
+      </div>
+
+      <div class="tab-content" id="tabContent">
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const tabContents = [
+      {
+        title: '概览',
+        html: `
+          <h2>View Transition Types</h2>
+          <p>通过传递 types 参数，你可以在同一页面根据不同操作触发不同的 CSS 动画。这个 demo 展示了如何根据选项卡的切换方向选择左滑或右滑动画。</p>
+          <p>尝试点击不同的选项卡——向右的选项卡会让内容向左滑出，向左的选项卡则反之。indicator 会平滑滑动到新位置。</p>
+        `
+      },
+      {
+        title: '特性',
+        html: `
+          <h2>核心特性</h2>
+          <ul class="feature-list">
+            <li><span class="icon">🎯</span> 方向感知：自动判断滑动方向</li>
+            <li><span class="icon">🎨</span> 纯 CSS 动画：通过 :active-view-transition-type() 选择器</li>
+            <li><span class="icon">⚡</span> 零布局抖动：过渡在合成层运行</li>
+            <li><span class="icon">🧱</span> 渐进增强：不支持时正常切换，无动画</li>
+          </ul>
+        `
+      },
+      {
+        title: '指标',
+        html: `
+          <h2>性能表现</h2>
+          <div class="metrics-grid">
+            <div class="metric">
+              <div class="metric-value">16ms</div>
+              <div class="metric-label">每帧预算（60fps）</div>
+            </div>
+            <div class="metric">
+              <div class="metric-value">0</div>
+              <div class="metric-label">Layout Shift</div>
+            </div>
+            <div class="metric">
+              <div class="metric-value">GPU</div>
+              <div class="metric-label">渲染层级</div>
+            </div>
+            <div class="metric">
+              <div class="metric-value">300ms</div>
+              <div class="metric-label">推荐过渡时长</div>
+            </div>
+          </div>
+        `
+      },
+      {
+        title: '代码',
+        html: `
+          <h2>实现代码</h2>
+          <div class="code-snippet">
+            <span class="cm">// 根据方向选择过渡类型</span><br>
+            <span class="kw">const</span> type = newIndex > currentIndex<br>
+            &nbsp;&nbsp;? <span class="str">'slide-forward'</span><br>
+            &nbsp;&nbsp;: <span class="str">'slide-backward'</span>;<br><br>
+            document.startViewTransition({<br>
+            &nbsp;&nbsp;<span class="kw">update</span>: () => renderTab(newIndex),<br>
+            &nbsp;&nbsp;<span class="kw">types</span>: [type],<br>
+            });<br><br>
+            <span class="cm">/* CSS 中根据类型匹配动画 */</span><br>
+            html:<span class="kw">active-view-transition-type</span>(slide-forward) {<br>
+            &nbsp;&nbsp;&::view-transition-old(content) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;animation: slide-out-left 0.25s;<br>
+            &nbsp;&nbsp;}<br>
+            }
+          </div>
+        `
+      }
+    ];
+
+    let currentTab = 0;
+
+    function updateIndicator() {
+      const tabs = document.querySelectorAll('.tab:not(.tab-indicator)');
+      const activeTab = tabs[currentTab];
+      const indicator = document.getElementById('indicator');
+      indicator.style.left = activeTab.offsetLeft + 'px';
+      indicator.style.width = activeTab.offsetWidth + 'px';
+    }
+
+    function renderTab(index) {
+      const tabs = document.querySelectorAll('.tab:not(.tab-indicator)');
+      tabs.forEach((t, i) => t.classList.toggle('active', i === index));
+
+      document.getElementById('tabContent').innerHTML = tabContents[index].html;
+      currentTab = index;
+      updateIndicator();
+    }
+
+    function switchTab(newIndex) {
+      if (newIndex === currentTab) return;
+
+      const type = newIndex > currentTab ? 'slide-forward' : 'slide-backward';
+
+      if (!document.startViewTransition) {
+        renderTab(newIndex);
+        return;
+      }
+
+      document.startViewTransition({
+        update: () => renderTab(newIndex),
+        types: [type],
+      });
+    }
+
+    renderTab(0);
+    window.addEventListener('resize', updateIndicator);
+  </script>
+</body>
+</html>

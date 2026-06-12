@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>01 · 创建与读取 Blob</title>
+  <link rel="stylesheet" href="./shared.css">
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <span class="eyebrow">Blob Basics</span>
+      <h1>创建 Blob，并用不同方法读取内容</h1>
+      <p class="lead">Blob 可以由字符串、ArrayBuffer、TypedArray、DataView、其他 Blob 混合组成。创建后内容不可变，只能创建新的 Blob 或截取切片。</p>
+      <nav class="nav">
+        <a class="button secondary" href="./index.html">返回目录</a>
+        <a class="button secondary" href="./02-object-url-download.html">下一个示例</a>
+      </nav>
+    </section>
+
+    <section class="grid">
+      <div class="panel">
+        <h2>输入内容</h2>
+        <label>
+          文本片段
+          <textarea id="textInput">你好，Blob！
+这段文字会被编码为 UTF-8，然后放入 Blob。</textarea>
+        </label>
+        <label>
+          MIME type
+          <input id="typeInput" value="text/plain;charset=utf-8">
+        </label>
+        <div class="controls">
+          <button id="buildBtn">创建 Blob</button>
+          <button class="secondary" id="readTextBtn" disabled>text()</button>
+          <button class="secondary" id="readBufferBtn" disabled>arrayBuffer()</button>
+          <button class="secondary" id="readBytesBtn" disabled>bytes()</button>
+          <button class="secondary" id="readStreamBtn" disabled>stream()</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Blob 元信息</h2>
+        <div class="metrics">
+          <div class="metric">
+            <strong>size</strong>
+            <span id="sizeOut">-</span>
+          </div>
+          <div class="metric">
+            <strong>type</strong>
+            <span id="typeOut">-</span>
+          </div>
+          <div class="metric">
+            <strong>parts</strong>
+            <span>String + Uint8Array + Blob</span>
+          </div>
+        </div>
+        <div class="note">本例会额外加入一个 Uint8Array 和一个 JSON Blob，展示 blobParts 可以混合多种来源。</div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>读取结果</h2>
+      <pre id="output">点击“创建 Blob”。</pre>
+    </section>
+  </main>
+
+  <script>
+    const textInput = document.querySelector('#textInput');
+    const typeInput = document.querySelector('#typeInput');
+    const sizeOut = document.querySelector('#sizeOut');
+    const typeOut = document.querySelector('#typeOut');
+    const output = document.querySelector('#output');
+    const buttons = [
+      document.querySelector('#readTextBtn'),
+      document.querySelector('#readBufferBtn'),
+      document.querySelector('#readBytesBtn'),
+      document.querySelector('#readStreamBtn')
+    ];
+
+    let currentBlob = null;
+
+    function formatBytes(bytes) {
+      return new Intl.NumberFormat('zh-CN').format(bytes) + ' bytes';
+    }
+
+    function enableReadButtons(enabled) {
+      buttons.forEach((button) => {
+        button.disabled = !enabled;
+      });
+    }
+
+    document.querySelector('#buildBtn').addEventListener('click', () => {
+      const binaryPart = new Uint8Array([10, 45, 45, 32, 85, 105, 110, 116, 56, 65, 114, 114, 97, 121, 32, 112, 97, 114, 116, 10]);
+      const metadataBlob = new Blob([
+        JSON.stringify({ createdAt: new Date().toISOString(), source: 'metadata blob' }, null, 2)
+      ], { type: 'application/json' });
+
+      currentBlob = new Blob(
+        [textInput.value, binaryPart, metadataBlob],
+        { type: typeInput.value, endings: 'transparent' }
+      );
+
+      sizeOut.textContent = formatBytes(currentBlob.size);
+      typeOut.textContent = currentBlob.type || '(empty)';
+      enableReadButtons(true);
+      output.textContent = `Blob created.
+
+const blob = new Blob([stringPart, uint8ArrayPart, metadataBlob], {
+  type: "${currentBlob.type}",
+  endings: "transparent"
+});
+
+blob.size = ${currentBlob.size}
+blob.type = "${currentBlob.type}"`;
+    });
+
+    document.querySelector('#readTextBtn').addEventListener('click', async () => {
+      output.textContent = await currentBlob.text();
+    });
+
+    document.querySelector('#readBufferBtn').addEventListener('click', async () => {
+      const buffer = await currentBlob.arrayBuffer();
+      const bytes = [...new Uint8Array(buffer)].slice(0, 80);
+      output.textContent = `ArrayBuffer byteLength: ${buffer.byteLength}
+First bytes:
+${bytes.join(' ')}`;
+    });
+
+    document.querySelector('#readBytesBtn').addEventListener('click', async () => {
+      if (!('bytes' in Blob.prototype)) {
+        output.textContent = '当前浏览器暂不支持 blob.bytes()。可以用 new Uint8Array(await blob.arrayBuffer()) 作为兼容写法。';
+        return;
+      }
+
+      const bytes = await currentBlob.bytes();
+      output.textContent = `Uint8Array length: ${bytes.length}
+First bytes:
+${[...bytes.slice(0, 80)].join(' ')}`;
+    });
+
+    document.querySelector('#readStreamBtn').addEventListener('click', async () => {
+      const reader = currentBlob.stream().getReader();
+      const chunks = [];
+      let total = 0;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        chunks.push(value.byteLength);
+        total += value.byteLength;
+      }
+
+      output.textContent = `Stream read complete.
+Chunk count: ${chunks.length}
+Chunk sizes: ${chunks.join(', ')}
+Total bytes: ${total}`;
+    });
+  </script>
+</body>
+</html>

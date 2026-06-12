@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>rule wider than gap</title>
+  <style>
+    :root {
+      --bg: #f6f7f4;
+      --ink: #202a32;
+      --muted: #66717a;
+      --panel: #ffffff;
+      --line: #d6ddd8;
+      --accent: rgba(190, 46, 46, 0.82);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+    }
+
+    main {
+      width: min(1040px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 32px 0 56px;
+    }
+
+    a {
+      color: #0f766e;
+    }
+
+    h1 {
+      margin: 14px 0 8px;
+      font-size: 30px;
+      line-height: 1.15;
+      letter-spacing: 0;
+    }
+
+    p {
+      margin: 0 0 16px;
+      color: var(--muted);
+    }
+
+    code {
+      background: #edf0eb;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    .stage {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+      margin-top: 24px;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      padding: 18px;
+      overflow-x: auto;
+    }
+
+    .panel h2 {
+      margin: 0 0 12px;
+      font-size: 18px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 150px 150px;
+      min-height: 130px;
+    }
+
+    .normal {
+      column-gap: 32px;
+      column-rule: 6px solid var(--accent);
+    }
+
+    .overflow {
+      column-gap: 8px;
+      column-rule: 40px solid var(--accent);
+    }
+
+    .cell {
+      min-height: 130px;
+      padding: 14px;
+      border: 1px solid #bbc7c0;
+      background: #e9f2ee;
+      color: #173d36;
+      font-weight: 650;
+    }
+
+    .edge-text {
+      display: inline-block;
+      background: rgba(255, 255, 255, 0.75);
+      padding: 2px 4px;
+      border-radius: 4px;
+    }
+
+    .caption {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .warning {
+      margin-top: 22px;
+      border-left: 4px solid #b45309;
+      background: #fff7ed;
+      padding: 14px 16px;
+      color: #663c12;
+    }
+
+    @supports not (row-rule: 1px solid red) {
+      .normal,
+      .overflow {
+        column-rule: none;
+      }
+
+      .grid > .cell:first-child {
+        box-shadow: 20px 0 0 var(--accent);
+      }
+    }
+
+    @media (max-width: 780px) {
+      main {
+        width: min(100% - 24px, 1040px);
+      }
+
+      h1 {
+        font-size: 26px;
+      }
+
+      .stage {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <a href="./index.html">返回索引</a>
+    <h1>02. rule 比 gap 宽时不会重新布局</h1>
+    <p>规则线始终围绕 gap 中心线绘制。它很粗时会覆盖到 item 区域，但 item 的位置不会变。</p>
+
+    <section class="stage">
+      <article class="panel">
+        <h2>rule 小于 gap</h2>
+        <div class="grid normal">
+          <div class="cell"><span class="edge-text">A 左侧内容</span></div>
+          <div class="cell"><span class="edge-text">B 左侧内容</span></div>
+        </div>
+        <div class="caption"><code>column-gap: 32px</code>, <code>column-rule-width: 6px</code></div>
+      </article>
+
+      <article class="panel">
+        <h2>rule 大于 gap</h2>
+        <div class="grid overflow">
+          <div class="cell"><span class="edge-text">A 贴边内容</span></div>
+          <div class="cell"><span class="edge-text">B 贴边内容</span></div>
+        </div>
+        <div class="caption"><code>column-gap: 8px</code>, <code>column-rule-width: 40px</code></div>
+      </article>
+    </section>
+
+    <p class="warning">实践建议：如果分隔线很粗，给 item 加内边距，或者保持 rule width 小于 gap。否则它可能盖住边缘内容。</p>
+  </main>
+</body>
+</html>
+

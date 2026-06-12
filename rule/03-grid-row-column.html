@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>row-rule and column-rule</title>
+  <style>
+    :root {
+      --bg: #f5f3ef;
+      --ink: #202a32;
+      --muted: #66717a;
+      --panel: #fffdfa;
+      --line: #d9d1c3;
+      --row: #2563eb;
+      --column: #c2410c;
+      --both: #0f766e;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+    }
+
+    main {
+      width: min(1120px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 32px 0 56px;
+    }
+
+    a {
+      color: #0f766e;
+    }
+
+    h1 {
+      margin: 14px 0 8px;
+      font-size: 30px;
+      line-height: 1.15;
+      letter-spacing: 0;
+    }
+
+    p {
+      margin: 0 0 16px;
+      color: var(--muted);
+    }
+
+    code {
+      background: #ece6da;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    .examples {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 24px;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      padding: 16px;
+    }
+
+    .panel h2 {
+      margin: 0 0 12px;
+      font-size: 18px;
+      line-height: 1.2;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(64px, 1fr));
+      grid-auto-rows: 72px;
+      gap: 20px;
+    }
+
+    .row-only {
+      row-rule: 3px solid var(--row);
+    }
+
+    .column-only {
+      column-rule: 3px solid var(--column);
+    }
+
+    .both {
+      rule: 3px solid var(--both);
+    }
+
+    .cell {
+      display: grid;
+      place-items: center;
+      border: 1px solid #cfc7b8;
+      background: #f1eadf;
+      color: #3d3529;
+      font-weight: 700;
+    }
+
+    .caption {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    @supports not (row-rule: 1px solid red) {
+      .row-only,
+      .column-only,
+      .both {
+        row-rule: none;
+        column-rule: none;
+        rule: none;
+      }
+
+      .cell {
+        box-shadow: inset 0 0 0 2px rgba(15, 118, 110, 0.16);
+      }
+    }
+
+    @media (max-width: 980px) {
+      .examples {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      main {
+        width: min(100% - 24px, 1120px);
+      }
+
+      h1 {
+        font-size: 26px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <a href="./index.html">返回索引</a>
+    <h1>03. `row-rule`、`column-rule` 和 `rule`</h1>
+    <p>在 grid 中，行 gap 和列 gap 可以分别装饰。<code>rule</code> 是同时设置两者的简写。</p>
+
+    <section class="examples">
+      <article class="panel">
+        <h2>只画 row-rule</h2>
+        <div class="grid row-only">
+          <div class="cell">1</div>
+          <div class="cell">2</div>
+          <div class="cell">3</div>
+          <div class="cell">4</div>
+          <div class="cell">5</div>
+          <div class="cell">6</div>
+        </div>
+        <div class="caption"><code>row-rule: 3px solid blue</code></div>
+      </article>
+
+      <article class="panel">
+        <h2>只画 column-rule</h2>
+        <div class="grid column-only">
+          <div class="cell">1</div>
+          <div class="cell">2</div>
+          <div class="cell">3</div>
+          <div class="cell">4</div>
+          <div class="cell">5</div>
+          <div class="cell">6</div>
+        </div>
+        <div class="caption"><code>column-rule: 3px solid orange</code></div>
+      </article>
+
+      <article class="panel">
+        <h2>同时画 rule</h2>
+        <div class="grid both">
+          <div class="cell">1</div>
+          <div class="cell">2</div>
+          <div class="cell">3</div>
+          <div class="cell">4</div>
+          <div class="cell">5</div>
+          <div class="cell">6</div>
+        </div>
+        <div class="caption"><code>rule: 3px solid teal</code></div>
+      </article>
+    </section>
+  </main>
+</body>
+</html>
+

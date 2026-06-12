@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>shape-outside: polygon()</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 0 20px;
+      line-height: 1.8;
+      color: #333;
+    }
+
+    h1 {
+      border-bottom: 2px solid #4a90d9;
+      padding-bottom: 10px;
+    }
+
+    .demo {
+      margin: 30px 0;
+      padding: 20px;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      background: #fafafa;
+    }
+
+    .demo h2 {
+      margin-top: 0;
+      color: #4a90d9;
+    }
+
+    .triangle {
+      float: left;
+      width: 200px;
+      height: 200px;
+      background: linear-gradient(135deg, #f5af19, #f12711);
+      clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+      shape-outside: polygon(50% 0%, 0% 100%, 100% 100%);
+      margin-right: 15px;
+      margin-bottom: 10px;
+    }
+
+    .diamond {
+      float: right;
+      width: 180px;
+      height: 180px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+      shape-outside: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+      margin-left: 15px;
+      margin-bottom: 10px;
+    }
+
+    .arrow {
+      float: left;
+      width: 200px;
+      height: 150px;
+      background: linear-gradient(135deg, #11998e, #38ef7d);
+      clip-path: polygon(0% 20%, 60% 20%, 60% 0%, 100% 50%, 60% 100%, 60% 80%, 0% 80%);
+      shape-outside: polygon(0% 20%, 60% 20%, 60% 0%, 100% 50%, 60% 100%, 60% 80%, 0% 80%);
+      margin-right: 15px;
+      margin-bottom: 10px;
+    }
+
+    .star {
+      float: right;
+      width: 200px;
+      height: 200px;
+      background: linear-gradient(135deg, #f093fb, #f5576c);
+      clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+      shape-outside: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+      margin-left: 15px;
+      margin-bottom: 10px;
+    }
+
+    .clearfix::after {
+      content: "";
+      display: block;
+      clear: both;
+    }
+
+    code {
+      background: #f0f0f0;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 0.9em;
+    }
+
+    pre {
+      background: #2d2d2d;
+      color: #f8f8f2;
+      padding: 15px;
+      border-radius: 6px;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>shape-outside: polygon()</h1>
+  <p>使用 <code>polygon()</code> 函数可以定义任意多边形的环绕区域。配合 <code>clip-path</code> 可以让元素的可见形状和文字环绕形状一致。</p>
+
+  <div class="demo clearfix">
+    <h2>三角形</h2>
+    <div class="triangle"></div>
+    <p>三角形是最简单的多边形之一，只需要三个顶点坐标。这里定义了一个顶部居中、底部占满宽度的等腰三角形。文字会沿着三角形的斜边环绕，在顶部时文字几乎占满整行，随着向下移动，文字需要为越来越宽的三角形让出空间。这种效果非常适合用于引导读者视线的设计。多边形的每个顶点使用百分比或具体长度值来定义其在元素内的位置。你可以清楚地看到文字是如何沿着三角形的倾斜边缘流动的。</p>
+  </div>
+
+  <div class="demo clearfix">
+    <h2>菱形</h2>
+    <div class="diamond"></div>
+    <p>菱形由四个顶点构成，分别位于上、右、下、左四个方向。文字从菱形的侧面开始环绕，在中间最宽处退让最多，在上下两端则可以更靠近元素中心。这种形状在装饰性设计中非常受欢迎，特别是用于展示珠宝、钻石等产品时。菱形的对称性让文字的环绕效果看起来非常和谐。注意观察文字行在菱形不同高度处的变化，完美地贴合了菱形的轮廓。文字在上下尖端处可以延伸到更靠近中心的位置。</p>
+  </div>
+
+  <div class="demo clearfix">
+    <h2>箭头形状</h2>
+    <div class="arrow"></div>
+    <p>polygon() 的强大之处在于可以定义任意复杂的形状。这里展示了一个箭头形状，由七个顶点构成。文字会沿着箭头的不规则轮廓环绕，在箭头尖端处文字需要退让，在箭头尾部的凹陷处文字则可以靠近。这种效果在创意网页设计中非常有趣，可以引导用户的视觉焦点。通过精心设计多边形的顶点，你几乎可以创造出任何想要的环绕形状。</p>
+  </div>
+
+  <div class="demo clearfix">
+    <h2>星形</h2>
+    <div class="star"></div>
+    <p>星形是一个更复杂的多边形示例，由十个顶点交替在外圈和内圈排列而成。文字会精确地沿着星形的凹凸轮廓进行环绕，在星形的尖角处文字需要退让更多，而在凹陷处文字可以更靠近元素。这种高度不规则的形状展示了 polygon() 函数的强大能力。虽然定义这样复杂的形状需要精确计算每个顶点的坐标，但效果却是令人惊艳的。在实际工作中，你可以使用在线工具来可视化地编辑这些顶点坐标，而不需要手动计算。星形在凹入的地方文字可以嵌入更深。</p>
+  </div>
+
+  <h2>语法</h2>
+  <pre>
+/* 三角形 */
+shape-outside: polygon(50% 0%, 0% 100%, 100% 100%);
+
+/* 菱形 */
+shape-outside: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+
+/* 使用具体长度 */
+shape-outside: polygon(0px 0px, 200px 0px, 200px 150px, 0px 200px);
+
+/* 使用 nonzero 或 evenodd 填充规则 */
+shape-outside: polygon(nonzero, 50% 0%, 100% 50%, 50% 100%, 0% 50%);
+  </pre>
+
+  <p><strong>提示：</strong>配合 <code>clip-path</code> 使用相同的 polygon 值，可以让元素的可见形状与文字环绕形状一致。</p>
+</body>
+</html>

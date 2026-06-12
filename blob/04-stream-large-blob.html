@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>04 · 大 Blob 与流式读取</title>
+  <link rel="stylesheet" href="./shared.css">
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <span class="eyebrow">ReadableStream</span>
+      <h1>用 stream() 分块读取大 Blob</h1>
+      <p class="lead">一次性调用 <code>text()</code> 或 <code>arrayBuffer()</code> 会把完整内容读入内存；<code>stream()</code> 可以逐块处理，适合较大的数据。</p>
+      <nav class="nav">
+        <a class="button secondary" href="./index.html">返回目录</a>
+        <a class="button secondary" href="./05-worker-and-fetch.html">下一个示例</a>
+      </nav>
+    </section>
+
+    <section class="grid">
+      <div class="panel">
+        <h2>生成 CSV Blob</h2>
+        <label>
+          行数
+          <input id="rowsInput" type="number" min="1000" max="200000" step="1000" value="25000">
+        </label>
+        <div class="controls">
+          <button id="generateBtn">生成 Blob</button>
+          <button class="secondary" id="streamBtn" disabled>stream() 读取</button>
+          <button class="secondary" id="textBtn" disabled>text() 读取</button>
+          <a class="button secondary" id="downloadLink" href="#" download="large-demo.csv" aria-disabled="true">下载 CSV</a>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>读取进度</h2>
+        <div class="progress" aria-label="读取进度">
+          <span id="progressFill"></span>
+        </div>
+        <div class="metrics">
+          <div class="metric"><strong>Blob size</strong><span id="sizeOut">-</span></div>
+          <div class="metric"><strong>Chunks</strong><span id="chunksOut">-</span></div>
+          <div class="metric"><strong>Read bytes</strong><span id="bytesOut">-</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>输出</h2>
+      <pre id="output">先生成一个 CSV Blob。</pre>
+    </section>
+  </main>
+
+  <script>
+    const rowsInput = document.querySelector('#rowsInput');
+    const generateBtn = document.querySelector('#generateBtn');
+    const streamBtn = document.querySelector('#streamBtn');
+    const textBtn = document.querySelector('#textBtn');
+    const downloadLink = document.querySelector('#downloadLink');
+    const progressFill = document.querySelector('#progressFill');
+    const sizeOut = document.querySelector('#sizeOut');
+    const chunksOut = document.querySelector('#chunksOut');
+    const bytesOut = document.querySelector('#bytesOut');
+    const output = document.querySelector('#output');
+    let csvBlob = null;
+    let objectUrl = '';
+
+    function formatBytes(bytes) {
+      return new Intl.NumberFormat('zh-CN').format(bytes) + ' bytes';
+    }
+
+    function cleanupUrl() {
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+      objectUrl = '';
+    }
+
+    function setProgress(readBytes, totalBytes) {
+      const percent = totalBytes ? Math.round((readBytes / totalBytes) * 100) : 0;
+      progressFill.style.width = percent + '%';
+      bytesOut.textContent = formatBytes(readBytes);
+    }
+
+    generateBtn.addEventListener('click', () => {
+      cleanupUrl();
+      const rows = Number(rowsInput.value);
+      const parts = ['id,name,score,created_at\n'];
+
+      for (let i = 1; i <= rows; i += 1) {
+        parts.push(`${i},user-${i},${(Math.sin(i) * 50 + 50).toFixed(2)},${new Date(2026, 0, (i % 28) + 1).toISOString()}\n`);
+      }
+
+      csvBlob = new Blob(parts, { type: 'text/csv;charset=utf-8' });
+      objectUrl = URL.createObjectURL(csvBlob);
+      downloadLink.href = objectUrl;
+      downloadLink.setAttribute('aria-disabled', 'false');
+      streamBtn.disabled = false;
+      textBtn.disabled = false;
+      sizeOut.textContent = formatBytes(csvBlob.size);
+      chunksOut.textContent = '-';
+      setProgress(0, csvBlob.size);
+      output.textContent = `CSV Blob generated.
+Rows: ${rows}
+Type: ${csvBlob.type}
+Size: ${formatBytes(csvBlob.size)}
+
+const blob = new Blob(csvParts, { type: 'text/csv;charset=utf-8' });`;
+    });
+
+    streamBtn.addEventListener('click', async () => {
+      if (!csvBlob) return;
+
+      const reader = csvBlob.stream().getReader();
+      const startedAt = performance.now();
+      let total = 0;
+      let chunks = 0;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        total += value.byteLength;
+        chunks += 1;
+        chunksOut.textContent = String(chunks);
+        setProgress(total, csvBlob.size);
+        await new Promise((resolve) => requestAnimationFrame(resolve));
+      }
+
+      output.textContent = `stream() finished.
+Chunks: ${chunks}
+Total read: ${formatBytes(total)}
+Time: ${(performance.now() - startedAt).toFixed(1)} ms
+
+for await 风格也可以通过 blob.stream() 得到 ReadableStream 后自行封装。`;
+    });
+
+    textBtn.addEventListener('click', async () => {
+      if (!csvBlob) return;
+
+      const startedAt = performance.now();
+      const text = await csvBlob.text();
+      setProgress(csvBlob.size, csvBlob.size);
+      chunksOut.textContent = '1 full read';
+      output.textContent = `text() finished.
+Characters: ${new Intl.NumberFormat('zh-CN').format(text.length)}
+Time: ${(performance.now() - startedAt).toFixed(1)} ms
+
+注意：text() 简洁，但它会把完整 Blob 解码成字符串。大文件更适合 stream()。`;
+    });
+
+    window.addEventListener('pagehide', cleanupUrl);
+  </script>
+</body>
+</html>

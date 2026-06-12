@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>View Transition - 图片画廊</title>
+  <style>
+    *,
+    *::before,
+    *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --surface: oklch(0.08 0.005 260);
+      --surface-raised: oklch(0.12 0.008 260);
+      --text-primary: oklch(0.95 0.003 60);
+      --text-secondary: oklch(0.6 0.005 260);
+      --accent: oklch(0.78 0.12 60);
+      --radius: 8px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: var(--surface);
+      color: var(--text-primary);
+      min-height: 100vh;
+      padding: 2.5rem 1.5rem;
+    }
+
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+
+    .header h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.4rem;
+    }
+
+    .header p {
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+    }
+
+    /* Gallery Grid */
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 0.5rem;
+    }
+
+    .gallery-item {
+      position: relative;
+      aspect-ratio: 1;
+      border-radius: var(--radius);
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    .gallery-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.3s ease;
+    }
+
+    .gallery-item:hover img {
+      transform: scale(1.04);
+    }
+
+    .gallery-item::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, oklch(0 0 0 / 0.4), transparent 50%);
+      opacity: 0;
+      transition: opacity 0.2s;
+      pointer-events: none;
+    }
+
+    .gallery-item:hover::after {
+      opacity: 1;
+    }
+
+    .gallery-item .label {
+      position: absolute;
+      bottom: 0.75rem;
+      left: 0.75rem;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: white;
+      opacity: 0;
+      transform: translateY(4px);
+      transition: opacity 0.2s, transform 0.2s;
+      z-index: 1;
+    }
+
+    .gallery-item:hover .label {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Make specific items span multiple cells */
+    .gallery-item:nth-child(1) {
+      grid-column: span 2;
+      grid-row: span 2;
+    }
+
+    .gallery-item:nth-child(5) {
+      grid-column: span 2;
+    }
+
+    /* Lightbox */
+    .lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: oklch(0.05 0.005 260 / 0.95);
+      backdrop-filter: blur(20px);
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      padding: 2rem;
+    }
+
+    .lightbox.active {
+      display: flex;
+    }
+
+    .lightbox-image {
+      max-width: 90vw;
+      max-height: 75vh;
+      object-fit: contain;
+      border-radius: var(--radius);
+    }
+
+    .lightbox-info {
+      margin-top: 1.5rem;
+      text-align: center;
+    }
+
+    .lightbox-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 0.3rem;
+    }
+
+    .lightbox-desc {
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+    }
+
+    .lightbox-close {
+      position: absolute;
+      top: 1.5rem;
+      right: 1.5rem;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: none;
+      background: oklch(0.2 0.01 260);
+      color: var(--text-primary);
+      font-size: 1.2rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s;
+    }
+
+    .lightbox-close:hover {
+      background: oklch(0.3 0.012 260);
+    }
+
+    .lightbox-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: none;
+      background: oklch(0.2 0.01 260);
+      color: var(--text-primary);
+      font-size: 1.2rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s, transform 0.15s;
+    }
+
+    .lightbox-nav:hover {
+      background: oklch(0.3 0.012 260);
+    }
+
+    .lightbox-nav:active {
+      transform: translateY(-50%) scale(0.92);
+    }
+
+    .lightbox-nav.prev { left: 1.5rem; }
+    .lightbox-nav.next { right: 1.5rem; }
+
+    .lightbox-counter {
+      position: absolute;
+      bottom: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      background: oklch(0.15 0.008 260);
+      padding: 0.3rem 0.8rem;
+      border-radius: 20px;
+    }
+
+    .gallery.hidden {
+      display: none;
+    }
+
+    /* View Transition */
+    ::view-transition-group(gallery-image) {
+      animation-duration: 0.35s;
+      animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+      overflow: visible;
+    }
+
+    ::view-transition-old(root) {
+      animation-duration: 0.2s;
+    }
+
+    ::view-transition-new(root) {
+      animation-duration: 0.3s;
+      animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      ::view-transition-group(*),
+      ::view-transition-old(*),
+      ::view-transition-new(*) {
+        animation-duration: 0.01ms !important;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .gallery {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .gallery-item:nth-child(1) {
+        grid-column: span 2;
+        grid-row: span 1;
+      }
+      .gallery-item:nth-child(5) {
+        grid-column: span 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>图片画廊</h1>
+      <p>点击缩略图，图片从原始位置"飞入"全屏预览</p>
+    </div>
+
+    <div class="gallery" id="gallery"></div>
+
+    <div class="lightbox" id="lightbox">
+      <button class="lightbox-close" onclick="closeLightbox()">×</button>
+      <button class="lightbox-nav prev" onclick="navImage(-1)">‹</button>
+      <button class="lightbox-nav next" onclick="navImage(1)">›</button>
+      <img class="lightbox-image" id="lightboxImage" src="" alt="">
+      <div class="lightbox-info">
+        <div class="lightbox-title" id="lightboxTitle"></div>
+        <div class="lightbox-desc" id="lightboxDesc"></div>
+      </div>
+      <div class="lightbox-counter" id="lightboxCounter"></div>
+    </div>
+  </div>
+
+  <script>
+    const images = [
+      { src: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=800&fit=crop', title: '阿尔卑斯山脉', desc: '瑞士·格林德瓦' },
+      { src: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=600&h=600&fit=crop', title: '晨曦山谷', desc: '挪威·峡湾' },
+      { src: 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=600&h=600&fit=crop', title: '静谧湖泊', desc: '新西兰·瓦纳卡' },
+      { src: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=600&h=600&fit=crop', title: '森林迷雾', desc: '德国·黑森林' },
+      { src: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800&h=400&fit=crop', title: '林间光影', desc: '加拿大·班夫' },
+      { src: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&h=600&fit=crop', title: '热带海岸', desc: '马尔代夫' },
+      { src: 'https://images.unsplash.com/photo-1494500764479-0c8f2919a3d8?w=600&h=600&fit=crop', title: '夜空星辰', desc: '冰岛·极光' },
+      { src: 'https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=600&h=600&fit=crop', title: '翠绿草原', desc: '爱尔兰·凯里' },
+    ];
+
+    let currentImage = 0;
+    let isLightboxOpen = false;
+
+    function renderGallery() {
+      const gallery = document.getElementById('gallery');
+      gallery.innerHTML = images.map((img, i) => `
+        <div class="gallery-item" onclick="openLightbox(${i})">
+          <img src="${img.src}" alt="${img.title}" id="thumb-${i}">
+          <span class="label">${img.title}</span>
+        </div>
+      `).join('');
+    }
+
+    function openLightbox(index) {
+      currentImage = index;
+      const thumb = document.getElementById(`thumb-${index}`);
+      thumb.style.viewTransitionName = 'gallery-image';
+
+      const doUpdate = () => {
+        thumb.style.viewTransitionName = '';
+        isLightboxOpen = true;
+        document.getElementById('lightbox').classList.add('active');
+        const lightboxImg = document.getElementById('lightboxImage');
+        lightboxImg.src = images[index].src;
+        lightboxImg.style.viewTransitionName = 'gallery-image';
+        document.getElementById('lightboxTitle').textContent = images[index].title;
+        document.getElementById('lightboxDesc').textContent = images[index].desc;
+        document.getElementById('lightboxCounter').textContent = `${index + 1} / ${images.length}`;
+      };
+
+      if (!document.startViewTransition) {
+        doUpdate();
+        return;
+      }
+
+      document.startViewTransition(() => doUpdate());
+    }
+
+    function closeLightbox() {
+      const lightboxImg = document.getElementById('lightboxImage');
+      const thumb = document.getElementById(`thumb-${currentImage}`);
+
+      const doUpdate = () => {
+        lightboxImg.style.viewTransitionName = '';
+        thumb.style.viewTransitionName = 'gallery-image';
+        isLightboxOpen = false;
+        document.getElementById('lightbox').classList.remove('active');
+      };
+
+      if (!document.startViewTransition) {
+        doUpdate();
+        return;
+      }
+
+      const t = document.startViewTransition(() => doUpdate());
+      t.finished.then(() => {
+        thumb.style.viewTransitionName = '';
+      });
+    }
+
+    function navImage(direction) {
+      const newIndex = (currentImage + direction + images.length) % images.length;
+      currentImage = newIndex;
+
+      const doUpdate = () => {
+        const lightboxImg = document.getElementById('lightboxImage');
+        lightboxImg.src = images[newIndex].src;
+        document.getElementById('lightboxTitle').textContent = images[newIndex].title;
+        document.getElementById('lightboxDesc').textContent = images[newIndex].desc;
+        document.getElementById('lightboxCounter').textContent = `${newIndex + 1} / ${images.length}`;
+      };
+
+      if (!document.startViewTransition) {
+        doUpdate();
+        return;
+      }
+
+      document.startViewTransition(() => doUpdate());
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (!isLightboxOpen) return;
+      if (e.key === 'Escape') closeLightbox();
+      if (e.key === 'ArrowLeft') navImage(-1);
+      if (e.key === 'ArrowRight') navImage(1);
+    });
+
+    renderGallery();
+  </script>
+</body>
+</html>

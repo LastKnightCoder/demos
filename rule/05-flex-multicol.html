@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>flex grid multicol gap rules</title>
+  <style>
+    :root {
+      --bg: #f7f5ef;
+      --ink: #202a32;
+      --muted: #66717a;
+      --panel: #fffdfa;
+      --line: #d9d1c3;
+      --accent: #0f766e;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+    }
+
+    main {
+      width: min(1080px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 32px 0 56px;
+    }
+
+    a {
+      color: #0f766e;
+    }
+
+    h1 {
+      margin: 14px 0 8px;
+      font-size: 30px;
+      line-height: 1.15;
+      letter-spacing: 0;
+    }
+
+    p {
+      margin: 0 0 16px;
+      color: var(--muted);
+    }
+
+    code {
+      background: #ece6da;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    .examples {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 24px;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      padding: 16px;
+    }
+
+    .panel h2 {
+      margin: 0 0 12px;
+      font-size: 18px;
+    }
+
+    .flex {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px 28px;
+      row-rule: 2px dashed #2563eb;
+      column-rule: 2px solid var(--accent);
+    }
+
+    .chip {
+      flex: 1 1 120px;
+      min-height: 58px;
+      display: grid;
+      place-items: center;
+      border: 1px solid #cfc7b8;
+      background: #f1eadf;
+      color: #3d3529;
+      font-weight: 700;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(80px, 1fr));
+      gap: 20px 28px;
+      row-rule: 2px dashed #2563eb;
+      column-rule: 2px solid var(--accent);
+    }
+
+    .multi {
+      columns: 3 160px;
+      column-gap: 28px;
+      column-rule: 2px solid var(--accent);
+      color: #334155;
+    }
+
+    .multi p {
+      color: #334155;
+      margin: 0;
+    }
+
+    .caption {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    @supports not (row-rule: 1px solid red) {
+      .flex,
+      .grid {
+        row-rule: none;
+        column-rule: none;
+      }
+
+      .chip {
+        box-shadow: inset 0 0 0 2px rgba(15, 118, 110, 0.16);
+      }
+    }
+
+    @media (max-width: 820px) {
+      main {
+        width: min(100% - 24px, 1080px);
+      }
+
+      h1 {
+        font-size: 26px;
+      }
+
+      .examples {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <a href="./index.html">返回索引</a>
+    <h1>05. Flex、Grid、多列文本里的 gap rule</h1>
+    <p><code>column-rule</code> 最早来自多列布局；新 gap decorations 把类似能力扩展到 grid 和 flex。下面用同一组间距对比。</p>
+
+    <section class="examples">
+      <article class="panel">
+        <h2>Flex wrap</h2>
+        <div class="flex">
+          <div class="chip">Alpha</div>
+          <div class="chip">Beta</div>
+          <div class="chip">Gamma</div>
+          <div class="chip">Delta</div>
+          <div class="chip">Epsilon</div>
+          <div class="chip">Zeta</div>
+        </div>
+        <div class="caption"><code>display: flex</code>, <code>gap</code>, <code>row-rule</code>, <code>column-rule</code></div>
+      </article>
+
+      <article class="panel">
+        <h2>Grid</h2>
+        <div class="grid">
+          <div class="chip">Alpha</div>
+          <div class="chip">Beta</div>
+          <div class="chip">Gamma</div>
+          <div class="chip">Delta</div>
+          <div class="chip">Epsilon</div>
+          <div class="chip">Zeta</div>
+        </div>
+        <div class="caption"><code>display: grid</code>, <code>gap</code>, <code>row-rule</code>, <code>column-rule</code></div>
+      </article>
+
+      <article class="panel">
+        <h2>Multi-column text</h2>
+        <div class="multi">
+          <p>Multi-column layout has supported column rules for a long time. Gap decorations make the same separator idea available to modern layout systems such as grid and flex. The rule is decorative, so it does not change the width of columns or the placement of content.</p>
+        </div>
+        <div class="caption"><code>columns: 3</code>, <code>column-gap</code>, <code>column-rule</code></div>
+      </article>
+    </section>
+  </main>
+</body>
+</html>
+

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>shape-outside: ellipse()</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 0 20px;
+      line-height: 1.8;
+      color: #333;
+    }
+
+    h1 {
+      border-bottom: 2px solid #4a90d9;
+      padding-bottom: 10px;
+    }
+
+    .demo {
+      margin: 30px 0;
+      padding: 20px;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      background: #fafafa;
+    }
+
+    .demo h2 {
+      margin-top: 0;
+      color: #4a90d9;
+    }
+
+    .ellipse-horizontal {
+      float: left;
+      width: 250px;
+      height: 150px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #a18cd1, #fbc2eb);
+      shape-outside: ellipse(50% 50%);
+      margin-right: 15px;
+      margin-bottom: 10px;
+    }
+
+    .ellipse-vertical {
+      float: right;
+      width: 150px;
+      height: 250px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #ffecd2, #fcb69f);
+      shape-outside: ellipse(50% 50%);
+      margin-left: 15px;
+      margin-bottom: 10px;
+    }
+
+    .ellipse-custom {
+      float: left;
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #89f7fe, #66a6ff);
+      shape-outside: ellipse(50% 50% at 50% 50%);
+      shape-margin: 15px;
+      margin-right: 0;
+      margin-bottom: 10px;
+    }
+
+    .clearfix::after {
+      content: "";
+      display: block;
+      clear: both;
+    }
+
+    code {
+      background: #f0f0f0;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 0.9em;
+    }
+
+    pre {
+      background: #2d2d2d;
+      color: #f8f8f2;
+      padding: 15px;
+      border-radius: 6px;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>shape-outside: ellipse()</h1>
+  <p>使用 <code>ellipse()</code> 函数定义椭圆形环绕区域。与 <code>circle()</code> 不同，椭圆有两个半径参数（水平和垂直），可以创建更丰富的环绕效果。</p>
+
+  <div class="demo clearfix">
+    <h2>水平椭圆</h2>
+    <div class="ellipse-horizontal"></div>
+    <p>这是一个宽度大于高度的水平椭圆。文字会沿着椭圆的边缘环绕，在椭圆的上下区域，文字可以更靠近元素中心，而在左右两侧则会被推得更远。水平椭圆适合用于横向展示的图片或装饰元素，能够创造出宽阔、平缓的环绕效果。注意观察文字在不同高度处与椭圆的距离变化，这正是椭圆形状的魅力所在。这种形状在需要展示横幅图片或者宽屏素材时特别有用。</p>
+  </div>
+
+  <div class="demo clearfix">
+    <h2>垂直椭圆</h2>
+    <div class="ellipse-vertical"></div>
+    <p>这是一个高度大于宽度的垂直椭圆，放置在右侧。文字从左边开始，在靠近椭圆中部时需要更多的退让空间，而在顶部和底部区域文字可以更靠近元素。垂直椭圆非常适合用于竖向的人物照片或者纵向展示的产品图。这种环绕效果让页面看起来更加生动有趣。你可以发现在椭圆的中部，文字行的宽度最窄，而在顶部和底部区域行的宽度则较宽。这种自然的流动感为页面增添了优雅的视觉节奏，让阅读体验更加舒适。文字自然地随着椭圆的轮廓流动，不需要任何额外的代码来计算位置。</p>
+  </div>
+
+  <div class="demo clearfix">
+    <h2>圆形 + shape-margin 间距</h2>
+    <div class="ellipse-custom"></div>
+    <p>这个示例将 ellipse(50% 50%) 配合 shape-margin: 15px 使用。ellipse 的半径匹配元素的可见边界，而 shape-margin 在形状外额外添加了 15px 的间距，让文字与椭圆边缘保持舒适的距离。这种组合方式是实际开发中最常用的做法——先用 ellipse() 精确定义形状，再用 shape-margin 微调文字与形状之间的距离，兼顾视觉准确性和阅读舒适度。</p>
+  </div>
+
+  <h2>语法</h2>
+  <pre>
+/* 基础用法：水平半径和垂直半径各 50% */
+shape-outside: ellipse(50% 50%);
+
+/* 指定具体半径 */
+shape-outside: ellipse(120px 80px);
+
+/* 指定椭圆中心位置 */
+shape-outside: ellipse(50% 50% at 50% 50%);
+
+/* 使用关键字 */
+shape-outside: ellipse(closest-side farthest-side);
+  </pre>
+</body>
+</html>
