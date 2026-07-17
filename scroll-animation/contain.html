@@ -59,14 +59,6 @@
     --target-shadow: 0 10px 26px rgba(0,0,0,.40);
   }
 
-  /* ===== 元素高于视口的情形（开关选中）：
-     滚动时先经过 100% 位置（顶边触顶线，旅程 42.86%），
-     后经过 0% 位置（底边触底线，旅程 57.14%）→ 区间倒置 */
-  body:has(#tall:checked) {
-    --th: calc(var(--vh) * 1.5);
-    --dur: 18s;
-  }
-
   * { margin: 0; box-sizing: border-box; }
   html, body { height: 100%; }
   body {
@@ -77,38 +69,18 @@
     font-family: ui-sans-serif, -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
   }
 
-  .fig { width: min(460px, 92vw, calc(var(--vh) * 1.5)); }
+  .fig { width: min(480px, 94vw, calc(var(--vh) * 2.2)); }
   figcaption { text-align: center; margin-bottom: 12px; }
   figcaption span {
     display: inline-block;
     font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-    font-size: 12.5px; color: var(--muted);
+    font-size: clamp(10.5px, 3.2vw, 12.5px); color: var(--muted);
+    white-space: nowrap;
     background: var(--panel);
     border: 1px solid var(--panel-border);
     padding: 5px 14px; border-radius: 999px;
   }
   figcaption b { color: var(--accent); font-weight: 700; }
-
-  /* ===== 高度切换开关（纯 CSS，无 JS） ===== */
-  .size-switch { display: flex; justify-content: center; margin-bottom: 14px; cursor: pointer; user-select: none; }
-  .size-switch input { position: absolute; opacity: 0; pointer-events: none; }
-  .size-switch .sw-track {
-    position: relative; display: flex;
-    background: var(--bar-track); border-radius: 999px; padding: 3px;
-    font-size: 11.5px; color: var(--muted);
-  }
-  .size-switch .opt { position: relative; z-index: 1; padding: 3px 12px; border-radius: 999px; transition: color .2s; }
-  .size-switch .thumb {
-    position: absolute; top: 3px; left: 3px;
-    width: calc(50% - 3px); height: calc(100% - 6px);
-    background: var(--panel); border-radius: 999px;
-    box-shadow: 0 2px 6px rgba(0,0,0,.12);
-    transition: transform .25s;
-  }
-  .size-switch .o1 { color: var(--accent); font-weight: 600; }
-  #tall:checked ~ .sw-track .thumb { transform: translateX(100%); }
-  #tall:checked ~ .sw-track .o1 { color: var(--muted); font-weight: 400; }
-  #tall:checked ~ .sw-track .o2 { color: var(--accent); font-weight: 600; }
 
   .vp {
     background: var(--panel);
@@ -140,7 +112,7 @@
     to   { transform: translateY(calc((var(--vh) + var(--th) + var(--gap) * 2) * -1)); }
   }
   .filler {
-    padding: 14px 36px;
+    padding: 14px clamp(12px, 7%, 36px);
     background-image:
       repeating-linear-gradient(to bottom, var(--fill) 0 9px, transparent 9px 40px),
       repeating-linear-gradient(to bottom, var(--fill) 0 9px, transparent 9px 40px);
@@ -153,23 +125,17 @@
   .filler.a { height: calc(var(--vh) + var(--gap)); }
   .filler.b { height: calc(var(--vh) + var(--gap) + 40px); }
 
-  /* contain（元素较矮）：完全被包含的阶段 —— 底边触底线(40%) → 顶边触顶线(60%) */
+  /* contain：完全被包含的阶段 —— 底边触底线(40%) → 顶边触顶线(60%) */
   @property --progress { syntax: "<integer>"; initial-value: 0; inherits: true; }
   .fig { animation: prog var(--dur) linear infinite alternate; }
   @keyframes prog {
     0%, 40%  { --progress: 0; }
     60%, 100%{ --progress: 100; }
   }
-  /* 元素较高：区间倒置，先经过 100% 位置(42.86%)、后经过 0% 位置(57.14%) */
-  body:has(#tall:checked) .fig { animation-name: prog-tall; }
-  @keyframes prog-tall {
-    0%, 42.86%  { --progress: 100; }
-    57.14%, 100%{ --progress: 0; }
-  }
   .target {
     position: relative;
     height: var(--th);
-    margin: 0 calc(var(--vh) * 0.17);
+    margin: 0 clamp(10px, 8%, calc(var(--vh) * 0.17));
     background: var(--panel);
     border: 1.5px solid var(--panel-border);
     border-radius: calc(var(--vh) * 0.05);
@@ -239,28 +205,15 @@
   .chip.c100 { top: 10px;    color: var(--green);  animation: flash100 var(--dur) linear infinite alternate; }
   .chip.c0::before   { background: var(--orange); }
   .chip.c100::before { background: var(--green); }
-  @keyframes flash0 {           /* 默认：旅程 40% → 0%（底边触底线） */
-    0%, 37%  { opacity: 0; }
-    40%, 45% { opacity: 1; }
-    48%, 100%{ opacity: 0; }
+  @keyframes flash0 {           /* 旅程 40% → 0%（底边触底线），窗口以触线点为中心对称，正反向一致 */
+    0%, 36%  { opacity: 0; }
+    40%      { opacity: 1; }
+    44%, 100%{ opacity: 0; }
   }
-  @keyframes flash100 {         /* 默认：旅程 60% → 100%（顶边触顶线） */
-    0%, 57%  { opacity: 0; }
-    60%, 65% { opacity: 1; }
-    68%, 100%{ opacity: 0; }
-  }
-  /* 元素较高：到达顺序颠倒 —— 先闪 100%（42.86%，顶边触顶线），后闪 0%（57.14%，底边触底线） */
-  body:has(#tall:checked) .chip.c0   { animation-name: flash0-tall; }
-  body:has(#tall:checked) .chip.c100 { animation-name: flash100-tall; }
-  @keyframes flash0-tall {
-    0%, 54.14%  { opacity: 0; }
-    57.14%, 62.14% { opacity: 1; }
-    65.14%, 100%{ opacity: 0; }
-  }
-  @keyframes flash100-tall {
-    0%, 39.86%  { opacity: 0; }
-    42.86%, 47.86% { opacity: 1; }
-    50.86%, 100%{ opacity: 0; }
+  @keyframes flash100 {         /* 旅程 60% → 100%（顶边触顶线），窗口以触线点为中心对称，正反向一致 */
+    0%, 56%  { opacity: 0; }
+    60%      { opacity: 1; }
+    64%, 100%{ opacity: 0; }
   }
 
   .prog { margin-top: 14px; }
@@ -282,11 +235,6 @@
     0%, 40%  { transform: scaleX(0); }
     60%, 100%{ transform: scaleX(1); }
   }
-  body:has(#tall:checked) .prog .bar i { animation-name: bar-tall; }
-  @keyframes bar-tall {
-    0%, 42.86%  { transform: scaleX(1); }
-    57.14%, 100%{ transform: scaleX(0); }
-  }
   .marks { display: flex; justify-content: space-between; margin-top: 8px; font-size: 11.5px; color: var(--muted); }
   .marks span::before {
     content: ""; display: inline-block;
@@ -295,23 +243,19 @@
   }
   .marks .m0::before   { background: var(--orange); }
   .marks .m100::before { background: var(--green); }
-  /* 两种情形的文案切换 */
-  .tall-only { display: none; }
-  body:has(#tall:checked) .norm-only { display: none; }
-  body:has(#tall:checked) .tall-only { display: inline; }
-  .note {
-    display: none;
-    margin-top: 10px;
-    text-align: center;
-    font-size: 11.5px; color: var(--orange);
-  }
-  body:has(#tall:checked) .note { display: block; }
 
   @media (max-width: 380px) {
     .vp-edge .full  { display: none; }
     .vp-edge .short { display: inline; }
-    .marks { font-size: 10.5px; }
-    .chip  { font-size: 10px; }
+    .marks { font-size: 10.5px; flex-wrap: wrap; gap: 2px 10px; }
+    .chip  { font-size: 10px; padding: 3px 8px; }
+    .edge b { font-size: 9px; padding: 1px 6px; }
+  }
+  @media (max-height: 480px) {
+    figcaption { margin-bottom: 8px; }
+    .prog { margin-top: 10px; }
+    .chip { font-size: 10px; padding: 3px 8px; }
+    .edge b { font-size: 9px; padding: 1px 6px; }
   }
   @media (max-height: 360px) {
     figcaption { display: none; }
@@ -324,10 +268,6 @@
 
 <figure class="fig">
   <figcaption><span>animation-range: <b>contain 0% contain 100%</b></span></figcaption>
-  <label class="size-switch" title="切换元素高度">
-    <input type="checkbox" id="tall">
-    <span class="sw-track"><span class="opt o1">元素 ≤ 视口</span><span class="opt o2">元素 > 视口</span><span class="thumb"></span></span>
-  </label>
   <div class="vp">
     <div class="chrome"><i></i><i></i><i></i><div class="addr"></div></div>
     <div class="view">
@@ -347,14 +287,9 @@
     </div>
   </div>
   <div class="prog">
-    <div class="head">
-      <span class="norm-only">contain 进度</span><span class="tall-only">contain 进度（区间倒置）</span>
-      <span class="val"></span>
-    </div>
+    <div class="head"><span>contain 进度</span><span class="val"></span></div>
     <div class="bar"><i></i></div>
-    <div class="marks norm-only"><span class="m0">0% · 元素底边触底线</span><span class="m100">100% · 元素顶边触顶线</span></div>
-    <div class="marks tall-only"><span class="m100">100% 位置：顶边触顶线（先到）</span><span class="m0">0% 位置：底边触底线（后到）</span></div>
-    <div class="note">元素高于视口时，滚动中会先经过 100% 位置、后经过 0% 位置 —— contain 区间倒置（为空），此时应改用 cover 等关键字。</div>
+    <div class="marks"><span class="m0">0% · 元素底边触底线</span><span class="m100">100% · 元素顶边触顶线</span></div>
   </div>
 </figure>
 

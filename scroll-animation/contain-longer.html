@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>animation-range: exit-crossing ｜ 示意</title>
+<title>animation-range: contain（元素 > 视口）｜ 示意</title>
 <script>
   /* 仅用于主题：URL 带 isDark=1 时启用深色模式 */
   if (new URLSearchParams(location.search).get('isDark') === '1')
@@ -125,13 +125,13 @@
   .filler.a { height: calc(var(--vh) + var(--gap)); }
   .filler.b { height: calc(var(--vh) + var(--gap) + 40px); }
 
-  /* exit-crossing：元素主盒子穿越视口顶边（start edge）这条线 —— 顶边触顶线(42.86%) → 底边触顶线(85.71%)。
-     对比 exit：其 0% 锚在底边触底线(57.14%，元素不再完全覆盖视口才开始），起步更晚 */
+  /* contain（元素高于视口）：元素完全覆盖视口的阶段 —— 顶边触顶线(42.86%) → 底边触底线(57.14%)，
+     即 0% 附着于顶边对齐视口顶边、100% 附着于底边对齐视口底边，进度仍沿滚动方向 0% → 100% */
   @property --progress { syntax: "<integer>"; initial-value: 0; inherits: true; }
   .fig { animation: prog var(--dur) linear infinite alternate; }
   @keyframes prog {
     0%, 42.86%  { --progress: 0; }
-    85.71%, 100%{ --progress: 100; }
+    57.14%, 100%{ --progress: 100; }
   }
   .target {
     position: relative;
@@ -202,8 +202,8 @@
     opacity: 0; pointer-events: none;
   }
   .chip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; }
-  .chip.c0   { top: 10px; color: var(--green);  animation: flash0   var(--dur) linear infinite alternate; }
-  .chip.c100 { top: 10px; color: var(--orange); animation: flash100 var(--dur) linear infinite alternate; }
+  .chip.c0   { top: 10px;    color: var(--green);  animation: flash0   var(--dur) linear infinite alternate; }
+  .chip.c100 { bottom: 10px; color: var(--orange); animation: flash100 var(--dur) linear infinite alternate; }
   .chip.c0::before   { background: var(--green); }
   .chip.c100::before { background: var(--orange); }
   @keyframes flash0 {           /* 旅程 42.86%：顶边触顶线 → 0%，窗口以触线点为中心对称，正反向一致 */
@@ -211,10 +211,10 @@
     42.86%      { opacity: 1; }
     46.86%, 100%{ opacity: 0; }
   }
-  @keyframes flash100 {         /* 旅程 85.71%：底边触顶线 → 100%，窗口以触线点为中心对称，正反向一致 */
-    0%, 81.71%  { opacity: 0; }
-    85.71%      { opacity: 1; }
-    89.71%, 100%{ opacity: 0; }
+  @keyframes flash100 {         /* 旅程 57.14%：底边触底线 → 100%，窗口以触线点为中心对称，正反向一致 */
+    0%, 53.14%  { opacity: 0; }
+    57.14%      { opacity: 1; }
+    61.14%, 100%{ opacity: 0; }
   }
 
   .prog { margin-top: 14px; }
@@ -234,7 +234,7 @@
   }
   @keyframes bar {
     0%, 42.86%  { transform: scaleX(0); }
-    85.71%, 100%{ transform: scaleX(1); }
+    57.14%, 100%{ transform: scaleX(1); }
   }
   .marks { display: flex; justify-content: space-between; margin-top: 8px; font-size: 11.5px; color: var(--muted); }
   .marks span::before {
@@ -273,7 +273,7 @@
 <body>
 
 <figure class="fig">
-  <figcaption><span>animation-range: <b>exit-crossing 0% exit-crossing 100%</b></span></figcaption>
+  <figcaption><span>animation-range: <b>contain 0% contain 100%</b></span></figcaption>
   <div class="vp">
     <div class="chrome"><i></i><i></i><i></i><div class="addr"></div></div>
     <div class="view">
@@ -286,16 +286,17 @@
         </div>
         <div class="filler b"></div>
       </div>
-      <div class="chip c0">exit-crossing 0% · 顶边触顶线</div>
-      <div class="chip c100">exit-crossing 100% · 底边触顶线</div>
+      <div class="chip c0">contain 0% · 顶边触顶线</div>
+      <div class="chip c100">contain 100% · 底边触底线</div>
       <div class="vp-edge top"><i></i><span><em class="full">视口顶边（start edge）</em><em class="short">视口顶边</em></span></div>
+      <div class="vp-edge bottom"><i></i><span><em class="full">视口底边（end edge）</em><em class="short">视口底边</em></span></div>
     </div>
   </div>
   <div class="prog">
-    <div class="head"><span>exit-crossing 进度</span><span class="val"></span></div>
+    <div class="head"><span>contain 进度</span><span class="val"></span></div>
     <div class="bar"><i></i></div>
-    <div class="marks"><span class="m0">0% · 元素顶边触顶线</span><span class="m100">100% · 元素底边触顶线</span></div>
-    <div class="note">元素高于视口时：exit-crossing 从顶边触顶线即开始；exit 要等底边离开视口底边（元素不再完全覆盖视口）才开始。两者同在底边触顶线达 100%。</div>
+    <div class="marks"><span class="m0">0% · 元素顶边触顶线</span><span class="m100">100% · 元素底边触底线</span></div>
+    <div class="note">元素高于视口时无法被视口完全包含 —— contain 此时表示元素完全覆盖视口的阶段：顶边对齐视口顶边（0%）→ 底边对齐视口底边（100%）。</div>
   </div>
 </figure>
 
